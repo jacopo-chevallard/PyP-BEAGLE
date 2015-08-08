@@ -36,7 +36,7 @@ class PhotometricFilters:
         self.label = list()
         self.errcolName = list()
 
-    def load_filters(self, fileName):
+    def load(self, fileName):
 
         # read the filter file used to run BANGS
 

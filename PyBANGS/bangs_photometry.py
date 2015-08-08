@@ -6,7 +6,13 @@ from bangs_filters import PhotometricFilters
 
 class ObservedCatalogue:
 
-    def load_catalogue(self, filename):
+    def __init__(self, 
+            residual_filename="BANGS_residual",
+            residual_plotname="BANGS_residual.pdf"):
+
+        self.residual_filename = 
+
+    def load(self, filename):
 
         """ 
         Load a photometric catalogue of observed sources. It automatically
@@ -66,11 +72,33 @@ class Photometry:
         """
 
         self.observed_catalogue = ObservedCatalogue()
-        self.observed_catalogue.load_catalogue(filename)
+        self.observed_catalogue.load(filename)
 
     def load_bangs_summary_catalogue(self, filename):
 
         self.bangs_summary_catalogue = BangsSummaryCatalogue()
-        self.bangs_summary_catalogue.load_catalogue(filename)
+        self.bangs_summary_catalogue.load(filename)
+
+    def plot_residuals(self, residual_filename=None, residual_plotname=None):
+
+        if not hasattr(self, 'observed_catalogue'):
+            except AttributeError:
+                    "An observed catalogue must be loaded before plotting the
+                    residual"
+
+        if not hasattr(self, 'bangs_summary_catalogue'):
+            except AttributeError:
+                    "A `bangs_summary_catalogue` must be loaded before plotting the
+                    residual"
+
+        self.residual = ResidualPhotometry()
+
+        try:
+            self.residual.load(self.residual_filename)
+        except:
+            self.residual.compute(self.observed_catalogue,
+                self.bangs_summary_catalogue, self.filters,
+                cPickleName=self.residual_filename)
+                
 
 

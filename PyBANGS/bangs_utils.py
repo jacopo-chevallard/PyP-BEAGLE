@@ -70,3 +70,30 @@ def match_ID(ID_list_1, ID_list_2, sorted=False ):
         indices_2 = match_indx_long[match_indx_long >= 0]
 
     return indices_1, indices_2
+
+
+def weighted_avg_and_std(values, weights):
+    """
+    Return the weighted average and standard deviation.
+
+    Parameters
+    ----------
+    values : Numpy ndarray
+        Contains the value of the parameter.
+
+    weights : Numpy ndarray
+        Contains the weights. Must have same shape as values.
+
+    Returns
+    -------
+    average : float 
+        The weighted average of the input values.
+
+    stddev : float
+        The weighted standard deviation of the input values.
+    """
+
+    average = np.average(values, weights=weights)
+    variance = np.average((values-average)**2, weights=weights)  # Fast and numerically precise
+
+    return (average, np.sqrt(variance))

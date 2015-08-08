@@ -61,7 +61,7 @@ def get1DInterval(param_values, probability, levels):
 class BangsSummaryCatalogue:
 
 
-    def load_catalogue(self, filename):
+    def load(self, filename):
 
         try:
             self.hdulist = fits.open(filename)
@@ -69,7 +69,7 @@ class BangsSummaryCatalogue:
             print "I/O error({0}): {1}".format(e.errno, e.strerror)
 
 
-    def make_catalogue(self, filelist, filename, levels=[68.,95.]):
+    def make(self, filelist, filename, levels=[68.,95.]):
 
         hdu_col = list()
 

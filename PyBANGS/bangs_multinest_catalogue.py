@@ -17,7 +17,7 @@ class MultiNestObject:
         self.logEvidence = logEvidence
         self.mode = list()
 
-    def AddMode(self, logEvidence, post_mean, max_likelihood, max_a_post):
+    def add_mode(self, logEvidence, post_mean, max_likelihood, max_a_post):
         newMode = MultiNestMode( logEvidence, post_mean, max_likelihood, max_a_post )
         self.mode.append(newMode)
 
@@ -106,7 +106,7 @@ class MultiNestCatalogue:
                 # Once you've read the data for the first mode, put them into
                 # the MultiNestObject!
                 if i == (first_line + n_lines_per_mode):
-                    MNObj.AddMode( logEv, post_mean, max_likelihood, max_a_post )
+                    MNObj.add_mode( logEv, post_mean, max_likelihood, max_a_post )
                     post_mean = list()
                     max_likelihood = list()
                     max_a_post = list()

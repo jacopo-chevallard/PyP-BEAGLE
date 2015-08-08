@@ -1,8 +1,9 @@
 import cPickle
+from bangs_utils import weighted_avg_and_std
 
 class ResidualPhotometry:
 
-    def load_residuals(self, filename):
+    def load(self, filename):
         """ 
         Load the pre-computed residul photometry from a cPickle file.
 
@@ -19,7 +20,7 @@ class ResidualPhotometry:
         except IOError as e:
             print "I/O error({0}): {1}".format(e.errno, e.strerror)
 
-    def compute_residuals(self, observed_catalogue, bangs_summary_catalogue,
+    def compute(self, observed_catalogue, bangs_summary_catalogue,
             filters, summary_stat=None, cPickleName=None):
 
         """ 
@@ -85,28 +86,86 @@ class ResidualPhotometry:
         if cPickleName is not None:
             cPickle.dump(self.residual_kde_pdf, cPickleName, cPickle.HIGHEST_PROTOCOL)
 
-    def plot(self):
+    def plot(self, filters, filename=None, x_range=None, n_x=None, summary_stat=None):
+        """ 
+        Plot the residual photometry.
+
+        Parameters
+        ----------
+        filters : PhotometricFilters class object
+
+        x_range : iterable float size=2, optional
+            Range over which computing the actual residual density function
+            from the computed KDE residual.
+
+        n_x : int, optional 
+            Number of values over which computing the residual density
+            function.
+
+        summary_stat : str, optional
+            Either 'mean' or 'median', determines which type of summary
+            statistics is used.
+            
+        Notes
+        -----
+        The residuals density function is computed at each residual value
+        defined by np.linspace(x_range[0], x_range[1], n_x)
+        """
+
+        _x_range = (-1.,1.)
+        if x_range is not None:
+            _x_range = x_range
+
+        _n_x = 1000
+        if x_range is not None:
+            _n_x = n_x
+
+        _summary_stat = "median"
+        if summary_stat is not None:
+            _summary_stat = summary_stat
+
+        # The grid of residual values over which computing the residual density
+        # function
+        x_grid = np.linspace(_x_range[0], _x_range[1], n_x)
+
+        for residual_kde_pdf in self.residual_kde_pdf:
+
+            # The residual density function, computed from the residual KDE
+            kde_pdf_grid = np.array(residual_kde_pdf(x_grid))
+
+            # You also compute the median, or mean residual, and its dispersion (or
+            # 68 % credible region)
+            cumul_pdf = np.cumsum(kde_pdf_grid)
+
+            # Be sure the it sums up to 1
+            cumul_pdf /= cumul_pdf[-1]
+
+            # Compute interpolant of cumulative PDF (linear interpolation)
+            interp_cumul_pdf = interp1d(cumul_pdf, x_grid)
+
+            if "median" in _summary_stat:
+                med = interp_cumul_pdf(0.5)
+                # This corresponds to a 68 % credible region
+                interval = interp_cumul_pdf(0.84) - interp_cumul_pdf(0.16)
+                print "\n median = {:.3f}".format(med)
+                print "68 % interval = {:.3f}".format(interval)
+            else if "mean" in summary_stat:
+                mean, stddev = weighted_avg_and_std(x_grid, kde_pdf_grid)
+                print "\n mean = {:.3f}".format(mean)
+                print "stddev = {:.3f}".format(stddev)
 
         # Compute interpolant of cumulative PDF (linear interpolation)
         fig = plt.figure()
         ax = fig.add_subplot(1, 1, 1)
-        x_grid = np.linspace(-5.0,5.0,5000.)
-        kde_pdf_grid = np.array(kde_pdf(x_grid))
-
-        cumul_pdf = np.cumsum(kde_pdf_grid)
-        # Be sure the it sums up to 1
-        cumul_pdf /= cumul_pdf[-1]
-
-        # Compute interpolant of cumulative PDF (linear interpolation)
-        interp_cumul_pdf = interp1d(cumul_pdf, x_grid)
-
-        print "filter: ", filters.label[i]
-        print 'median:', interp_cumul_pdf(0.5)
 
         #print "x_grid: ", x_grid
         #print "y_val: ", y_val
         ax.plot(x_grid, kde_pdf_grid , ls="-", color = "black")
-        plt.show()
+
+        if filename is not None:
+        else:
+            plt.show()
+
         plt.close(fig)
 
 

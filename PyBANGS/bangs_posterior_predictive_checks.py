@@ -39,6 +39,12 @@ class PosteriorPredictiveChecks:
             strID = str(objID[i])
             file = os.path.join(resultsDir, strID + "_BANGS.fits.gz")
 
+
+
+
+
+
+
             if os.path.isfile(file):
 
                 # Open the FITS file containing BANGS results for the current object

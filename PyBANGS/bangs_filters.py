@@ -35,6 +35,7 @@ class PhotometricFilters:
         self.colName = list()
         self.label = list()
         self.errcolName = list()
+        self.min_rel_err = list()
 
     def load(self, fileName):
 
@@ -52,6 +53,8 @@ class PhotometricFilters:
                     self.colName.append(line.split('flux:colName:')[1].split()[0])
                     self.errcolName.append(line.split('fluxerr:colName:')[1].split()[0])
                     self.label.append(line.split('label:')[1].split()[0])
+                    if 'min_rel_err:' in line:
+                        self.min_rel_err.append(line.split('min_rel_err:')[1].split()[0])
 
         self.n_bands = len(self.index)
 

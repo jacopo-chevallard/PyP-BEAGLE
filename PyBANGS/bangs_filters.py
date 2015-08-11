@@ -1,6 +1,7 @@
 import os
 import ast
 import numpy as np
+from astropy.table import Table, Column
 
 
 class UnitsError(Exception):
@@ -29,19 +30,41 @@ def jy_to_erg(jy):
 
 class PhotometricFilters:
 
-    def __init__(self):
+    def load(self, file_name):
+        """ 
+        Load various information about a set of photometric filters used
+        during a BANGS run. 
 
-        self.index = list()
-        self.colName = list()
-        self.label = list()
-        self.errcolName = list()
-        self.min_rel_err = list()
+        Parameters
+        ----------
+        file_name : str
+            Contains the filter file used in the BANGS run.
 
-    def load(self, fileName):
+        Notes
+        -----
+        For consistency with BANGS (and to mnimize errors), it uses the
+        '$BANGS_FILTERS' environment variable to load the 'filters.log' and
+        'filterfrm.res' files.
+        """
+
+        # Count number of bands defined in filter file
+        self.n_bands = 0
+        with open(file_name) as f:
+            for line in f:
+                if 'index:' in line:
+                    self.n_bands += 1
+
+        index = Column(name='index', dtype=np.int32, length=self.n_bands)
+        wl_eff = Column(name='wl_eff', dtype=np.float32, length=self.n_bands)
+        colName = Column(name='flux_colName', dtype='S20', length=self.n_bands)
+        errcolName = Column(name='flux_errcolName', dtype='S20', length=self.n_bands)
+        label = Column(name='label', dtype='S40', length=self.n_bands)
+
+        min_rel_err = Column(name='min_rel_err', dtype=np.float32, length=self.n_bands)
 
         # read the filter file used to run BANGS
-
-        for line in open(fileName):
+        i = 0
+        for line in open(file_name):
             if line.strip() and not line.startswith("#"):
                 # Split the line into different columns using whitespaces
                 if 'units:value:' in line:
@@ -49,14 +72,14 @@ class PhotometricFilters:
                 elif 'units:' in line:
                     self.units = jy_to_erg(line.split('units:')[1])
                 elif 'index:' in line:
-                    self.index.append(line.split('index:')[1].split()[0])
-                    self.colName.append(line.split('flux:colName:')[1].split()[0])
-                    self.errcolName.append(line.split('fluxerr:colName:')[1].split()[0])
-                    self.label.append(line.split('label:')[1].split()[0])
+                    index[i] = line.split('index:')[1].split()[0]
+                    colName[i] = line.split('flux:colName:')[1].split()[0]
+                    errcolName[i] = line.split('fluxerr:colName:')[1].split()[0]
+                    label[i] = line.split('label:')[1].split()[0]
+                    min_rel_err[i] = 0.
                     if 'min_rel_err:' in line:
-                        self.min_rel_err.append(line.split('min_rel_err:')[1].split()[0])
-
-        self.n_bands = len(self.index)
+                        min_rel_err[i] = line.split('min_rel_err:')[1].split()[0]
+                    i += 1    
 
         # Read filter transmission functions
         filt_log = os.path.expandvars("$BANGS_FILTERS/filters.log")
@@ -68,21 +91,23 @@ class PhotometricFilters:
 
         self.start_line = list()
         self.end_line = list()
-        for i, indx in enumerate(self.index):
+        for i, indx in enumerate(index):
             self.start_line.append(int(np.sum(n_wl_points[0:int(indx)-1]) + int(indx)) )
             self.end_line.append(int(self.start_line[i]+n_wl_points[int(indx)-1]))
 
         filt_trans = os.path.expandvars("$BANGS_FILTERS/filterfrm.res")
         lines = open(filt_trans).readlines()
 
-        self.wl_eff = list()
-
-        for i in range(len(self.index)):
+        for i in range(len(index)):
             n_wl = self.end_line[i]-self.start_line[i]
             wl = np.zeros(n_wl)
             t_wl = np.zeros(n_wl)
             for j, l in enumerate(lines[self.start_line[i]+1:self.end_line[i]]):
                 wl[j], t_wl[j] = l.split()
 
-            self.wl_eff.append(np.sum(wl*t_wl) / np.sum(t_wl))
+            wl_eff[i] = np.sum(wl*t_wl) / np.sum(t_wl)
 
+        my_cols = [index, colName, errcolName, label, wl_eff, min_rel_err]
+        
+        self.columns = my_cols
+        self.data = Table(my_cols)

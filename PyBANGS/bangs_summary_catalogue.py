@@ -1,41 +1,41 @@
-import numpy as np
 import os
-from astropy.io import fits
+import numpy as np
 from scipy.integrate import cumtrapz
 from scipy.interpolate import interp1d
-
+from astropy.io import fits
 
 def get1DInterval(param_values, probability, levels):
-        """ 
-        Compute several quantities from a 1D probability density function
 
-        Parameters
-        ----------
-        param_values : numpy array
-            Contains the values of the parameter.
+    """ 
+    Compute several quantities from a 1D probability density function
 
-        probability : numpy array 
-            Contains the probability associated with each value of the
-            parameter, hence must have same dimension as 'param_values'.
+    Parameters
+    ----------
+    param_values : numpy array
+        Contains the values of the parameter.
 
-        levels : numpy array or list containing float
-            Contains the (percentage) levels used to compute the credible
-            regions, e.g. levels=[68.,95.] will compute 68 % and 95 % (central)
-            credible regions
+    probability : numpy array 
+        Contains the probability associated with each value of the
+        parameter, hence must have same dimension as 'param_values'.
 
-        Returns
-        -------
-        mean : float
-            Mean of the parameter, computed as
-            sum(probability*param_values)/sum(probability)
-        median : float
-            Median of the parameter, computed from the cumulative integral of
-            the PDF
-        interval : list of float
-            2-dimensional list containing the lower and upper value of the
-            parameter corresponding to the different `levels`
+    levels : numpy array or list containing float
+        Contains the (percentage) levels used to compute the credible
+        regions, e.g. levels=[68.,95.] will compute 68 % and 95 % (central)
+        credible regions
 
-        """
+    Returns
+    -------
+    mean : float
+        Mean of the parameter, computed as
+        sum(probability*param_values)/sum(probability)
+    median : float
+        Median of the parameter, computed from the cumulative integral of
+        the PDF
+    interval : list of float
+        2-dimensional list containing the lower and upper value of the
+        parameter corresponding to the different `levels`
+
+    """
 
     sort_ = np.argsort(param_values)
     cumul_pdf = cumtrapz(probability[sort_], param_values[sort_], initial = 0.)
@@ -61,15 +61,19 @@ def get1DInterval(param_values, probability, levels):
 class BangsSummaryCatalogue:
 
 
-    def load(self, filename):
+    def load(self, file_name):
+        """ 
+        Load a 'BANGS summary catalogue'
 
-        try:
-            self.hdulist = fits.open(filename)
-        except IOError as e:
-            print "I/O error({0}): {1}".format(e.errno, e.strerror)
+        Parameters
+        ----------
+        file_name : str
+            Name of the file containing the catalogue.
+        """
 
+        self.hdulist = fits.open(file_name)
 
-    def make(self, filelist, filename, levels=[68.,95.]):
+    def compute(self, filelist, file_name, levels=[68.,95.]):
 
         hdu_col = list()
 
@@ -148,7 +152,7 @@ class BangsSummaryCatalogue:
             hdulist = fits.open(file)
             end = BANGS_file.find('_BANGS')
 
-            # Extract the object ID from the filename
+            # Extract the object ID from the file_name
             ID = os.path.basename(BANGS_file[0:end])
 
             probability = hdulist['posterior pdf'].data['probability']
@@ -175,4 +179,4 @@ class BangsSummaryCatalogue:
 
             hdulist.close()
 
-        my_hdu.writeto(filename, clobber=True)
+        my_hdu.writeto(file_name, clobber=True)

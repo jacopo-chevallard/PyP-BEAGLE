@@ -3,22 +3,19 @@ from bangs_utils import weighted_avg_and_std
 
 class ResidualPhotometry:
 
-    def load(self, filename):
+    def load(self, file_name):
         """ 
         Load the pre-computed residul photometry from a cPickle file.
 
         Parameters
         ----------
-        filename : str
+        file_name : str
             Name of the file containing the cPicke dump.
         """ 
 
-        try:
-            file = open(filename, 'rb')
-            self.residual_kde_pdf = cPickle.load(file)
-            file.close()
-        except IOError as e:
-            print "I/O error({0}): {1}".format(e.errno, e.strerror)
+        file = open(file_name, 'rb')
+        self.residual_kde_pdf = cPickle.load(file)
+        file.close()
 
     def compute(self, observed_catalogue, bangs_summary_catalogue,
             filters, summary_stat=None, cPickleName=None):
@@ -53,8 +50,10 @@ class ResidualPhotometry:
 
         # As a sanity check, check if the ID match among the two catalogues, by
         # random picking some indices here and there...
-        if (bangs_data['ID'][0] != bangs_data['ID'][0]) or
-        (bangs_data['ID'][-1] != bangs_data['ID'][-1]):
+        if (bangs_data['ID'][0] != catalogue_data['ID'][0]) or \
+        (bangs_data['ID'][-1] != catalogue_data['ID'][-1]):
+            raise ValueError("The object IDs between the BANGS summary catalogue and \
+                the observed catalogue do not match!")
 
         self.residual_kde_pdf = list() 
 
@@ -86,7 +85,7 @@ class ResidualPhotometry:
         if cPickleName is not None:
             cPickle.dump(self.residual_kde_pdf, cPickleName, cPickle.HIGHEST_PROTOCOL)
 
-    def plot(self, filters, filename=None, x_range=None, n_x=None, summary_stat=None):
+    def plot(self, filters, file_name=None, x_range=None, n_x=None, summary_stat=None):
         """ 
         Plot the residual photometry.
 
@@ -149,7 +148,7 @@ class ResidualPhotometry:
                 interval = interp_cumul_pdf(0.84) - interp_cumul_pdf(0.16)
                 print "\n median = {:.3f}".format(med)
                 print "68 % interval = {:.3f}".format(interval)
-            else if "mean" in summary_stat:
+            elif "mean" in summary_stat:
                 mean, stddev = weighted_avg_and_std(x_grid, kde_pdf_grid)
                 print "\n mean = {:.3f}".format(mean)
                 print "stddev = {:.3f}".format(stddev)
@@ -162,7 +161,10 @@ class ResidualPhotometry:
         #print "y_val: ", y_val
         ax.plot(x_grid, kde_pdf_grid , ls="-", color = "black")
 
-        if filename is not None:
+        if file_name is not None:
+            fig.savefig(file_name + '_residual_photometry.pdf', dpi=None, facecolor='w', edgecolor='w',
+                orientation='portrait', papertype='a4', format="pdf",
+                transparent=False, bbox_inches="tight", pad_inches=0.1)
         else:
             plt.show()
 

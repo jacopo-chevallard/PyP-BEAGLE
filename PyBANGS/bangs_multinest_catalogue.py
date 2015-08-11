@@ -5,54 +5,88 @@ import cPickle
 class MultiNestMode:
 
     def __init__(self, logEvidence, post_mean, max_likelihood, max_a_post):
+
         self.logEvidence = logEvidence
         self.post_mean = np.array(post_mean)
         self.max_likelihood = max_likelihood
         self.max_a_post = max_a_post
 
+
 class MultiNestObject:
 
     def __init__(self, ID, logEvidence):
+
         self.ID = ID
         self.logEvidence = logEvidence
         self.mode = list()
 
+
     def add_mode(self, logEvidence, post_mean, max_likelihood, max_a_post):
-        newMode = MultiNestMode( logEvidence, post_mean, max_likelihood, max_a_post )
+
+        newMode = MultiNestMode( logEvidence, post_mean, max_likelihood,
+                max_a_post )
+
         self.mode.append(newMode)
+
 
 class MultiNestCatalogue:
 
-    def __init__(self, n_par, catalogueName):
 
-        self.catalogueName = catalogueName
-        self.n_par = n_par
+    def load(self, file_name):
+        """ 
+        Load a 'MultiNest catalogue'.
 
-    def load_catalogue(self, filename):
+        Parameters
+        ----------
+        file_name : str
+            Name of the file containing the catalogue.
 
-        try:
-            file = open(filename, 'rb')
-            self.MNObjects = cPickle.load(file)
-            file.close()
-        except IOError as e:
-            print "I/O error({0}): {1}".format(e.errno, e.strerror)
+        Notes
+        -----
+        You then access the data for each object and each mode as
+        self.MNObjects[0].mode[0].post_mean  ---> posterior mean values for
+        the different parameters for object 0 and mode 0
 
-        # You then access the data for each object and each mode as
-        # self.MNObjects[0].mode[0].post_mean  ---> posterior mean values for
-        # the different parameters for object 0 and mode 0
+        self.MNObjects[2].mode[1].max_likelihood ---> max_likelihood likelihood
+        values for the different parameters for object 2 and mode 1
+        """
 
-        # self.MNObjects[2].mode[1].max_likelihood ---> max_likelihood likelihood values for
-        # the different parameters for object 2 and mode 1
+        file = open(file_name, 'rb')
+        self.MNObjects = cPickle.load(file)
+        file.close()
 
-    def make_catalogue(self, filelist, filename):
+    def compute(self, n_par, file_list, file_name):
+        """ 
+        Compute a 'MultiNest catalogue'
+
+        Parameters
+        ----------
+        n_par : int
+            Number of free parameters in the BANGS run.
+
+        file_list : iterable 
+            Contains the list of MultiNest output files '*MNstats.dat'.
+
+        file_name : str
+            Name of the output 'MultiNest' catalogue.
+
+        Notes
+        -----
+        You then access the data for each object and each mode as
+        self.MNObjects[0].mode[0].post_mean  ---> posterior mean values for
+        the different parameters for object 0 and mode 0
+
+        self.MNObjects[2].mode[1].max_likelihood ---> max_likelihood likelihood
+        values for the different parameters for object 2 and mode 1
+        """
 
         self.MNObjects = list()
 
         # Open file for writing
-        fOut = open(filename, 'w')
+        fOut = open(file_name, 'w')
 
         # Loop over all files containing BANGS results
-        for j, file in enumerate(filelist):
+        for j, file in enumerate(file_list):
 
             # Object ID is what comes before the suffix (excluding the
             # directory tree!)
@@ -71,7 +105,7 @@ class MultiNestCatalogue:
 
             # This number include the posterior mean, maximum likelihood and
             # maximum a posteriori for each parameter + the headers
-            n_lines_per_mode = 8 + self.n_par*3
+            n_lines_per_mode = 8 + n_par*3
 
             # Useful information for the first mode start at line 11 (in Python
             # we count from 0)
@@ -94,13 +128,13 @@ class MultiNestCatalogue:
                 if i == first_line:
                     logEv = float(line.split()[2])
                 # Posterior mean for each parameter 
-                elif( (i >= first_line+3) and (i < first_line+3+self.n_par) ):
+                elif( (i >= first_line+3) and (i < first_line+3+n_par) ):
                     post_mean.append( float(line.split()[1]) ) 
                 # Maximum likelihood for each parameter 
-                elif( (i >= first_line+6+self.n_par) and (i < first_line+6+2*self.n_par ) ):
+                elif( (i >= first_line+6+n_par) and (i < first_line+6+2*n_par ) ):
                     max_likelihood.append( float(line.split()[1]) ) 
                 # Maximum a posteriori for each parameter 
-                elif( (i >= first_line+9+2*self.n_par) and (i < first_line+9+3*self.n_par ) ):
+                elif( (i >= first_line+9+2*n_par) and (i < first_line+9+3*n_par ) ):
                     max_a_post.append( float(line.split()[1]) ) 
 
                 # Once you've read the data for the first mode, put them into
@@ -121,13 +155,6 @@ class MultiNestCatalogue:
         # Print to a file the data read from the different *stats* files, and
         # saved into self.MNObjects  
         cPickle.dump(self.MNObjects, fOut, cPickle.HIGHEST_PROTOCOL)
-
-        # You then access the data for each object and each mode as
-        # self.MNObjects[0].mode[0].post_mean  ---> posterior mean values for
-        # the different parameters for object 0 and mode 0
-
-        # self.MNObjects[2].mode[1].max_likelihood ---> max_likelihood likelihood values for
-        # the different parameters for object 2 and mode 1
 
         # Close the output file containing the cataogue
         fOut.close()

@@ -1,5 +1,40 @@
+import os
+import logging
 import numpy as np
 from bisect import bisect_left
+from datetime import datetime
+
+
+def prepare_file_writing(results_dir, file_name):
+    """ 
+    Prepare directory for writing the file.  
+
+    Parameters
+    ----------
+    results_dir : str
+        Directory containing the BANGS output files.
+
+    file_name : str
+        Name of the output file (without directory tree).
+
+    Returns
+    -------
+    name : str
+        Full path to the output file,
+    """ 
+
+    directory = os.path.join(results_dir, 'pybangs', 'data')
+    if not os.path.exists(directory):
+        logging.info("Creating the directory: " + directory)
+        os.makedirs(directory)
+
+    name = os.path.join(directory, os.path.basename(file_name))
+    if os.path.isfile(name):
+        new_name = os.path.splitext(name)[0] + datetime.now().strftime("-%Y%m%d-%H%M%S") + os.path.splitext(name)[1]
+        logging.warning("The file " + name + " already exists, and it will be renamed to " + new_name)
+        os.rename(name, new_name)
+
+    return name
 
 def match_ID(ID_list_1, ID_list_2, sorted=False ):
 

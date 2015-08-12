@@ -1,8 +1,11 @@
 import os
+import logging
 import numpy as np
 from scipy.integrate import cumtrapz
 from scipy.interpolate import interp1d
 from astropy.io import fits
+
+from bangs_utils import prepare_file_writing
 
 def get1DInterval(param_values, probability, levels):
 
@@ -71,9 +74,16 @@ class BangsSummaryCatalogue:
             Name of the file containing the catalogue.
         """
 
+        logging.info("Loading the `BangsSummaryCatalogue` file: " + file_name)
+
         self.hdulist = fits.open(file_name)
 
-    def compute(self, filelist, file_name, levels=[68.,95.]):
+    def compute(self, file_list, results_dir, file_name, levels=[68.,95.]):
+        """ 
+        results_dir : str
+            Directory containing the BANGS output files.
+        """ 
+
 
         hdu_col = list()
 
@@ -87,12 +97,13 @@ class BangsSummaryCatalogue:
 
         hdu_col.append({'name':'ABSOLUTE MAGNITUDES'})
 
-        # You considerthe first file in the list and use as a "mold" to create
+        # You consider the first file in the list and use as a "mold" to create
         # the structure (binary tables and their columns) of the output FITS file
-        firstfile = filelist[0]
+        firstfile = os.path.join(results_dir, file_list[0])
         hdulist = fits.open(firstfile)
+        hdulist.info()
 
-        n_objects = len(filelist)
+        n_objects = len(file_list)
 
         # Initialize a new (empty) primary HDU for your output FITS file
         my_hdu = fits.HDUList(fits.PrimaryHDU())
@@ -103,7 +114,7 @@ class BangsSummaryCatalogue:
             new_columns = list()
 
             # Pick the extension name
-            hduName = hdu['name']
+            hdu_name = hdu['name']
 
             # The first column of each output extension contains the object ID
             new_columns.append(fits.Column(name='ID', format='20A'))
@@ -113,14 +124,14 @@ class BangsSummaryCatalogue:
                 columnNames = hdu['columns']
             # While by default you take all columns in that extensions
             else:
-                columnNames = hdulist[hduName].columns.names
+                columnNames = hdulist[hdu_name].columns.names
 
             # For each column, you add a '_mean', '_median' and confidence
             # intervals columns, taking the appropriate units from the FITS
             # file that you are using as a mold
-            for colName in columnNames:
-                col_ = hdulist[hduName].columns[colName]
-
+            for col_name in columnNames:
+                col_ = hdulist[hdu_name].columns[col_name]
+    
                 new_columns.append(fits.Column(name=col_.name+'_mean',
                     format=col_.format, unit=col_.unit))
 
@@ -137,8 +148,9 @@ class BangsSummaryCatalogue:
 
             # Create the actual binary table, with the correct number of rows
             # to accomodate all objects
+            nrows = len(file_list)
             new_hdu = fits.BinTableHDU.from_columns(cols_, nrows=nrows)
-            new_hdu.name = hduName
+            new_hdu.name = hdu_name
 
             # And finally append the newly created bunary table to the hdulist
             # that will be printed to the ouput FITS file
@@ -148,35 +160,37 @@ class BangsSummaryCatalogue:
 
         # Now you can go through each file, and compute the required quantities
 
-        for i, file in enumerate(filelist):
-            hdulist = fits.open(file)
-            end = BANGS_file.find('_BANGS')
+        for i, file in enumerate(file_list):
+            hdulist = fits.open(os.path.join(results_dir, file))
+            end = file.find('_BANGS')
 
             # Extract the object ID from the file_name
-            ID = os.path.basename(BANGS_file[0:end])
+            ID = os.path.basename(file[0:end])
 
             probability = hdulist['posterior pdf'].data['probability']
 
             for hdu in hdu_col:
-                hduName = hdu['name']
+                hdu_name = hdu['name']
                 if 'columns' in hdu:
                     columnNames = hdu['columns']
                 else:
-                    columnNames = hdulist[hduName].columns.names
+                    columnNames = hdulist[hdu_name].columns.names
 
-                for colName in columnNames:
-                    my_hdu[hduName].data['ID'][i] = ID
-                    par_values = hdulist[hduName].data[colName]
+                for col_name in columnNames:
+                    my_hdu[hdu_name].data['ID'][i] = ID
+                    par_values = hdulist[hdu_name].data[col_name]
 
                     mean, median, interval = get1DInterval(par_values, probability, levels)
 
-                    my_hdu[hduName].data[colName+'_mean'][i] = mean
-                    my_hdu[hduName].data[colName+'_median'][i] = median
+                    my_hdu[hdu_name].data[col_name+'_mean'][i] = mean
+                    my_hdu[hdu_name].data[col_name+'_median'][i] = median
 
                     for j, lev in enumerate(levels):
-                        levName = colName + '_' + "{:.2f}".format(lev)
-                        my_hdu[hduName].data[levName][i] = interval[j]
+                        levName = col_name + '_' + "{:.2f}".format(lev)
+                        my_hdu[hdu_name].data[levName][i] = interval[j]
 
             hdulist.close()
 
-        my_hdu.writeto(file_name, clobber=True)
+        if file_name is not None:
+            name = prepare_file_writing(results_dir, file_name)
+            my_hdu.writeto(name)

@@ -3,6 +3,8 @@ import numpy as np
 from astropy.io import fits
 from astropy.table import Table, Column
 
+from bangs_utils import prepare_file_writing
+
 class PosteriorPredictiveChecks:
 
 
@@ -128,10 +130,6 @@ class PosteriorPredictiveChecks:
         self.data = my_table
 
         if file_name is not None:
-            directory = os.path.join(results_dir, 'pybangs', 'data')
-            if not os.path.exists(directory):
-                os.makedirs(directory)
-
-            name = os.path.join(directory, os.path.basename(file_name))
+            name = prepare_file_writing(results_dir, file_name)
             my_table.write(name)
 

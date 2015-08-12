@@ -1,4 +1,5 @@
 import os
+import logging
 import ast
 import numpy as np
 from astropy.table import Table, Column
@@ -46,6 +47,8 @@ class PhotometricFilters:
         '$BANGS_FILTERS' environment variable to load the 'filters.log' and
         'filterfrm.res' files.
         """
+
+        logging.info("Loading the `PhotometricFilters` file: " + file_name)
 
         # Count number of bands defined in filter file
         self.n_bands = 0

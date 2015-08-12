@@ -12,8 +12,9 @@ class PDF:
         with open(param_names_file) as f:    
             self.adjust_params = json.load(f)
 
-    def plot_triangle(self, fits_file, params_to_plot=None, suffix=None):
+    def plot_triangle(self, ID, results_dir, params_to_plot=None, suffix=None):
 
+        fits_file = os.path.join(results_dir, str(ID)+'_BANGS.fits.gz')
         hdulist = fits.open(fits_file)
 
         param_values = hdulist['posterior pdf'].data

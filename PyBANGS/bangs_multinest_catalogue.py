@@ -2,6 +2,8 @@ import numpy as np
 import os
 import cPickle
 
+from bangs_utils import prepare_file_writing
+
 class MultiNestMode:
 
     def __init__(self, logEvidence, post_mean, max_likelihood, max_a_post):
@@ -55,7 +57,7 @@ class MultiNestCatalogue:
         self.MNObjects = cPickle.load(file)
         file.close()
 
-    def compute(self, n_par, file_list, file_name):
+    def compute(self, n_par, file_list, results_dir, file_name):
         """ 
         Compute a 'MultiNest catalogue'
 
@@ -66,6 +68,9 @@ class MultiNestCatalogue:
 
         file_list : iterable 
             Contains the list of MultiNest output files '*MNstats.dat'.
+
+        results_dir : str
+            Directory containing the BANGS output files.
 
         file_name : str
             Name of the output 'MultiNest' catalogue.
@@ -82,8 +87,6 @@ class MultiNestCatalogue:
 
         self.MNObjects = list()
 
-        # Open file for writing
-        fOut = open(file_name, 'w')
 
         # Loop over all files containing BANGS results
         for j, file in enumerate(file_list):
@@ -95,7 +98,7 @@ class MultiNestCatalogue:
 
             # Open the MultiNest "stats" file
             # Read the global evidence and total number of modes
-            f = open(file, 'r')
+            f = open(os.path.join(results_dir, file), 'r')
             for i, line in enumerate(f):
                 if i == 0:
                     logEvidence = float(line.split()[5])
@@ -121,7 +124,7 @@ class MultiNestCatalogue:
             MNObj = MultiNestObject(objID, logEvidence)
 
             # Now we read the evidence, post mean, maximum likelihood and map for each mode
-            f = open(file, 'r')
+            f = open(os.path.join(results_dir, file), 'r')
             for i, line in enumerate(f):
                 
                 # Evidence
@@ -152,9 +155,19 @@ class MultiNestCatalogue:
             # object to the catalogue
             self.MNObjects.append(MNObj)
 
-        # Print to a file the data read from the different *stats* files, and
-        # saved into self.MNObjects  
-        cPickle.dump(self.MNObjects, fOut, cPickle.HIGHEST_PROTOCOL)
+        directory = os.path.join(results_dir, 'pybangs', 'data')
+        if not os.path.exists(directory):
+            logging.info("Creating the directory: " + directory)
+            os.makedirs(directory)
 
-        # Close the output file containing the cataogue
-        fOut.close()
+        if file_name is not None:
+            name = prepare_file_writing(results_dir, file_name)
+
+            fOut = open(name, 'w')
+
+            # Print to a file the data read from the different *stats* files, and
+            # saved into self.MNObjects  
+            cPickle.dump(self.MNObjects, fOut, cPickle.HIGHEST_PROTOCOL)
+
+            # Close the output file containing the cataogue
+            fOut.close()

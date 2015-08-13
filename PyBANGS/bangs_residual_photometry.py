@@ -1,5 +1,6 @@
 import cPickle
-from bangs_utils import weighted_avg_and_std
+
+from bangs_utils import weighted_avg_and_std, BangsDirectories
 
 class ResidualPhotometry:
 
@@ -13,7 +14,10 @@ class ResidualPhotometry:
             Name of the file containing the cPicke dump.
         """ 
 
-        file = open(file_name, 'rb')
+        name = os.path.join(BangsDirectories.results_dir,
+                BangsDirectories.pybangs_dir, file_name)
+
+        file = open(name, 'rb')
         self.residual_kde_pdf = cPickle.load(file)
         file.close()
 
@@ -25,13 +29,13 @@ class ResidualPhotometry:
 
         Parameters
         ----------
-        observed_catalogue : Table object
+        observed_catalogue : `ObservedCatalogue` class object
             
 
-        bangs_summary_catalogue : Table object
+        bangs_summary_catalogue : `BangsSummaryCatalogue` class object
             
 
-        filters : PhotometricFilters class object
+        filters : `PhotometricFilters` class object
             
         summary_stat : str, optional
             Either 'mean' or 'median', determines which type of summary

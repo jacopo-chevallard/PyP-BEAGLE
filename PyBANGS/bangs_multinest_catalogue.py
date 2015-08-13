@@ -1,8 +1,9 @@
 import numpy as np
 import os
+import logging
 import cPickle
 
-from bangs_utils import prepare_file_writing
+from bangs_utils import prepare_file_writing, BangsDirectories
 
 class MultiNestMode:
 
@@ -53,11 +54,16 @@ class MultiNestCatalogue:
         values for the different parameters for object 2 and mode 1
         """
 
-        file = open(file_name, 'rb')
+        name = os.path.join(BangsDirectories.results_dir,
+                BangsDirectories.pybangs_dir, file_name)
+
+        logging.info("Loading the `MultiNestCatalogue`: " + name)
+
+        file = open(name, 'rb')
         self.MNObjects = cPickle.load(file)
         file.close()
 
-    def compute(self, n_par, file_list, results_dir, file_name):
+    def compute(self, n_par, file_list, file_name):
         """ 
         Compute a 'MultiNest catalogue'
 
@@ -68,9 +74,6 @@ class MultiNestCatalogue:
 
         file_list : iterable 
             Contains the list of MultiNest output files '*MNstats.dat'.
-
-        results_dir : str
-            Directory containing the BANGS output files.
 
         file_name : str
             Name of the output 'MultiNest' catalogue.
@@ -98,7 +101,7 @@ class MultiNestCatalogue:
 
             # Open the MultiNest "stats" file
             # Read the global evidence and total number of modes
-            f = open(os.path.join(results_dir, file), 'r')
+            f = open(os.path.join(BangsDirectories.results_dir, file), 'r')
             for i, line in enumerate(f):
                 if i == 0:
                     logEvidence = float(line.split()[5])
@@ -155,13 +158,8 @@ class MultiNestCatalogue:
             # object to the catalogue
             self.MNObjects.append(MNObj)
 
-        directory = os.path.join(results_dir, 'pybangs', 'data')
-        if not os.path.exists(directory):
-            logging.info("Creating the directory: " + directory)
-            os.makedirs(directory)
-
         if file_name is not None:
-            name = prepare_file_writing(results_dir, file_name)
+            name = prepare_file_writing(file_name)
 
             fOut = open(name, 'w')
 

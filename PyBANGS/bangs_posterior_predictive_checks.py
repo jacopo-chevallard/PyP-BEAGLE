@@ -3,7 +3,7 @@ import numpy as np
 from astropy.io import fits
 from astropy.table import Table, Column
 
-from bangs_utils import prepare_file_writing
+from bangs_utils import prepare_file_writing, BangsDirectories
 
 class PosteriorPredictiveChecks:
 
@@ -18,12 +18,15 @@ class PosteriorPredictiveChecks:
             Name of the file.
         """
 
-        my_table = Table.read(file_name)
+        name = os.path.join(BangsDirectories.results_dir,
+                BangsDirectories.pybangs_dir, file_name)
+
+        my_table = Table.read(name)
     
         self.data = my_table
 
     def compute(self, observed_catalogue, filters, 
-            results_dir, file_name=None):
+            file_name=None):
         """ 
         Compute  posterior predictive checks quantities.
 
@@ -35,12 +38,9 @@ class PosteriorPredictiveChecks:
         filters : `bangs_filters.PhotometricFilters`
             Class containing a set of photometric filters.
 
-        results_dir : str
-            Directory containing the BANGS output files.
-
         file_name : str, optional
             Name of the output catalogue, wuthout including the direcory tree.
-            It will be saved into the `results_dir`/pybangs/data folder (which
+            It will be saved into the RESULTS_DIR/PYBANGS_DIR folder (which
             will be created if not present).
         """
 
@@ -86,7 +86,7 @@ class PosteriorPredictiveChecks:
         for i in range(n_obj):
 
             strID = str(objID[i])
-            file = os.path.join(results_dir, strID + "_BANGS.fits.gz")
+            file = os.path.join(BangsDirectories.results_dir, strID + "_BANGS.fits.gz")
 
             if os.path.isfile(file):
 
@@ -130,6 +130,6 @@ class PosteriorPredictiveChecks:
         self.data = my_table
 
         if file_name is not None:
-            name = prepare_file_writing(results_dir, file_name)
+            name = prepare_file_writing(file_name)
             my_table.write(name)
 

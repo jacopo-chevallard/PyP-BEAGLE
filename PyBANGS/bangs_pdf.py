@@ -3,6 +3,8 @@ from astropy.io import fits
 
 from getdist import plots, MCSamples
 
+from bangs_utils import BangsDirectories
+
 class PDF:
 
     def __init__(self, param_names_file):
@@ -12,9 +14,11 @@ class PDF:
         with open(param_names_file) as f:    
             self.adjust_params = json.load(f)
 
-    def plot_triangle(self, ID, results_dir, params_to_plot=None, suffix=None):
+    def plot_triangle(self, ID, params_to_plot=None, suffix=None):
 
-        fits_file = os.path.join(results_dir, str(ID)+'_BANGS.fits.gz')
+        fits_file = os.path.join(BangsDirectories.results_dir,
+                str(ID)+'_BANGS.fits.gz')
+
         hdulist = fits.open(fits_file)
 
         param_values = hdulist['posterior pdf'].data

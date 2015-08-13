@@ -5,7 +5,7 @@ from scipy.integrate import cumtrapz
 from scipy.interpolate import interp1d
 from astropy.io import fits
 
-from bangs_utils import prepare_file_writing
+from bangs_utils import prepare_file_writing, BangsDirectories
 
 def get1DInterval(param_values, probability, levels):
 
@@ -74,14 +74,15 @@ class BangsSummaryCatalogue:
             Name of the file containing the catalogue.
         """
 
-        logging.info("Loading the `BangsSummaryCatalogue` file: " + file_name)
+        name = os.path.join(BangsDirectories.results_dir,
+                BangsDirectories.pybangs_dir, file_name)
 
-        self.hdulist = fits.open(file_name)
+        logging.info("Loading the `BangsSummaryCatalogue` file: " + name)
 
-    def compute(self, file_list, results_dir, file_name, levels=[68.,95.]):
+        self.hdulist = fits.open(name)
+
+    def compute(self, file_list, file_name, levels=[68.,95.]):
         """ 
-        results_dir : str
-            Directory containing the BANGS output files.
         """ 
 
 
@@ -95,18 +96,17 @@ class BangsSummaryCatalogue:
 
         hdu_col.append({'name':'DUST ATTENUATION', 'columns':['tauV_eff']})
 
-        hdu_col.append({'name':'ABSOLUTE MAGNITUDES'})
+        hdu_col.append({'name':'MARGINAL PHOTOMETRY'})
 
         # You consider the first file in the list and use as a "mold" to create
         # the structure (binary tables and their columns) of the output FITS file
-        firstfile = os.path.join(results_dir, file_list[0])
+        firstfile = os.path.join(BangsDirectories.results_dir, file_list[0])
         hdulist = fits.open(firstfile)
-        hdulist.info()
 
         n_objects = len(file_list)
 
         # Initialize a new (empty) primary HDU for your output FITS file
-        my_hdu = fits.HDUList(fits.PrimaryHDU())
+        self.hdulist = fits.HDUList(fits.PrimaryHDU())
     
         # Now you cycle over all extension and columns that you want to put in
         # the summary catalogue
@@ -138,7 +138,7 @@ class BangsSummaryCatalogue:
                 new_columns.append(fits.Column(name=col_.name+'_median',
                     format=col_.format, unit=col_.unit))
 
-                for lev in levels:
+                for lev in np.array(levels):
                     new_columns.append(fits.Column(name=col_.name + '_' +
                         "{:.2f}".format(lev), format='2'+col_.format[-1],
                         unit=col_.unit))
@@ -154,14 +154,14 @@ class BangsSummaryCatalogue:
 
             # And finally append the newly created bunary table to the hdulist
             # that will be printed to the ouput FITS file
-            my_hdu.append(new_hdu)
+            self.hdulist.append(new_hdu)
 
         hdulist.close()
 
         # Now you can go through each file, and compute the required quantities
 
         for i, file in enumerate(file_list):
-            hdulist = fits.open(os.path.join(results_dir, file))
+            hdulist = fits.open(os.path.join(BangsDirectories.results_dir, file))
             end = file.find('_BANGS')
 
             # Extract the object ID from the file_name
@@ -177,20 +177,20 @@ class BangsSummaryCatalogue:
                     columnNames = hdulist[hdu_name].columns.names
 
                 for col_name in columnNames:
-                    my_hdu[hdu_name].data['ID'][i] = ID
+                    self.hdulist[hdu_name].data['ID'][i] = ID
                     par_values = hdulist[hdu_name].data[col_name]
 
                     mean, median, interval = get1DInterval(par_values, probability, levels)
 
-                    my_hdu[hdu_name].data[col_name+'_mean'][i] = mean
-                    my_hdu[hdu_name].data[col_name+'_median'][i] = median
+                    self.hdulist[hdu_name].data[col_name+'_mean'][i] = mean
+                    self.hdulist[hdu_name].data[col_name+'_median'][i] = median
 
                     for j, lev in enumerate(levels):
                         levName = col_name + '_' + "{:.2f}".format(lev)
-                        my_hdu[hdu_name].data[levName][i] = interval[j]
+                        self.hdulist[hdu_name].data[levName][i] = interval[j]
 
             hdulist.close()
 
         if file_name is not None:
-            name = prepare_file_writing(results_dir, file_name)
-            my_hdu.writeto(name)
+            name = prepare_file_writing(file_name)
+            self.hdulist.writeto(name)

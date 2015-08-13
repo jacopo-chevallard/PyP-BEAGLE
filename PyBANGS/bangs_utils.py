@@ -4,18 +4,23 @@ import numpy as np
 from bisect import bisect_left
 from datetime import datetime
 
+class BangsDirectories(object):
 
-def prepare_file_writing(results_dir, file_name):
+    pybangs_dir = os.path.join("pybangs", "data")
+    results_dir = ""
+
+def prepare_file_writing(file_name, results_dir=None):
     """ 
     Prepare directory for writing the file.  
 
     Parameters
     ----------
-    results_dir : str
-        Directory containing the BANGS output files.
-
     file_name : str
         Name of the output file (without directory tree).
+
+    results_dir : str, optional
+        Directory containing the BANGS output files. By default uses the
+        RESULTS_DIR constant.
 
     Returns
     -------
@@ -23,7 +28,10 @@ def prepare_file_writing(results_dir, file_name):
         Full path to the output file,
     """ 
 
-    directory = os.path.join(results_dir, 'pybangs', 'data')
+    if results_dir is None:
+        results_dir = BangsDirectories.results_dir
+
+    directory = os.path.join(results_dir, BangsDirectories.pybangs_dir)
     if not os.path.exists(directory):
         logging.info("Creating the directory: " + directory)
         os.makedirs(directory)

@@ -8,6 +8,7 @@ from astropy.io import fits
 
 import WeightedKDE
 
+from bangs_utils import BangsDirectories
 from bangs_filters import PhotometricFilters
 from bangs_summary_catalogue import BangsSummaryCatalogue
 from bangs_residual_photometry import ResidualPhotometry
@@ -41,9 +42,7 @@ class ObservedCatalogue:
 
 class Photometry:
 
-    def __init__(self, results_dir):
-
-        self.results_dir = results_dir
+    def __init__(self):
 
         self.filters = PhotometricFilters()
 
@@ -101,7 +100,7 @@ class Photometry:
         ax = fig.add_subplot(1, 1, 1)
 
         # Open the file containing BANGS results
-        fits_file = os.path.join(self.results_dir, str(ID)+'_BANGS.fits.gz')
+        fits_file = os.path.join(BangsDirectories.results_dir, str(ID)+'_BANGS.fits.gz')
         hdulist = fits.open(fits_file)
 
         # Consider onyl the extension containing the predicted model fluxes

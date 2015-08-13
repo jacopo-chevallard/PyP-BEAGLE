@@ -127,7 +127,7 @@ class MultiNestCatalogue:
             MNObj = MultiNestObject(objID, logEvidence)
 
             # Now we read the evidence, post mean, maximum likelihood and map for each mode
-            f = open(os.path.join(results_dir, file), 'r')
+            f = open(os.path.join(BangsDirectories.results_dir, file), 'r')
             for i, line in enumerate(f):
                 
                 # Evidence

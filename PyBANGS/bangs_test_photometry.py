@@ -26,7 +26,7 @@ args = parser.parse_args()
 logging.basicConfig(level=args.loglevel)
 
 # Initialize an instance of the main "Photometry" class
-results_dir = "/Users/jchevall/My_Codes/BANGS_REPOS/BANGS_root/results/UVUDF/RAND_0.2/mass_sfr_cb14"
+results_dir = "/Users/jchevall/My_Codes/BANGS_REPOS/BANGS_root/results/UVUDF/RAND_0.2/mass_specific_sfr_cb14"
 BangsDirectories.results_dir = results_dir
 
 my_photometry = Photometry()

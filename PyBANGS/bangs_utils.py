@@ -77,14 +77,14 @@ def match_ID(ID_list_1, ID_list_2, sorted=False ):
     n2 = len(ID_list_2)
 
     if n1 >= n2:
-        ID_long = ID_list_1
+        ID_long = np.array(ID_list_1, dtype=np.int)
         n_long = n1
-        ID_short = ID_list_2
+        ID_short = np.array(ID_list_2, dtype=np.int)
         n_short = n2
     else:
-        ID_long = ID_list_2
+        ID_long = np.array(ID_list_2, dtype=np.int)
         n_long = n2
-        ID_short = ID_list_1
+        ID_short = np.array(ID_list_1, dtype=np.int)
         n_short = n1
 
     if not sorted:
@@ -101,9 +101,10 @@ def match_ID(ID_list_1, ID_list_2, sorted=False ):
     for i in range(n_short):
         i1 = bisect_left(ID_long[sort_long], ID_short[sort_short[i]])
 
-        if ID_long[sort_long[i1]] == ID_short[sort_short[i]]:
-            match_indx_long = sort_long[i1]
-            match_indx_short = sort_short[i]
+        if i1 < n_long:
+            if ID_long[sort_long[i1]] == ID_short[sort_short[i]]:
+                match_indx_long[i1] = sort_long[i1]
+                match_indx_short[i] = sort_short[i]
 
     if n1 >= n2:
         indices_1 = match_indx_long[match_indx_long >= 0]

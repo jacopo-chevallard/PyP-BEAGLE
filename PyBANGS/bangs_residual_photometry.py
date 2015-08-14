@@ -1,6 +1,8 @@
+import numpy as np
 import cPickle
 
-from bangs_utils import weighted_avg_and_std, BangsDirectories
+import WeightedKDE
+from bangs_utils import weighted_avg_and_std, BangsDirectories, match_ID
 
 class ResidualPhotometry:
 
@@ -44,20 +46,27 @@ class ResidualPhotometry:
 
         """
 
-        _summary_stat = "median"
-        if summary_stat is not None:
-            _summary_stat = summary_stat
+        if summary_stat is None:
+            summary_stat = "median"
 
         bangs_data = bangs_summary_catalogue.hdulist['MARGINAL PHOTOMETRY'].data
 
         catalogue_data = observed_catalogue.data
 
+        indx_bangs, indx_catalogue = match_ID(bangs_data['ID'], catalogue_data['ID'])
+
+        bangs_data = bangs_data[indx_bangs]
+        catalogue_data = catalogue_data[indx_catalogue]
+
+        print "ID: ", bangs_data['ID']
+        print "ID: ", catalogue_data['ID']
+
         # As a sanity check, check if the ID match among the two catalogues, by
         # random picking some indices here and there...
-        if (bangs_data['ID'][0] != catalogue_data['ID'][0]) or \
-        (bangs_data['ID'][-1] != catalogue_data['ID'][-1]):
-            raise ValueError("The object IDs between the BANGS summary catalogue and \
-                the observed catalogue do not match!")
+        #if (bangs_data['ID'][0] != catalogue_data['ID'][0]) or \
+        #(bangs_data['ID'][-1] != catalogue_data['ID'][-1]):
+        #    raise ValueError("The object IDs between the BANGS summary catalogue and \
+        #        the observed catalogue do not match!")
 
         self.residual_kde_pdf = list() 
 
@@ -65,14 +74,15 @@ class ResidualPhotometry:
 
         for i in range(filters.n_bands):
 
-            obs_flux = catalogue_data[filters.colName[i]] * filters.units / jy
-            obs_flux_err = catalogue_data[filters.errcolName[i]] * filters.units  / jy
+            obs_flux = catalogue_data[filters.data['flux_colName'][i]] * filters.units / jy
+            obs_flux_err = catalogue_data[filters.data['flux_errcolName'][i]] * filters.units  / jy
 
-            name = '_' + filters.label[i] + '_'
-            model_flux = bangs_data[name+'_'+_summary_stat] / jy
+            name = '_' + filters.data['label'][i] + '_'
+            model_flux = bangs_data[name+'_'+summary_stat] / jy
             model_flux_err = 0.5 * (bangs_data[name+'_68.00'][:,1]-bangs_data[name+'_68.00'][:,0]) / jy
 
             mask = np.zeros(len(obs_flux), dtype=bool)
+
             mask[(obs_flux > 0.) & (obs_flux_err > 0.) & (model_flux > 0.) & (model_flux_err > 0.)] = True
 
             # Compute the residual in magnitude scale
@@ -115,21 +125,18 @@ class ResidualPhotometry:
         defined by np.linspace(x_range[0], x_range[1], n_x)
         """
 
-        _x_range = (-1.,1.)
-        if x_range is not None:
-            _x_range = x_range
+        if x_range is None:
+            x_range = (-1.,1.)
 
-        _n_x = 1000
-        if x_range is not None:
-            _n_x = n_x
+        if n_x is None:
+            n_x = 1000
 
-        _summary_stat = "median"
-        if summary_stat is not None:
-            _summary_stat = summary_stat
+        if summary_stat is None:
+            summary_stat = "median"
 
         # The grid of residual values over which computing the residual density
         # function
-        x_grid = np.linspace(_x_range[0], _x_range[1], n_x)
+        x_grid = np.linspace(x_range[0], x_range[1], n_x)
 
         for residual_kde_pdf in self.residual_kde_pdf:
 
@@ -146,7 +153,7 @@ class ResidualPhotometry:
             # Compute interpolant of cumulative PDF (linear interpolation)
             interp_cumul_pdf = interp1d(cumul_pdf, x_grid)
 
-            if "median" in _summary_stat:
+            if "median" in summary_stat:
                 med = interp_cumul_pdf(0.5)
                 # This corresponds to a 68 % credible region
                 interval = interp_cumul_pdf(0.84) - interp_cumul_pdf(0.16)

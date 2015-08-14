@@ -117,7 +117,7 @@ class BangsSummaryCatalogue:
             hdu_name = hdu['name']
 
             # The first column of each output extension contains the object ID
-            new_columns.append(fits.Column(name='ID', format='20A'))
+            new_columns.append(fits.Column(name='ID', format=np.int))
 
             # You just consider the columns defined in the structure
             if 'columns' in hdu:
@@ -165,7 +165,7 @@ class BangsSummaryCatalogue:
             end = file.find('_BANGS')
 
             # Extract the object ID from the file_name
-            ID = os.path.basename(file[0:end])
+            ID = np.int(os.path.basename(file[0:end]))
 
             probability = hdulist['posterior pdf'].data['probability']
 

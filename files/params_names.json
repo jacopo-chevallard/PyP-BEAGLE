@@ -1,0 +1,34 @@
+{
+"mass": {
+  "range": [5.0, 12.0],
+  "label": "$\\log (\\textnormal{M} / \\textnormal{M}_\\odot)$"
+},
+
+"redshift": {
+  "range": [0.0, 15.0],
+  "label": "$z$"
+},
+
+"tauV_eff": {
+  "range": [0.001, 5.0],
+  "label": "$\\log \\hat{\\tau}_V$",
+  "log" : true
+},
+
+"tau": {
+  "range": [7.0, 10.5],
+  "label": "$\\log (\\tau / \\textnormal{yr})$"
+},
+
+"metallicity": {
+  "range": [-2.2, 0.24],
+  "label": "$\\log(Z/Z_\\odot)$"
+},
+
+"specific_sfr": {
+  "range": [-12.0, -8.0],
+  "label": "$\\log(\\psi_\\textnormal{S} / \\textnormal{yr})$"
+}
+
+}
+

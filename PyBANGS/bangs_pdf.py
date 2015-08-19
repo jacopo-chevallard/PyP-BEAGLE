@@ -1,3 +1,5 @@
+import numpy as np
+import os
 import json
 from astropy.io import fits
 
@@ -19,6 +21,7 @@ class PDF:
         fits_file = os.path.join(BangsDirectories.results_dir,
                 str(ID)+'_BANGS.fits.gz')
 
+        print fits_file
         hdulist = fits.open(fits_file)
 
         param_values = hdulist['posterior pdf'].data
@@ -26,11 +29,11 @@ class PDF:
 
         n_rows = probability.size
 
-       # ParamsToPlot = ['mass', 'redshift', 'tauV_eff', 'metallicity', 'sfr', 'tau']
+        ParamsToPlot = ['mass', 'redshift', 'tauV_eff', 'metallicity', 'sfr', 'tau']
 
         # By default you plot all parameters
         if params_to_plot is None:
-            _params_to_plot = 
+            _params_to_plot = ParamsToPlot 
         else: 
             _params_to_plot = params_to_plot
 
@@ -43,7 +46,9 @@ class PDF:
 
         j = 0
         for par_name in ParamsToPlot:
+            print self.adjust_params
             for key, par in self.adjust_params.iteritems():
+                print key, par
                 if key == par_name:
                     names.append(key)
                     labels.append(par['label'])

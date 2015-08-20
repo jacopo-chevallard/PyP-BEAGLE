@@ -24,12 +24,10 @@ class PDF:
         fits_file = os.path.join(BangsDirectories.results_dir,
                 str(ID)+'_BANGS.fits.gz')
 
-        print fits_file
         hdulist = fits.open(fits_file)
 
         param_values = hdulist['posterior pdf'].data
         probability = hdulist['posterior pdf'].data['probability']
-        print 'prob: ', probability[:10]
 
         n_rows = probability.size
 

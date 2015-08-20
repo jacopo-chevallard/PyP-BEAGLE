@@ -1,4 +1,5 @@
 import os
+from scipy import stats
 import numpy as np
 from astropy.io import fits
 from astropy.table import Table, Column
@@ -66,14 +67,31 @@ class PosteriorPredictiveChecks:
         # used in the BANGS run, for a given object,
         n_used_bands = Column(name='n_used_bands', dtype=np.int32, length=n_obj)
 
+        deg_of_freedom = Column(name='dof', dtype=np.int32, length=n_obj)
+
         # the average chi-square, and average chi-square/n_used_bands
         aver_chi_square = Column(name='aver_chi_square', dtype=np.float32,
+                length=n_obj)
+
+        # Int from 0 to x of chi^2(x) with N-1 degreed of freedom (see Johnson,
+        # V. E. (2004). A Bayesian chi2 Test for Goodness-of-Fit on JSTOR.
+        # Annals of Statistics for an explanation of why the average chi^2 has
+        # N-1 and not N-k-1 degrees of freedom)
+
+        left_cumul_probability = Column(name='left_cumul_probability', dtype=np.float32,
+                length=n_obj)
+
+        # Int from x to +infty of chi^2(x)
+        right_cumul_probability = Column(name='right_cumul_probability', dtype=np.float32,
                 length=n_obj)
 
         aver_red_chi_square = Column(name='aver_red_chi_square',
                 dtype=np.float32, length=n_obj)
 
-        my_cols = [objID, n_used_bands, aver_chi_square, aver_red_chi_square]
+        my_cols = [objID, n_used_bands, deg_of_freedom, aver_chi_square,
+                aver_red_chi_square, left_cumul_probability,
+                right_cumul_probability]
+
         my_table = Table(my_cols)
 
         obs_flux = np.zeros(filters.n_bands, np.float32)
@@ -120,9 +138,18 @@ class PosteriorPredictiveChecks:
                         n_data += 1
                         chi_square += ((obs_flux-model_flux) / obs_flux_err)**2
 
+                dof = n_data-1
+
                 my_table['n_used_bands'][i] = n_data
-                my_table['aver_chi_square'][i] = np.sum(probability*chi_square) / np.sum(probability)
-                my_table['aver_red_chi_square'][i] = my_table['aver_chi_square'][i] / (n_data-1)
+                my_table['dof'][i] = dof
+
+                av_chi_square = np.sum(probability*chi_square) / np.sum(probability)
+                my_table['aver_chi_square'][i] = av_chi_square
+                my_table['aver_red_chi_square'][i] = av_chi_square / dof
+
+                cdf = stats.chi2.cdf(av_chi_square, dof)[0]
+                my_table['left_cumul_probability'][i] = cdf
+                my_table['right_cumul_probability'][i] = 1.-cdf
 
                 hdulist.close()
 

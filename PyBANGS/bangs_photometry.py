@@ -5,6 +5,8 @@ from bisect import bisect_left
 import numpy as np
 from astropy.io import ascii
 from astropy.io import fits
+import matplotlib.pyplot as plt
+import os
 
 import WeightedKDE
 
@@ -73,7 +75,7 @@ class Photometry:
 
         # From the (previously loaded) observed catalogue select the row
         # corresponding to the input ID
-        observation = observed_catalogue.data[observed_catalogue.data['ID'] == ID]
+        observation = self.observed_catalogue.data[self.observed_catalogue.data['ID'] == ID]
 
         # Check if you need to apply an aperture correction to the catalogue fluxes
         if 'aper_corr' in self.observed_catalogue.data.dtype.names:
@@ -85,14 +87,14 @@ class Photometry:
         obs_flux = np.zeros(self.filters.n_bands)
         obs_flux_err = np.zeros(self.filters.n_bands)
 
-        for i, band in enumerate(self.filters['flux_colName']):
-            obs_flux[i] = observation[0][band]*aper_corr*self.filters.units / nanoJy
+        for i, band in enumerate(self.filters.data['flux_colName']):
+            obs_flux[i] = observation[band]*aper_corr*self.filters.units / nanoJy
 
         # Add to the error array the minimum relative error thet BANGS allows
         # one to add to the errors quoted in the catalogue
-        for i, err in enumerate(self.filters['flux_errcolName']):
-            obs_flux_err[i] = observation[0][err]*aper_corr*self.filters.units / nanoJy
-            obs_flux_err[i] = np.sqrt( (obs_flux_err[i]/obs_flux[i])**2 + np.float32(self.filters['min_rel_err'][i])**2) * obs_flux[i]
+        for i, err in enumerate(self.filters.data['flux_errcolName']):
+            obs_flux_err[i] = observation[err]*aper_corr*self.filters.units / nanoJy
+            obs_flux_err[i] = np.sqrt( (obs_flux_err[i]/obs_flux[i])**2 + np.float32(self.filters.data['min_rel_err'][i])**2) * obs_flux[i]
 
         ok = np.where(obs_flux_err > 0.)[0]
 
@@ -119,10 +121,12 @@ class Photometry:
         kde_pdf = list()
         nXgrid = 1000
 
-        width = 5*np.min(np.array(filters.wl_eff[1:])-np.array(filters.wl_eff[0:-1]))
+        width = 5*np.min(np.array(self.filters.data['wl_eff'][1:])-np.array(self.filters.data['wl_eff'][0:-1]))
 
         kwargs = {'color':'tomato', 'alpha':0.7, 'edgecolor':'black', 'linewidth':0.2}
 
+        min_flux = np.zeros(n_bands)
+        max_flux = np.zeros(n_bands)
         for i in range(n_bands):
             xdata = model_sed.data.field(i) / nanoJy
             min_x = np.min(xdata)

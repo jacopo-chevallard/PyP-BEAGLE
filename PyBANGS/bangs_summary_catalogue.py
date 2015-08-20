@@ -117,7 +117,7 @@ class BangsSummaryCatalogue:
             hdu_name = hdu['name']
 
             # The first column of each output extension contains the object ID
-            new_columns.append(fits.Column(name='ID', format=np.int))
+            new_columns.append(fits.Column(name='ID', format='K'))
 
             # You just consider the columns defined in the structure
             if 'columns' in hdu:
@@ -129,8 +129,8 @@ class BangsSummaryCatalogue:
             # For each column, you add a '_mean', '_median' and confidence
             # intervals columns, taking the appropriate units from the FITS
             # file that you are using as a mold
-            for col_name in columnNames:
-                col_ = hdulist[hdu_name].columns[col_name]
+            for col_index in range(len(hdulist[hdu_name].columns)):
+                col_ = hdulist[hdu_name].columns[col_index]
     
                 new_columns.append(fits.Column(name=col_.name+'_mean',
                     format=col_.format, unit=col_.unit))
@@ -165,7 +165,7 @@ class BangsSummaryCatalogue:
             end = file.find('_BANGS')
 
             # Extract the object ID from the file_name
-            ID = np.int(os.path.basename(file[0:end]))
+            ID = np.int(np.float(os.path.basename(file[0:end])))
 
             probability = hdulist['posterior pdf'].data['probability']
 

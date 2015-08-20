@@ -1,5 +1,7 @@
 import numpy as np
 import cPickle
+from scipy.interpolate import interp1d
+import matplotlib.pyplot as plt
 
 import WeightedKDE
 from bangs_utils import weighted_avg_and_std, BangsDirectories, match_ID

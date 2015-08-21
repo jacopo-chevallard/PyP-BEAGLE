@@ -3,7 +3,7 @@ import os
 import logging
 import cPickle
 
-from bangs_utils import prepare_file_writing, BangsDirectories
+from bangs_utils import prepare_data_saving, BangsDirectories
 
 class MultiNestMode:
 
@@ -55,7 +55,7 @@ class MultiNestCatalogue:
         """
 
         name = os.path.join(BangsDirectories.results_dir,
-                BangsDirectories.pybangs_dir, file_name)
+                BangsDirectories.pybangs_data, file_name)
 
         logging.info("Loading the `MultiNestCatalogue`: " + name)
 
@@ -159,7 +159,7 @@ class MultiNestCatalogue:
             self.MNObjects.append(MNObj)
 
         if file_name is not None:
-            name = prepare_file_writing(file_name)
+            name = prepare_data_saving(file_name)
 
             fOut = open(name, 'w')
 

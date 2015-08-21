@@ -6,12 +6,13 @@ from datetime import datetime
 
 class BangsDirectories(object):
 
-    pybangs_dir = os.path.join("pybangs", "data")
+    pybangs_data = os.path.join("pybangs", "data")
+    pybangs_plot = os.path.join("pybangs", "plot")
     results_dir = ""
 
-def prepare_file_writing(file_name, results_dir=None):
+def prepare_data_saving(file_name, results_dir=None, overwrite=False):
     """ 
-    Prepare directory for writing the file.  
+    Prepare directory to save a data file.  
 
     Parameters
     ----------
@@ -22,6 +23,10 @@ def prepare_file_writing(file_name, results_dir=None):
         Directory containing the BANGS output files. By default uses the
         RESULTS_DIR constant.
 
+    overwrite: bool, optional
+        If rue overwrites the file, is already present, while False makes a copy of
+        the original file to avoid overwriting
+
     Returns
     -------
     name : str
@@ -31,13 +36,52 @@ def prepare_file_writing(file_name, results_dir=None):
     if results_dir is None:
         results_dir = BangsDirectories.results_dir
 
-    directory = os.path.join(results_dir, BangsDirectories.pybangs_dir)
+    directory = os.path.join(results_dir, BangsDirectories.pybangs_data)
     if not os.path.exists(directory):
         logging.info("Creating the directory: " + directory)
         os.makedirs(directory)
 
     name = os.path.join(directory, os.path.basename(file_name))
-    if os.path.isfile(name):
+    if os.path.isfile(name) and not overwrite:
+        new_name = os.path.splitext(name)[0] + datetime.now().strftime("-%Y%m%d-%H%M%S") + os.path.splitext(name)[1]
+        logging.warning("The file " + name + " already exists, and it will be renamed to " + new_name)
+        os.rename(name, new_name)
+
+    return name
+
+def prepare_plot_saving(file_name, results_dir=None, overwrite=False):
+    """ 
+    Prepare directory to save a plot file.  
+
+    Parameters
+    ----------
+    file_name : str
+        Name of the output file (without directory tree).
+
+    results_dir : str, optional
+        Directory containing the BANGS output files. By default uses the
+        RESULTS_DIR constant.
+
+    overwrite: bool, optional
+        If rue overwrites the file, is already present, while False makes a copy of
+        the original file to avoid overwriting
+
+    Returns
+    -------
+    name : str
+        Full path to the output file,
+    """ 
+
+    if results_dir is None:
+        results_dir = BangsDirectories.results_dir
+
+    directory = os.path.join(results_dir, BangsDirectories.pybangs_plot)
+    if not os.path.exists(directory):
+        logging.info("Creating the directory: " + directory)
+        os.makedirs(directory)
+
+    name = os.path.join(directory, os.path.basename(file_name))
+    if os.path.isfile(name) and not overwrite:
         new_name = os.path.splitext(name)[0] + datetime.now().strftime("-%Y%m%d-%H%M%S") + os.path.splitext(name)[1]
         logging.warning("The file " + name + " already exists, and it will be renamed to " + new_name)
         os.rename(name, new_name)

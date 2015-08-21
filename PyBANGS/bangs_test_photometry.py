@@ -26,7 +26,7 @@ args = parser.parse_args()
 logging.basicConfig(level=args.loglevel)
 
 # Initialize an instance of the main "Photometry" class
-results_dir = "/Users/jchevall/My_Codes/BANGS_REPOS/BANGS_root/results/UVUDF/RAND_0.2/mass_specific_sfr_cb14"
+results_dir = "/Users/jchevall/Coding/BANGS/files/root/results/UVUDF/RAND_0.2/mass_specific_sfr_cb14"
 BangsDirectories.results_dir = results_dir
 
 my_photometry = Photometry()
@@ -47,6 +47,11 @@ my_photometry.filters.load(os.path.expandvars("$BANGS_FILTERS/filters_UVUDF.dat"
 # ********** Loading *****************
 file_name = os.path.expandvars("$BANGS_DATA/UVUDF/hlsp_uvudf_hst_v2.0_cat_Types_no_star.fits")
 my_photometry.observed_catalogue.load(file_name)
+
+
+# ********** Plotting of the marginal photometry *****************
+#ID = 10000
+#my_photometry.plot_marginal(ID)
 
 # *****************************************************
 # *********** "BANGS summary catalogue" ****************
@@ -96,6 +101,12 @@ my_photometry.PPC.load( file_name)
 #my_photometry.PPC.compute(my_photometry.observed_catalogue, 
 #        my_photometry.filters, 
 #        file_name=file_name)
+
+# ********* Plot ***************
+
+#my_photometry.PPC.plot_chi2()
+
+my_photometry.PPC.plot_p_value()
 
 # *****************************************************
 # *********** Residual Photometry  ****************

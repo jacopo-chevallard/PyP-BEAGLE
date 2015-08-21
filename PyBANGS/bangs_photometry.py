@@ -10,7 +10,7 @@ from astropy.io import fits
 
 import WeightedKDE
 
-from bangs_utils import BangsDirectories
+from bangs_utils import BangsDirectories, prepare_plot_saving
 from bangs_filters import PhotometricFilters
 from bangs_summary_catalogue import BangsSummaryCatalogue
 from bangs_residual_photometry import ResidualPhotometry
@@ -244,26 +244,6 @@ class Photometry:
         x0, x1 = ax.get_xlim()
         if yMin < 0.: plt.plot( [x0,x1], [0.,0.], color='gray', lw=0.8 )
 
-        # Compute the "average chi square", a measure of the predicitve accuacy
-        # of the model (e.g. see Section 6.5 of "Bayesian Data Analysis", by
-        # Gelman, Carlin, Stern and Rubin )
-
-        # In BANGS we use all data-points with errors > 0 in the likelihood calculation
-        n_data = len(ok)
-        n_samples = len(model_sed.data.field(0))
-        chi_square = np.zeros((n_bands, n_samples))
-
-        # This factor ensures no floating point overflow when computing the square of the difference
-        factor = np.amin(obs_flux[ok])
-
-        for i in ok:
-            xdata = model_sed.data.field(i) / nanoJy
-            chi_square[i,:] +=  (obs_flux[i]/factor-xdata/factor)**2/(obs_flux_err[i]/factor)**2
-
-        sum_chi_square = np.sum(chi_square[ok,:], axis=0)
-        #self.aver_chi_square = np.sum(self.probability*sum_chi_square) / np.sum(self.probability)
-        #self.aver_red_chi_square = self.aver_chi_square / (n_data-1)
-
         # Define plotting styles
         ax.set_xlabel("$\lambda_\\textnormal{eff} / \\textnormal{\AA}$ (observed-frame)")
         ax.set_ylabel("$f_{\\nu}/\\textnormal{nanoJy}$")
@@ -292,24 +272,45 @@ class Photometry:
         # Title of the plot is the object ID
         plt.title(str(ID))
 
-        # Print the evidence
+        # Location of printed text
         x0, x1 = ax.get_xlim()
         x = x0 + (x1-x0)*0.03
         y0, y1 = ax.get_ylim()
         y = y1 - (y1-y0)*0.10
-        #ax.text(x, y, "$\log(Z)=" + "{:.2f}".format(self.logEvidence) + "$", fontsize=10 )
+
+        # Print the evidence
+        try:
+            ax.text(x, y, "$\log(Z)=" + "{:.2f}".format(self.logEvidence) + "$", fontsize=10 )
+        except AttributeError:
+            print "ciao"
 
         # Print the average reduced chi-square
-        y = y1 - (y1-y0)*0.15
-        #ax.text(x, y, "$\langle\chi^2\\rangle=" + "{:.2f}".format(self.aver_chi_square) + "$", fontsize=10 )
+        try:
+            aver_chi_square = self.PPC.data['aver_chi_square'][self.PPC.data['ID'] == ID]
+            y = y1 - (y1-y0)*0.15
+            ax.text(x, y, "$\langle\chi^2\\rangle=" + "{:.2f}".format(aver_chi_square) + "$", fontsize=10 )
+        except AttributeError:
+            print "`PosteriorPredictiveChecks` not computed/loaded, hence " \
+            "<chi^2> for the object `" + str(ID) + "` is not available"
 
-        y = y1 - (y1-y0)*0.20
-       # ax.text(x, y, "$\langle\chi^2/(\\textnormal{N}_\\textnormal{data}-1)\\rangle=" + "{:.2f}".format(self.aver_red_chi_square) +"\; (\\textnormal{N}_\\textnormal{data}=" + "{:d}".format(n_data) + ")" + "$", fontsize=10 )
+        try:
+            aver_red_chi_square = self.PPC.data['aver_red_chi_square'][self.PPC.data['ID'] == ID]
+            n_data = self.PPC.data['n_used_bands'][self.PPC.data['ID'] == ID]
+            y = y1 - (y1-y0)*0.20
+            ax.text(x, y,
+                    "$\langle\chi^2/(\\textnormal{N}_\\textnormal{data}-1)\\rangle=" \
+                    + "{:.2f}".format(aver_red_chi_square) + "\; \
+                    (\\textnormal{N}_\\textnormal{data}=" + \
+                    "{:d}".format(n_data) + ")" + "$", fontsize=10 )
+        except AttributeError:
+            print "`PosteriorPredictiveChecks` not computed/loaded, hence " \
+            "<chi^2_red> for the object `" + str(ID) + "` is not available"
 
         if y0 < 0.: plt.plot( [x0,x1], [0.,0.], color='gray', lw=1.0 )
 
-        outputfile_name = os.path.join(BangsDirectories.results_dir, str(ID)+'_BANGS_marginal_SED_phot.pdf')
-        fig.savefig(outputfile_name, dpi=None, facecolor='w', edgecolor='w',
+        name = prepare_plot_saving(str(ID)+'_BANGS_marginal_SED_phot.pdf')
+
+        fig.savefig(name, dpi=None, facecolor='w', edgecolor='w',
                 orientation='portrait', papertype='a4', format="pdf",
                 transparent=False, bbox_inches="tight", pad_inches=0.1)
         plt.close(fig)

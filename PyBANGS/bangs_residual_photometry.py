@@ -2,7 +2,7 @@ import numpy as np
 import cPickle
 
 import WeightedKDE
-from bangs_utils import weighted_avg_and_std, BangsDirectories, match_ID
+from bangs_utils import weighted_avg_and_std, BangsDirectories, match_ID, prepare_plot_saving
 
 class ResidualPhotometry:
 
@@ -17,7 +17,7 @@ class ResidualPhotometry:
         """ 
 
         name = os.path.join(BangsDirectories.results_dir,
-                BangsDirectories.pybangs_dir, file_name)
+                BangsDirectories.pybangs_data, file_name)
 
         file = open(name, 'rb')
         self.residual_kde_pdf = cPickle.load(file)
@@ -99,13 +99,21 @@ class ResidualPhotometry:
         if cPickleName is not None:
             cPickle.dump(self.residual_kde_pdf, cPickleName, cPickle.HIGHEST_PROTOCOL)
 
-    def plot(self, filters, file_name=None, x_range=None, n_x=None, summary_stat=None):
+    def plot(self, 
+            filters, 
+            plot_name="BANGS_residual_photometry.pdf", 
+            x_range=(-1.,1.), 
+            n_x=1000, 
+            summary_stat="median"):
         """ 
         Plot the residual photometry.
 
         Parameters
         ----------
         filters : PhotometricFilters class object
+
+        plot_name: str, optional
+            File name of the output plot.
 
         x_range : iterable float size=2, optional
             Range over which computing the actual residual density function
@@ -124,15 +132,6 @@ class ResidualPhotometry:
         The residuals density function is computed at each residual value
         defined by np.linspace(x_range[0], x_range[1], n_x)
         """
-
-        if x_range is None:
-            x_range = (-1.,1.)
-
-        if n_x is None:
-            n_x = 1000
-
-        if summary_stat is None:
-            summary_stat = "median"
 
         # The grid of residual values over which computing the residual density
         # function
@@ -168,16 +167,13 @@ class ResidualPhotometry:
         fig = plt.figure()
         ax = fig.add_subplot(1, 1, 1)
 
-        #print "x_grid: ", x_grid
-        #print "y_val: ", y_val
         ax.plot(x_grid, kde_pdf_grid , ls="-", color = "black")
 
-        if file_name is not None:
-            fig.savefig(file_name + '_residual_photometry.pdf', dpi=None, facecolor='w', edgecolor='w',
-                orientation='portrait', papertype='a4', format="pdf",
-                transparent=False, bbox_inches="tight", pad_inches=0.1)
-        else:
-            plt.show()
+        name = prepare_plot_saving(plot_name)
+
+        fig.savefig(name, dpi=None, facecolor='w', edgecolor='w',
+            orientation='portrait', papertype='a4', format="pdf",
+            transparent=False, bbox_inches="tight", pad_inches=0.1)
 
         plt.close(fig)
 

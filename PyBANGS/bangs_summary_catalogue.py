@@ -5,7 +5,7 @@ from scipy.integrate import cumtrapz
 from scipy.interpolate import interp1d
 from astropy.io import fits
 
-from bangs_utils import prepare_file_writing, BangsDirectories
+from bangs_utils import prepare_data_saving, BangsDirectories
 
 def get1DInterval(param_values, probability, levels):
 
@@ -75,7 +75,7 @@ class BangsSummaryCatalogue:
         """
 
         name = os.path.join(BangsDirectories.results_dir,
-                BangsDirectories.pybangs_dir, file_name)
+                BangsDirectories.pybangs_data, file_name)
 
         logging.info("Loading the `BangsSummaryCatalogue` file: " + name)
 
@@ -192,5 +192,5 @@ class BangsSummaryCatalogue:
             hdulist.close()
 
         if file_name is not None:
-            name = prepare_file_writing(file_name)
+            name = prepare_data_saving(file_name)
             self.hdulist.writeto(name)

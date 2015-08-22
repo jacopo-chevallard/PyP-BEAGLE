@@ -8,6 +8,8 @@ import matplotlib.ticker as plticker
 from astropy.io import ascii
 from astropy.io import fits
 
+import sys
+sys.path.append("../dependencies")
 import WeightedKDE
 
 from bangs_utils import BangsDirectories, prepare_plot_saving

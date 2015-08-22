@@ -3,7 +3,10 @@ from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
 import cPickle
 
+import sys
+sys.path.append("../dependencies")
 import WeightedKDE
+
 from bangs_utils import weighted_avg_and_std, BangsDirectories, match_ID, prepare_plot_saving
 
 class ResidualPhotometry:

@@ -5,7 +5,10 @@ import matplotlib.pyplot as plt
 from astropy.io import fits
 from astropy.table import Table, Column
 
+import sys
+sys.path.append("../dependencies")
 import WeightedKDE
+
 from bangs_utils import prepare_data_saving, prepare_plot_saving, BangsDirectories
 
 class PosteriorPredictiveChecks:

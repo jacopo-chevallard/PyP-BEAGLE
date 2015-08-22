@@ -1,9 +1,14 @@
+import numpy as np
+import os
 import json
 from astropy.io import fits
 
 from getdist import plots, MCSamples
 
 from bangs_utils import BangsDirectories
+
+from matplotlib.colors import colorConverter
+from matplotlib.patches import Rectangle
 
 class PDF:
 
@@ -26,15 +31,19 @@ class PDF:
 
         n_rows = probability.size
 
-       # ParamsToPlot = ['mass', 'redshift', 'tauV_eff', 'metallicity', 'sfr', 'tau']
+       # ParamsToPlot = ['mass', 'redshift', 'tauV_eff', 'metallicity', 'specific_sfr', 'tau']
 
         # By default you plot all parameters
         if params_to_plot is None:
-            _params_to_plot = 
+            _params_to_plot = []
+            for param in param_values.dtype.names:
+                if param != 'probability': 
+                    if param != 'ln_likelihood':
+                        _params_to_plot.append(param)
         else: 
             _params_to_plot = params_to_plot
 
-        nParamsToPlot = len(ParamsToPlot)
+        nParamsToPlot = len(_params_to_plot)
 
         names = list()
         labels = list()
@@ -42,7 +51,7 @@ class PDF:
         samps = np.zeros((n_rows, nParamsToPlot))
 
         j = 0
-        for par_name in ParamsToPlot:
+        for par_name in _params_to_plot:
             for key, par in self.adjust_params.iteritems():
                 if key == par_name:
                     names.append(key)
@@ -66,7 +75,7 @@ class PDF:
                     "smooth_scale_2D":0.7
                     }
 
-        samples = MCSamples(samples=samps, names=names, ranges=ranges,
+        samples = MCSamples(samples=samps, names=names, ranges=ranges, \
                 weights=probability, labels=labels, settings=settings )
 
         g = plots.getSubplotPlotter()
@@ -81,7 +90,7 @@ class PDF:
 
         # Add tick labels at top of diagonal panels
         for i, ax in enumerate([g.subplots[i,i] for i in range(nParamsToPlot)]):
-            par_name = ParamsToPlot[i]
+            par_name = _params_to_plot[i]
             if i < nParamsToPlot-1: 
                 ticklabels = [item.get_text() for item in g.subplots[-1,i].xaxis.get_ticklabels()]
                 ax.xaxis.set_ticklabels(ticklabels)
@@ -92,11 +101,19 @@ class PDF:
             lev = samples.get1DDensity(par_name).getLimits(settings['contours'][0])
             ax.add_patch(Rectangle((lev[0], y0), lev[1]-lev[0], y1-y0, facecolor="grey", alpha=0.2))
 
+        
+
         # Now save the plot
         if suffix is None:
-            outputName = self.outputFileName + '_triangle.pdf'
+            outputName = os.path.join(BangsDirectories.results_dir,
+                str(ID)+'_BANGS_triangle.pdf')
+
+            #outputName = self.outputFileName + '_triangle.pdf'
         else:
-            outputName = self.outputFileName + '_triangle_' + suffix + '.pdf'
+            outputName = os.path.join(BangsDirectories.results_dir,
+                str(ID)+'_BANGS_triangle_' + suffix + '.pdf')
+
+            #outputName = self.outputFileName + '_triangle_' + suffix + '.pdf'
 
         g.export( outputName )
 
@@ -130,4 +147,4 @@ class PDF:
 ##                self.joint.DrawPosteriorMean(
 ##                    Appearance.PosteriorMean)
 
-        plt.close(g.fig)
+        #plt.close(g.fig)

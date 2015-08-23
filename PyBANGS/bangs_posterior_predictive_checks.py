@@ -134,15 +134,17 @@ class PosteriorPredictiveChecks:
 
                     name = filters.data['flux_errcolName'][j]
                     obs_flux_err = observed_catalogue.data[i][name] * filters.units  / jy
-
-                    # if defined, add the minimum error in quadrature
-                    obs_flux_err = np.sqrt((obs_flux_err/obs_flux)**2 + np.float32(filters.data['min_rel_err'][j])**2) * obs_flux
+                    has_measure = False
+                    if obs_flux_err > 0.:
+                        has_measure = True
 
                     # model flux and its error
                     name = '_' + filters.data['label'][j] + '_'
                     model_flux = bangs_data[name] / jy
 
-                    if obs_flux_err > 0.:
+                    if has_measure > 0.:
+                        # if defined, add the minimum error in quadrature
+                        obs_flux_err = np.sqrt((obs_flux_err/obs_flux)**2 + np.float32(filters.data['min_rel_err'][j])**2) * obs_flux
                         n_data += 1
                         chi_square += ((obs_flux-model_flux) / obs_flux_err)**2
 
@@ -155,7 +157,7 @@ class PosteriorPredictiveChecks:
                 my_table['aver_chi_square'][i] = av_chi_square
                 my_table['aver_red_chi_square'][i] = av_chi_square / dof
 
-                cdf = stats.chi2.cdf(av_chi_square, dof)[0]
+                cdf = stats.chi2.cdf(av_chi_square, dof)
                 my_table['left_cumul_probability'][i] = cdf
                 my_table['right_cumul_probability'][i] = 1.-cdf
 

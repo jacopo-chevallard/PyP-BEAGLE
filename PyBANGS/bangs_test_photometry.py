@@ -45,7 +45,7 @@ my_photometry.filters.load(os.path.expandvars("$BANGS_FILTERS/filters_UVUDF.dat"
 # *****************************************************
 
 # ********** Loading *****************
-file_name = os.path.expandvars("$BANGS_DATA/UVUDF/hlsp_uvudf_hst_v2.0_cat_Types_no_star.fits")
+file_name = os.path.expandvars("$BANGS_DATA/UVUDF/hlsp_uvudf_hst_v2.0_cat_Types_no_star_TEST.fits")
 my_photometry.observed_catalogue.load(file_name)
 
 
@@ -92,15 +92,17 @@ my_photometry.multinest_catalogue.load(file_name)
 # *********** Posterior Predictive Checks  ****************
 # *****************************************************
 
-file_name = "PPC.fits"
+file_name = "PPC_TEST.fits"
 
 # ********* Load ***************
-my_photometry.PPC.load( file_name) 
+#my_photometry.PPC.load( file_name) 
 
 # ********* Compute ***************
-#my_photometry.PPC.compute(my_photometry.observed_catalogue, 
-#        my_photometry.filters, 
-#        file_name=file_name)
+my_photometry.PPC.compute(my_photometry.observed_catalogue, 
+        my_photometry.filters, 
+        file_name=file_name)
+
+stop
 
 # ********* Plot ***************
 

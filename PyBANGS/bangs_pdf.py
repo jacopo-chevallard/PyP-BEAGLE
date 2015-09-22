@@ -1,14 +1,13 @@
 import numpy as np
 import os
 import json
+from matplotlib.colors import colorConverter
+from matplotlib.patches import Rectangle
 from astropy.io import fits
 
 from getdist import plots, MCSamples
 
-from bangs_utils import BangsDirectories
-
-from matplotlib.colors import colorConverter
-from matplotlib.patches import Rectangle
+from bangs_utils import BangsDirectories, prepare_plot_saving
 
 class PDF:
 
@@ -105,17 +104,13 @@ class PDF:
 
         # Now save the plot
         if suffix is None:
-            outputName = os.path.join(BangsDirectories.results_dir,
-                str(ID)+'_BANGS_triangle.pdf')
-
-            #outputName = self.outputFileName + '_triangle.pdf'
+            plot_name = str(ID)+'_BANGS_triangle.pdf'
         else:
-            outputName = os.path.join(BangsDirectories.results_dir,
-                str(ID)+'_BANGS_triangle_' + suffix + '.pdf')
+            plot_name = str(ID)+'_BANGS_triangle_' + suffix + '.pdf'
 
-            #outputName = self.outputFileName + '_triangle_' + suffix + '.pdf'
+        name = prepare_plot_saving(plot_name)
 
-        g.export( outputName )
+        g.export(name)
 
         hdulist.close()
 

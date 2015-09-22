@@ -5,6 +5,7 @@ from astropy.io import ascii
 from astropy.io import fits
 
 from bangs_photometry import Photometry
+from bangs_pdf import PDF
 from bangs_utils import BangsDirectories
 
 # 
@@ -30,6 +31,10 @@ results_dir = "/Users/jchevall/Coding/BANGS/files/root/results/UVUDF/RAND_0.2/ma
 BangsDirectories.results_dir = results_dir
 
 my_photometry = Photometry()
+#ID = 5866
+
+#my_PDF = PDF(os.path.join(results_dir, "params_names.json"))
+#my_PDF.plot_triangle(ID)
 
 # We now have access to other classes!
 
@@ -45,30 +50,31 @@ my_photometry.filters.load(os.path.expandvars("$BANGS_FILTERS/filters_UVUDF.dat"
 # *****************************************************
 
 # ********** Loading *****************
-file_name = os.path.expandvars("$BANGS_DATA/UVUDF/hlsp_uvudf_hst_v2.0_cat_Types_no_star_TEST.fits")
-my_photometry.observed_catalogue.load(file_name)
+#file_name = os.path.expandvars("$BANGS_DATA/UVUDF/hlsp_uvudf_hst_v2.0_cat_Types_no_star.fits")
+#my_photometry.observed_catalogue.load(file_name)
 
 
 # ********** Plotting of the marginal photometry *****************
-#ID = 10000
 #my_photometry.plot_marginal(ID)
 
 # *****************************************************
 # *********** "BANGS summary catalogue" ****************
 # *****************************************************
 
-file_name = "BANGS_summary_catalogue.fits"
+file_name = "BANGS_summary_catalogue_TEST.fits"
 
 # ********* Load ***************
-my_photometry.summary_catalogue.load(file_name)
+#my_photometry.summary_catalogue.load(file_name)
 
 # ********* Compute ***************
-#file_list = list()
+file_list = ("1021_BANGS.fits.gz", "5866_BANGS.fits.gz")
 #for file in os.listdir(results_dir):
 #    if file.endswith("BANGS.fits.gz"):
 #        file_list.append(file)
 
-#my_photometry.summary_catalogue.compute(file_list, file_name)
+my_photometry.summary_catalogue.compute(file_list, file_name)
+
+stop
 
 # *****************************************************
 # *********** "BANGS MultiNest catalogue" ****************
@@ -92,23 +98,21 @@ my_photometry.multinest_catalogue.load(file_name)
 # *********** Posterior Predictive Checks  ****************
 # *****************************************************
 
-file_name = "PPC_TEST.fits"
+file_name = "PPC.fits"
 
 # ********* Load ***************
-#my_photometry.PPC.load( file_name) 
+my_photometry.PPC.load( file_name) 
 
 # ********* Compute ***************
-my_photometry.PPC.compute(my_photometry.observed_catalogue, 
-        my_photometry.filters, 
-        file_name=file_name)
-
-stop
+#my_photometry.PPC.compute(my_photometry.observed_catalogue, 
+#        my_photometry.filters, 
+#        file_name=file_name)
 
 # ********* Plot ***************
 
 #my_photometry.PPC.plot_chi2()
 
-my_photometry.PPC.plot_p_value()
+#my_photometry.PPC.plot_p_value()
 
 # *****************************************************
 # *********** Residual Photometry  ****************

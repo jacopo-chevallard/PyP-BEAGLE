@@ -229,12 +229,13 @@ class Photometry:
 
 
         # Determine min and max values of y-axis
-        yMin = np.min(np.concatenate((obs_flux[ok]-obs_flux_err[ok], min_flux)))
-        if yMin > 0.:
-            yMin *= 1.2
-
         yMax = np.max(max_flux)
-        yMax *= 1.2
+        yMin = np.min(np.concatenate((obs_flux[ok]-obs_flux_err[ok], min_flux)))
+
+        dY = yMax-yMin
+
+        yMax += dY * 0.1
+        yMin -= dY * 0.1
 
         ax.set_ylim([yMin, yMax])
 

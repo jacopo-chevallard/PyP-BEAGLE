@@ -98,6 +98,9 @@ class BangsSummaryCatalogue:
 
         hdu_col.append({'name':'MARGINAL PHOTOMETRY'})
 
+        hdu_col.append({'name':'POSTERIOR PDF', 'columns':['mass', 'redshift',
+            'tauV_eff', 'tau', 'metallicity', 'specific_sfr']})
+
         # You consider the first file in the list and use as a "mold" to create
         # the structure (binary tables and their columns) of the output FITS file
         firstfile = os.path.join(BangsDirectories.results_dir, file_list[0])
@@ -130,7 +133,11 @@ class BangsSummaryCatalogue:
             # intervals columns, taking the appropriate units from the FITS
             # file that you are using as a mold
             for col_index in range(len(hdulist[hdu_name].columns)):
+
                 col_ = hdulist[hdu_name].columns[col_index]
+
+                if col_.name not in columnNames:
+                    continue
     
                 new_columns.append(fits.Column(name=col_.name+'_mean',
                     format=col_.format, unit=col_.unit))

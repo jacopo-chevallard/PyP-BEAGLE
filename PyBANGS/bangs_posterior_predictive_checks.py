@@ -9,7 +9,8 @@ import sys
 sys.path.append("../dependencies")
 import WeightedKDE
 
-from bangs_utils import prepare_data_saving, prepare_plot_saving, BangsDirectories
+from bangs_utils import prepare_data_saving, prepare_plot_saving, \
+    BangsDirectories, set_plot_ticks
 
 class PosteriorPredictiveChecks:
 
@@ -144,7 +145,9 @@ class PosteriorPredictiveChecks:
 
                     if has_measure > 0.:
                         # if defined, add the minimum error in quadrature
-                        obs_flux_err = np.sqrt((obs_flux_err/obs_flux)**2 + np.float32(filters.data['min_rel_err'][j])**2) * obs_flux
+                        obs_flux_err = (np.sqrt((obs_flux_err/obs_flux)**2 +
+                            np.float32(filters.data['min_rel_err'][j])**2) *
+                            obs_flux)
                         n_data += 1
                         chi_square += ((obs_flux-model_flux) / obs_flux_err)**2
 
@@ -191,6 +194,11 @@ class PosteriorPredictiveChecks:
 
         ax.set_ylabel("Number of galaxies")
         ax.set_xlabel("$\langle \chi^2 \\rangle$")
+
+        ax.set_xlim((min_x, max_x))
+
+        # Set the correct number of major and mnor tick marks
+        set_plot_ticks(ax, prune_y='lower')
 
         # Plot the histogram of the average chi-square
         kwargs = {'alpha':0.7, 'linewidth':0.5}
@@ -262,6 +270,11 @@ class PosteriorPredictiveChecks:
 
         ax.set_ylabel("Number of galaxies")
         ax.set_xlabel("$\log p$-value")
+
+        ax.set_xlim((min_x, max_x))
+
+        # Set the correct number of major and mnor tick marks
+        set_plot_ticks(ax, n_x=3, prune_y='lower')
 
         # Plot the histogram of the average chi-square
         kwargs = {'alpha':0.7, 'linewidth':0.5}

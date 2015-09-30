@@ -4,6 +4,8 @@ import numpy as np
 from bisect import bisect_left
 from datetime import datetime
 
+import matplotlib.ticker as plticker
+
 class BangsDirectories(object):
 
     pybangs_data = os.path.join("pybangs", "data")
@@ -88,8 +90,43 @@ def prepare_plot_saving(file_name, results_dir=None, overwrite=False):
 
     return name
 
-def match_ID(ID_list_1, ID_list_2, sorted=False ):
+def set_plot_ticks(ax, n_x=4, n_y=4, prune_x=None, prune_y=None):
+    """ 
+    Set the major and minor ticks of plots.
 
+    Parameters
+    ---------
+    ax : Axes instance
+        The axis on which to apply yhe major/minor tick marks setting.
+
+    n_x : int, optional
+        Maximum number of intervals on the x-axis.
+
+    n_y : int, optional
+        Maximum number of intervals on the y-axis.
+
+    prune_x : str, optional 
+        Either 'lower' | 'upper' | 'both' | None, to remove
+        edge ticks on the x-axis.
+
+    prune_y : str, optional 
+        Either 'lower' | 'upper' | 'both' | None, to remove
+        edge ticks on the y-axis.
+    """ 
+
+    ax.xaxis.major_locations = plticker.MaxNLocator(nbins=n_x, prune=prune_x) 
+    ax.xaxis.set_major_locator(ax.xaxis.major_locations)
+
+    ax.xaxis.minor_locations = plticker.AutoMinorLocator(2)
+    ax.xaxis.set_minor_locator(ax.xaxis.minor_locations)
+
+    ax.yaxis.major_locations = plticker.MaxNLocator(nbins=n_y, prune=prune_y) 
+    ax.yaxis.set_major_locator(ax.yaxis.major_locations)
+
+    ax.yaxis.minor_locations = plticker.AutoMinorLocator(2)
+    ax.yaxis.set_minor_locator(ax.yaxis.minor_locations)
+
+def match_ID(ID_list_1, ID_list_2, sorted=False):
     """ 
     Match the ID in two catalogues.
 

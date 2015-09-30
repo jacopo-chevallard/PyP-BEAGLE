@@ -12,7 +12,7 @@ import sys
 sys.path.append("../dependencies")
 import WeightedKDE
 
-from bangs_utils import BangsDirectories, prepare_plot_saving
+from bangs_utils import BangsDirectories, prepare_plot_saving, set_plot_ticks
 from bangs_filters import PhotometricFilters
 from bangs_summary_catalogue import BangsSummaryCatalogue
 from bangs_residual_photometry import ResidualPhotometry
@@ -60,7 +60,7 @@ class Photometry:
 
         self.PPC = PosteriorPredictiveChecks()
 
-    def plot_marginal(self, ID, max_interval=99.7):    
+    def plot_marginal(self, ID, max_interval=99.7, print_text=False):    
         """ 
         Plot the 'marginal' photometry predicted by BANGS.
 
@@ -73,6 +73,10 @@ class Photometry:
             The marginal photometry is shown to include `max_interval`
             probability, e.g. `max_interval` = 68. will show the 68 % (i.e.
             '1-sigma') (central) credible region of the marginal photometry.
+
+        print_text : bool, optional
+            Whether to print further information on the plot, such as
+            chi-square, p-value, or leave it empty and neat.
         """
 
         # From the (previously loaded) observed catalogue select the row
@@ -95,8 +99,14 @@ class Photometry:
         # Add to the error array the minimum relative error thet BANGS allows
         # one to add to the errors quoted in the catalogue
         for i, err in enumerate(self.filters.data['flux_errcolName']):
-            obs_flux_err[i] = observation[0][err]*aper_corr*self.filters.units / nanoJy
-            obs_flux_err[i] = np.sqrt( (obs_flux_err[i]/obs_flux[i])**2 + np.float32(self.filters.data['min_rel_err'][i])**2) * obs_flux[i]
+            tmp_err = observation[0][err]
+            if tmp_err > 0.:
+                obs_flux_err[i] = observation[0][err]*aper_corr*self.filters.units / nanoJy
+                obs_flux_err[i] = (np.sqrt( (obs_flux_err[i]/obs_flux[i])**2 +
+                        np.float32(self.filters.data['min_rel_err'][i])**2) *
+                        obs_flux[i])
+            else:
+                obs_flux_err[i] = tmp_err
 
         ok = np.where(obs_flux_err > 0.)[0]
 
@@ -112,6 +122,7 @@ class Photometry:
         probability = hdulist['posterior pdf'].data['probability']
 
         n_bands = len(model_sed.columns.names)
+        print "-------> ", model_sed.columns.names
         median_flux = np.zeros(n_bands)
         pdf_norm = np.zeros(n_bands)
         _max_y = np.zeros(n_bands)
@@ -131,9 +142,6 @@ class Photometry:
 
         for i in range(n_bands):
             xdata = model_sed.data.field(i) / nanoJy
-
-            if i == 0:
-                xdata[:] = 0.
 
             min_x = np.min(xdata)
             max_x = np.max(xdata)
@@ -252,11 +260,7 @@ class Photometry:
         ax.set_ylabel("$f_{\\nu}/\\textnormal{nanoJy}$")
 
         # Set better location of tick marks
-        locx = plticker.MaxNLocator(nbins=4) 
-        ax.xaxis.set_major_locator(locx)
-
-        locy = plticker.MaxNLocator(nbins=4) 
-        ax.yaxis.set_major_locator(locy)
+        set_plot_ticks(ax, n_x=5)
 
         kwargs = {'alpha':0.7}
 
@@ -281,33 +285,35 @@ class Photometry:
         y0, y1 = ax.get_ylim()
         y = y1 - (y1-y0)*0.10
 
-        # Print the evidence
-        try:
-            ax.text(x, y, "$\log(Z)=" + "{:.2f}".format(self.logEvidence) + "$", fontsize=10 )
-        except AttributeError:
-            print "ciao"
+        if print_text:
 
-        # Print the average reduced chi-square
-        try:
-            aver_chi_square = self.PPC.data['aver_chi_square'][self.PPC.data['ID'] == ID]
-            y = y1 - (y1-y0)*0.15
-            ax.text(x, y, "$\langle\chi^2\\rangle=" + "{:.2f}".format(aver_chi_square) + "$", fontsize=10 )
-        except AttributeError:
-            print "`PosteriorPredictiveChecks` not computed/loaded, hence " \
-            "<chi^2> for the object `" + str(ID) + "` is not available"
+            # Print the evidence
+            try:
+                ax.text(x, y, "$\log(Z)=" + "{:.2f}".format(self.logEvidence) + "$", fontsize=10 )
+            except AttributeError:
+                print "ciao"
 
-        try:
-            aver_red_chi_square = self.PPC.data['aver_red_chi_square'][self.PPC.data['ID'] == ID]
-            n_data = self.PPC.data['n_used_bands'][self.PPC.data['ID'] == ID]
-            y = y1 - (y1-y0)*0.20
-            ax.text(x, y,
-                    "$\langle\chi^2/(\\textnormal{N}_\\textnormal{data}-1)\\rangle=" \
-                    + "{:.2f}".format(aver_red_chi_square) + "\; \
-                    (\\textnormal{N}_\\textnormal{data}=" + \
-                    "{:d}".format(n_data) + ")" + "$", fontsize=10 )
-        except AttributeError:
-            print "`PosteriorPredictiveChecks` not computed/loaded, hence " \
-            "<chi^2_red> for the object `" + str(ID) + "` is not available"
+            # Print the average reduced chi-square
+            try:
+                aver_chi_square = self.PPC.data['aver_chi_square'][self.PPC.data['ID'] == ID]
+                y = y1 - (y1-y0)*0.15
+                ax.text(x, y, "$\langle\chi^2\\rangle=" + "{:.2f}".format(aver_chi_square) + "$", fontsize=10 )
+            except AttributeError:
+                print "`PosteriorPredictiveChecks` not computed/loaded, hence " \
+                "<chi^2> for the object `" + str(ID) + "` is not available"
+
+            try:
+                aver_red_chi_square = self.PPC.data['aver_red_chi_square'][self.PPC.data['ID'] == ID]
+                n_data = self.PPC.data['n_used_bands'][self.PPC.data['ID'] == ID]
+                y = y1 - (y1-y0)*0.20
+                ax.text(x, y,
+                        "$\langle\chi^2/(\\textnormal{N}_\\textnormal{data}-1)\\rangle=" \
+                        + "{:.2f}".format(aver_red_chi_square) + "\; \
+                        (\\textnormal{N}_\\textnormal{data}=" + \
+                        "{:d}".format(n_data) + ")" + "$", fontsize=10 )
+            except AttributeError:
+                print "`PosteriorPredictiveChecks` not computed/loaded, hence " \
+                "<chi^2_red> for the object `" + str(ID) + "` is not available"
 
         if y0 < 0.: plt.plot( [x0,x1], [0.,0.], color='gray', lw=1.0 )
 

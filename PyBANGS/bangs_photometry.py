@@ -122,7 +122,6 @@ class Photometry:
         probability = hdulist['posterior pdf'].data['probability']
 
         n_bands = len(model_sed.columns.names)
-        print "-------> ", model_sed.columns.names
         median_flux = np.zeros(n_bands)
         pdf_norm = np.zeros(n_bands)
         _max_y = np.zeros(n_bands)

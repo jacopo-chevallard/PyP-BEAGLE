@@ -1,6 +1,7 @@
 import numpy as np
 import os
 import json
+from matplotlib import rc
 from matplotlib.colors import colorConverter
 from matplotlib.patches import Rectangle
 from astropy.io import fits
@@ -19,7 +20,28 @@ class PDF:
             self.adjust_params = json.load(f)
 
     def plot_triangle(self, ID, params_to_plot=None, suffix=None):
+        # NB: you changed the getdist/plot.py _set_locator function
+        # replacing line 1172-1176
+        #if x and (abs(xmax - xmin) < 0.01 or max(abs(xmin), abs(xmax)) >= 1000):
+        #    axis.set_major_locator(plt.MaxNLocator(self.settings.subplot_size_inch / 2 + 3, prune=prune))
+        #else:
+        #    axis.set_major_locator(plt.MaxNLocator(self.settings.subplot_size_inch / 2 + 4, prune=prune))
+        # with
+        #if x and (abs(xmax - xmin) < 0.01 or max(abs(xmin), abs(xmax)) >= 1000):
+        #    axis.set_major_locator(plt.MaxNLocator(self.settings.subplot_size_inch / 2 + 2, prune=prune))
+        #else:
+        #    axis.set_major_locator(plt.MaxNLocator(self.settings.subplot_size_inch / 2 + 3, prune=prune))
+        # to have a fewer number of tick marks, and hence less crowded triangle plots
 
+        # for "cosmetics" reasons you also changed the getdist/plot.py setWithSubplotSize function
+        # replacing line 166-167
+        # self.lab_fontsize = 7 + 2 * self.subplot_size_inch
+        # self.axes_fontsize = 4 + 2 * self.subplot_size_inch
+        # with
+        # self.lab_fontsize = 7 + 4 * self.subplot_size_inch
+        # self.axes_fontsize = 4 + 4 * self.subplot_size_inch
+        # to have larger, hence more readable, label and axes font sizes
+    
         fits_file = os.path.join(BangsDirectories.results_dir,
                 str(ID)+'_BANGS.fits.gz')
 
@@ -71,7 +93,8 @@ class PDF:
                     "fine_bins":200,
                     "fine_bins_2d":80,
                     "smooth_scale_1D":0.5,
-                    "smooth_scale_2D":0.7
+                    "smooth_scale_2D":0.7,
+                    "tight_gap_fraction":0.15
                     }
 
         samples = MCSamples(samples=samps, names=names, ranges=ranges, \
@@ -98,9 +121,7 @@ class PDF:
             # Add shaded region showing 1D 68% credible interval
             y0, y1 = ax.get_ylim()
             lev = samples.get1DDensity(par_name).getLimits(settings['contours'][0])
-            ax.add_patch(Rectangle((lev[0], y0), lev[1]-lev[0], y1-y0, facecolor="grey", alpha=0.2))
-
-        
+            ax.add_patch(Rectangle((lev[0], y0), lev[1]-lev[0], y1-y0, facecolor="grey", alpha=0.5))
 
         # Now save the plot
         if suffix is None:

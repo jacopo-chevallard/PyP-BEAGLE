@@ -8,11 +8,48 @@ from astropy.table import Table, Column
 import sys
 sys.path.append("../dependencies")
 import WeightedKDE
+from walker_random_sampling import WalkerRandomSampling
 
 from bangs_utils import prepare_data_saving, prepare_plot_saving, \
     BangsDirectories, set_plot_ticks
 
+
 class PosteriorPredictiveChecks:
+
+    def chi_square(y, E_y, sig_y):
+        """ 
+        An example of a "discrepancy function", the chi-square
+
+        Parameters
+        ----------
+        y : float
+            "Observed" value
+
+        E_y : float
+            "Expected" (theoretical) value
+
+        sig_y: float
+            Standard deviation of the "observed" values
+
+        Returns 
+        ------
+        float    
+
+        Notes
+        -----
+        Negative values of sig_y produce a mask, i.e. those values are not
+        considered in the chi-square computation.
+        For further details on "discrepancy functions" see Gelman, Meng & Stern (1996).
+        """
+    
+        if y.ndim == 1:
+            loc = np.where(sig_y > 0.)[0]
+            return np.sum((y[loc]-E_y[loc])**2/sig_y[loc]**2)
+        elif y.ndim == 2:
+            my = np.ma.masked_array(y, mask=(sig_y <= 0.))
+            mE_y = np.ma.masked_array(E_y, mask=(sig_y <= 0.))
+            msig_y = np.ma.masked_array(sig_y, mask=(sig_y <= 0.))
+            return np.ma.sum((my-mE_y)**2/msig_y**2, axis=0)
 
 
     def load(self, file_name):
@@ -32,7 +69,7 @@ class PosteriorPredictiveChecks:
     
         self.data = my_table
 
-    def compute(self, observed_catalogue, filters, 
+    def compute(self, observed_catalogue, filters, discrepancy=chi_square, n_replicated=2000, 
             file_name=None):
         """ 
         Compute  posterior predictive checks quantities.
@@ -45,24 +82,18 @@ class PosteriorPredictiveChecks:
         filters : `bangs_filters.PhotometricFilters`
             Class containing a set of photometric filters.
 
+        discrepancy : function, optional
+            The discrepancy function used in the posterior predicitve check.
+
+        n_replicated: int, optional
+            The number of replicated data to draw.
+
         file_name : str, optional
             Name of the output catalogue, wuthout including the direcory tree.
             It will be saved into the RESULTS_DIR/PYBANGS_DATA folder (which
             will be created if not present).
         """
 
-##        if filters is not None:
-##            self.filters = filters
-##
-##        if not hasattr(self, 'filters'):
-##            raise AttributeError("No 'PhotometricFilters' class has been passed"
-##                    " to the class constructor or to this function!")
-##
-##        if results_dir is not None:
-##            self.results_dir = results_dir
-##
-##        if not hasattr(self, 'results_dir'):
-##            raise AttributeError("No 'results_dir' defined!")
 
         # Copy from the catalogue the column containing the object IDs
         objID = Column(data=observed_catalogue.data['ID'], name='ID', dtype=np.int32) 
@@ -97,9 +128,12 @@ class PosteriorPredictiveChecks:
         aver_red_chi_square = Column(name='aver_red_chi_square',
                 dtype=np.float32, length=n_obj)
 
+        p_value = Column(name='p_value',
+                dtype=np.float32, length=n_obj)
+
         my_cols = [objID, n_used_bands, deg_of_freedom, aver_chi_square,
                 aver_red_chi_square, left_cumul_probability,
-                right_cumul_probability]
+                right_cumul_probability, p_value]
 
         my_table = Table(my_cols)
 
@@ -121,9 +155,26 @@ class PosteriorPredictiveChecks:
                 hdulist = fits.open(file)
                 bangs_data = hdulist['MARGINAL PHOTOMETRY'].data
 
+                # Load the posterior probability and create array of row indices
                 probability = hdulist['POSTERIOR PDF'].data['probability']
+                n_samples = len(probability)
+                row_indices = np.arange(n_samples)
 
-                n_samples = len(bangs_data.field(0))
+                # Now, draw the weighted samples with replacement
+                wrand = WalkerRandomSampling(probability, keys=row_indices)
+                replic_data_rows = wrand.random(n_replicated)
+
+                obs_flux = np.zeros(filters.n_bands, np.float32)
+                obs_flux_err = np.zeros(filters.n_bands, np.float32)
+                model_flux = np.zeros((filters.n_bands, n_samples), np.float32)
+
+                # The replicated data are just the fluxes predicted by your
+                # model, drawn from the posterior probability distribution
+                # accordingly to their probability, with the effect of
+                # observational noise added
+                noiseless_flux = np.zeros((filters.n_bands, n_replicated), np.float32)
+                replic_flux = np.zeros((filters.n_bands, n_replicated), np.float32)
+
                 chi_square = np.zeros(n_samples, np.float32)
                 n_data = 0
 
@@ -131,28 +182,85 @@ class PosteriorPredictiveChecks:
 
                     # observed flux and its error
                     name = filters.data['flux_colName'][j]
-                    obs_flux = observed_catalogue.data[i][name] * filters.units / jy
+                    obs_flux[j] = observed_catalogue.data[i][name] * filters.units / jy
 
                     name = filters.data['flux_errcolName'][j]
-                    obs_flux_err = observed_catalogue.data[i][name] * filters.units  / jy
+                    obs_flux_err[j] = observed_catalogue.data[i][name] * filters.units  / jy
                     has_measure = False
-                    if obs_flux_err > 0.:
+                    if obs_flux_err[j] > 0.:
                         has_measure = True
 
-                    # model flux and its error
+                    # model flux
                     name = '_' + filters.data['label'][j] + '_'
-                    model_flux = bangs_data[name] / jy
+                    model_flux[j,:] = bangs_data[name] / jy
 
                     if has_measure > 0.:
                         # if defined, add the minimum error in quadrature
-                        obs_flux_err = (np.sqrt((obs_flux_err/obs_flux)**2 +
+                        obs_flux_err[j] = (np.sqrt((obs_flux_err[j]/obs_flux[j])**2 +
                             np.float32(filters.data['min_rel_err'][j])**2) *
-                            obs_flux)
+                            obs_flux[j])
                         n_data += 1
-                        chi_square += ((obs_flux-model_flux) / obs_flux_err)**2
+                        
+                # You save in this array the noise-less flux predicted by the model        
+                noiseless_flux = model_flux[:, replic_data_rows]
+
+                for j in range(filters.n_bands):
+                    # Here you add the observational noise to the
+                    # noise-less fluxes predicted by the model, obtaining
+                    # the actual replicated data
+                    if obs_flux_err[j] > 0.:
+                        replic_flux[j,:] = noiseless_flux[j, :] +   \
+                        np.random.normal(scale=obs_flux_err[j], size=n_replicated)
+                    else:    
+                        replic_flux[j,:] = -99.99999
+
+                # Write the replicated data to an output FITS file
+                # Create the new FITS file
+                new_hdu = fits.HDUList(fits.PrimaryHDU())
+
+                # Add column allowing you to match each row of the replicated
+                # data to the row of noise-less fluxes predicted by your model,
+                # i.e. those in the "MARGINAL PHOTOMETRY" extension of the
+                # BANGS output FITS file 
+                # NB: the column indexing start with 1 !!
+                ID_col = fits.Column(name='row_index', format='I')
+
+                # Copy the columns defined in the "MARGINAL PHOTOMETRY"
+                # extension to the new FITS file
+                cols = hdulist['MARGINAL PHOTOMETRY'].columns
+
+                new_hdu.append(fits.BinTableHDU.from_columns(ID_col + cols, nrows=n_replicated, fill=True))
+
+                # Fill with the replicated data fluxes
+                j = 0
+                for col_name in new_hdu[1].columns.names:
+                    if col_name in cols.names:
+                        new_hdu[1].data[col_name] = replic_flux[j,:]
+                        j += 1
+
+                # Fill with the row indices
+                new_hdu[1].data['row_index'] = replic_data_rows
+
+                # Save the file
+                file_name = strID + "_BANGS_replic_data.fits.gz"
+                name = prepare_data_saving(file_name)
+                new_hdu.writeto(name)
+
+                # Extend the arrays containing the observed flux and its
+                # error to match the shape of the replicated data array
+                ext_obs_flux = obs_flux.reshape(filters.n_bands, 1).repeat(n_replicated, 1)
+                ext_obs_flux_err = obs_flux_err.reshape(filters.n_bands, 1).repeat(n_replicated, 1)
+
+                # Compute the "discrepancy" for the actual data, and for the replicated data
+                discrepancy_data = discrepancy(ext_obs_flux, noiseless_flux, ext_obs_flux_err)
+                discrepancy_repl_data = discrepancy(replic_flux, noiseless_flux, ext_obs_flux_err)
+
+                # The p-value is just the fraction of objects for which the
+                # discrepancy for the replicated data is larger then that for
+                # the actual data! 
+                my_table['p_value'][i] = 1. * np.count_nonzero((discrepancy_repl_data > discrepancy_data)) / n_replicated
 
                 dof = n_data
-
                 my_table['n_used_bands'][i] = n_data
                 my_table['dof'][i] = dof
 

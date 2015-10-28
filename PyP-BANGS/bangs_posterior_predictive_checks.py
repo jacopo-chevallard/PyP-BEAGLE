@@ -144,7 +144,8 @@ class PosteriorPredictiveChecks:
 
         model_flux = np.zeros(filters.n_bands, np.float32)
 
-        jy = 1.E-26
+        # 1 jy = 10^-23 erg s^-1 cm^-2 hz^-1
+        jy = 1.E-23 
 
         for i in range(n_obj):
 

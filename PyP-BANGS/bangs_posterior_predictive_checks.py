@@ -16,7 +16,7 @@ from bangs_utils import prepare_data_saving, prepare_plot_saving, \
 
 class PosteriorPredictiveChecks:
 
-    def chi_square(y, E_y, sig_y):
+    def chi_square(self, y, E_y, sig_y):
         """ 
         An example of a "discrepancy function", the chi-square
 
@@ -69,8 +69,8 @@ class PosteriorPredictiveChecks:
     
         self.data = my_table
 
-    def compute(self, observed_catalogue, filters, discrepancy=chi_square, n_replicated=2000, 
-            file_name=None):
+    def compute(self, observed_catalogue, filters, discrepancy=None, 
+            n_replicated=2000, file_name=None):
         """ 
         Compute  posterior predictive checks quantities.
 
@@ -94,6 +94,8 @@ class PosteriorPredictiveChecks:
             will be created if not present).
         """
 
+        if discrepancy is None:
+            discrepancy = self.chi_square
 
         # Copy from the catalogue the column containing the object IDs
         objID = Column(data=observed_catalogue.data['ID'], name='ID', dtype=np.int32) 
@@ -175,7 +177,6 @@ class PosteriorPredictiveChecks:
                 noiseless_flux = np.zeros((filters.n_bands, n_replicated), np.float32)
                 replic_flux = np.zeros((filters.n_bands, n_replicated), np.float32)
 
-                chi_square = np.zeros(n_samples, np.float32)
                 n_data = 0
 
                 for j in range(filters.n_bands):
@@ -242,8 +243,8 @@ class PosteriorPredictiveChecks:
                 new_hdu[1].data['row_index'] = replic_data_rows
 
                 # Save the file
-                file_name = strID + "_BANGS_replic_data.fits.gz"
-                name = prepare_data_saving(file_name)
+                name = strID + "_BANGS_replic_data.fits.gz"
+                name = prepare_data_saving(name)
                 new_hdu.writeto(name)
 
                 # Extend the arrays containing the observed flux and its
@@ -264,7 +265,10 @@ class PosteriorPredictiveChecks:
                 my_table['n_used_bands'][i] = n_data
                 my_table['dof'][i] = dof
 
-                av_chi_square = np.sum(probability*chi_square) / np.sum(probability)
+                # Here you cosider all samples in the posterior
+                ext_obs_flux = obs_flux.reshape(filters.n_bands, 1).repeat(n_samples, 1)
+                ext_obs_flux_err = obs_flux_err.reshape(filters.n_bands, 1).repeat(n_samples, 1)
+                av_chi_square = np.sum(probability*self.chi_square(ext_obs_flux, model_flux, ext_obs_flux_err)) / np.sum(probability)
                 my_table['aver_chi_square'][i] = av_chi_square
                 my_table['aver_red_chi_square'][i] = av_chi_square / dof
 
@@ -368,9 +372,9 @@ class PosteriorPredictiveChecks:
             File name of the output plot.
         """ 
 
-        xdata = np.log10(self.data['right_cumul_probability'])
+        xdata = np.log10(self.data['p_value'])
         n_data = len(xdata)
-        min_x = -3.
+        min_x = 0.001
         max_x = 0.
 
         fig = plt.figure()

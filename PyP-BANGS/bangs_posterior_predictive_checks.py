@@ -363,50 +363,93 @@ class PosteriorPredictiveChecks:
         plt.close(fig)
 
     def plot_p_value(self, 
-            plot_name="BANGS_p_value.pdf"):
+            plot_name="BANGS_p_value.pdf", broken_axis=False):
         """ 
         Plots the distribution (histogram) of the p-value.
 
         Parameters
         ----------
-        plot_name: str, optional
+        plot_name : str, optional
             File name of the output plot.
+
+        broken_axis : bool, optionak
+            If True, then the y-axis is broken to allow a larger dynamic range
+            without loosing details.
         """ 
 
-        xdata = np.log10(self.data['p_value'])
+        xdata = self.data['p_value']
         n_data = len(xdata)
-        min_x = 0.001
-        max_x = 0.
+        min_x = 0.
+        max_x = 1.
 
         fig = plt.figure()
-        ax = fig.add_subplot(1, 1, 1)
+        
+        if broken_axis:
+            fig, axs = plt.subplots(2, 1, sharex=True)
+            fig.subplots_adjust(left=0.13, bottom=0.10)
+        else:
+            fig, axs = plt.subplots(1, 1)
+            axs = (axs,)
 
-        ax.set_ylabel("Number of galaxies")
-        ax.set_xlabel("$\log p$-value")
+        ylabel = "Number of galaxies"
+        xlabel = "$p$-value"
 
-        ax.set_xlim((min_x, max_x))
-
-        # Set the correct number of major and mnor tick marks
-        set_plot_ticks(ax, n_x=3, prune_y='lower')
+        fig.text(0.5, 0.02, xlabel, ha='center')
+        fig.text(0.03, 0.5, ylabel, va='center', rotation='vertical')
 
         # Plot the histogram of the average chi-square
         kwargs = {'alpha':0.7, 'linewidth':0.5}
-        n, bins, patches = ax.hist(xdata, 
-                bins=50, 
-                range=(min_x, max_x),
-                color='gray',
-                **kwargs)
+        for ax in axs:
+            n, bins, patches = ax.hist(xdata, 
+                    bins=50, 
+                    range=(min_x, max_x),
+                    color='gray',
+                    **kwargs)
 
-        y0, y1 = ax.get_ylim()
-        levels = (0.01,)
+            ax.set_xlim((min_x, max_x))
+
+
+        if broken_axis:
+            # Set the correct number of major and mnor tick marks
+            set_plot_ticks(axs[0], n_x=4, n_y=3, prune_y='lower')
+            set_plot_ticks(axs[1], n_x=4, n_y=3, prune_y='both')
+
+            max_y = np.max(n[1:])
+            axs[1].set_ylim((0, max_y*1.12))
+            axs[0].set_ylim((n[0]*0.8, n[0]*1.04))
+
+            # hide the spines between ax and ax2
+            axs[0].spines['bottom'].set_visible(False)
+            axs[1].spines['top'].set_visible(False)
+            axs[0].xaxis.tick_top()
+            axs[0].tick_params(labeltop='off')  # don't put tick labels at the top
+            axs[1].xaxis.tick_bottom()
+
+            d = .015  # how big to make the diagonal lines in axes coordinates
+            # arguments to pass plot, just so we don't keep repeating them
+            kwargs = dict(transform=axs[0].transAxes, color='k', clip_on=False)
+            axs[0].plot((-d, +d), (-d, +d), **kwargs)        # top-left diagonal
+            axs[0].plot((1 - d, 1 + d), (-d, +d), **kwargs)  # top-right diagonal
+
+            kwargs.update(transform=axs[1].transAxes)  # switch to the bottom axes
+            axs[1].plot((-d, +d), (1 - d, 1 + d), **kwargs)  # bottom-left diagonal
+            axs[1].plot((1 - d, 1 + d), (1 - d, 1 + d), **kwargs)  # bottom-right diagonal
+        else:
+            set_plot_ticks(axs[0], n_x=4, n_y=4, prune_y='lower')
+            axs[0].set_ylim((0, np.max(n)*1.1))
+
+
+
+       # y0, y1 = ax.get_ylim()
+        levels = (0.01, 0.05)
         for lev in levels:
-            l = np.log10(lev)
+            l = lev
             frac = 1.*len(np.where(xdata <= l)[0])/n_data
             print "Fraction of galaxies with p-value < " + "{:.2f}".format(lev) + " = {:.2f}".format(frac)
-            ax.plot((l, l),
-                    (y0, y1),
-                    color='black',
-                    linestyle='--')
+           # ax.plot((l, l),
+           #         (y0, y1),
+           #         color='black',
+           #         linestyle='--')
 
         name = prepare_plot_saving(plot_name)
         fig.savefig(name, dpi=None, facecolor='w', edgecolor='w',

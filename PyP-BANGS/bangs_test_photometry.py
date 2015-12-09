@@ -36,7 +36,7 @@ results_dir = "/Users/jchevall/Coding/BANGS/files/root/results/UVUDF/RAND_0.2/ma
 BangsDirectories.results_dir = results_dir
 
 my_photometry = Photometry()
-ID = 5866
+ID = 5378
 
 my_PDF = PDF(os.path.join(results_dir, "params_names.json"))
 #my_PDF.plot_triangle(ID)
@@ -62,6 +62,8 @@ my_photometry.observed_catalogue.load(file_name)
 
 # ********** Plotting of the marginal photometry *****************
 #my_photometry.plot_marginal(ID)
+my_photometry.plot_replicated_data(ID)
+stop
 
 # *****************************************************
 # *********** "BANGS summary catalogue" ****************
@@ -105,18 +107,18 @@ my_photometry.multinest_catalogue.load(file_name)
 file_name = "PPC.fits"
 
 # ********* Load ***************
-#my_photometry.PPC.load( file_name) 
+my_photometry.PPC.load( file_name) 
 
 # ********* Compute ***************
-my_photometry.PPC.compute(my_photometry.observed_catalogue, 
-        my_photometry.filters, 
-        file_name=file_name)
+#my_photometry.PPC.compute(my_photometry.observed_catalogue, 
+#        my_photometry.filters, 
+#        file_name=file_name)
 
 # ********* Plot ***************
 
-my_photometry.PPC.plot_chi2()
+#my_photometry.PPC.plot_chi2()
 
-my_photometry.PPC.plot_p_value()
+my_photometry.PPC.plot_p_value(broken_axis=True)
 
 stop
 

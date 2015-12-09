@@ -5,6 +5,8 @@ from bisect import bisect_left
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as plticker
+import pandas as pd
+import seaborn as sns
 from astropy.io import ascii
 from astropy.io import fits
 
@@ -22,6 +24,8 @@ from bangs_posterior_predictive_checks import PosteriorPredictiveChecks
 
 microJy = np.float32(1.E-23 * 1.E-06)
 nanoJy = np.float32(1.E-23 * 1.E-09)
+
+p_value_lim = 0.05
 
 class ObservedCatalogue:
 
@@ -60,7 +64,8 @@ class Photometry:
 
         self.PPC = PosteriorPredictiveChecks()
 
-    def plot_marginal(self, ID, max_interval=99.7, print_text=False):    
+    def plot_marginal(self, ID, max_interval=99.7, 
+            print_text=False, print_title=False):    
         """ 
         Plot the fluxes predicted by BANGS.
 
@@ -81,6 +86,9 @@ class Photometry:
         print_text : bool, optional
             Whether to print further information on the plot, such as
             chi-square, p-value, or leave it empty and neat.
+
+        print_text : bool, optional
+            Whether to print the object ID on the top of the plot.
         """
 
         # From the (previously loaded) observed catalogue select the row
@@ -265,7 +273,7 @@ class Photometry:
         # Set better location of tick marks
         set_plot_ticks(ax, n_x=5)
 
-        kwargs = {'alpha':0.7}
+        kwargs = {'alpha':0.8}
 
         plt.errorbar(self.filters.data['wl_eff'], 
                 obs_flux, 
@@ -275,12 +283,13 @@ class Photometry:
                 marker = "D",
                 markeredgewidth = 0.,
                 markersize = 8,
-                elinewidth=0.5,
+                elinewidth=1.0,
+                capsize=3,
                 **kwargs)
 
 
         # Title of the plot is the object ID
-        plt.title(str(ID))
+        if print_title: plt.title(str(ID))
 
         # Location of printed text
         x0, x1 = ax.get_xlim()
@@ -329,7 +338,8 @@ class Photometry:
 
         hdulist.close()
 
-    def plot_replicated_data(self, ID, max_interval=99.7, print_text=False):    
+    def plot_replicated_data(self, ID, max_interval=99.7, n_replic_to_plot=16,
+            print_text=False):    
         """ 
         Plot the replicated data.
 
@@ -343,10 +353,23 @@ class Photometry:
             probability, e.g. `max_interval` = 68. will show the 68 % (i.e.
             '1-sigma') (central) credible region of the marginal photometry.
 
+        n_replic_to_plot: int, optional
+            The number of replicated data that will be plotted. It can be given
+            as a single number, or as a pair (n_x, n_y), in which case the
+            total number of replicated data plotted will be n_x * n_y
+
         print_text : bool, optional
             Whether to print further information on the plot, such as
             chi-square, p-value, or leave it empty and neat.
         """
+
+        n_replic_to_plot = np.array(n_replic_to_plot)
+        if n_replic_to_plot.size == 1:
+            n_plot_x = int(np.sqrt(n_replic_to_plot))
+            n_plot_y = n_plot_x
+        else:
+            n_plot_x = n_replic_to_plot[0]
+            n_plot_y = n_replic_to_plot[1]
 
         # From the (previously loaded) observed catalogue select the row
         # corresponding to the input ID
@@ -365,7 +388,7 @@ class Photometry:
         for i, band in enumerate(self.filters.data['flux_colName']):
             obs_flux[i] = observation[0][band]*aper_corr*self.filters.units / nanoJy
 
-        # Add to the error array the minimum relative error thet BANGS allows
+        # Add to the error array the minimum relative error that BANGS allows
         # one to add to the errors quoted in the catalogue
         for i, err in enumerate(self.filters.data['flux_errcolName']):
             tmp_err = observation[0][err]
@@ -379,187 +402,251 @@ class Photometry:
 
         ok = np.where(obs_flux_err > 0.)[0]
 
-        fig = plt.figure()
-        ax = fig.add_subplot(1, 1, 1)
+        # Open the file containing BANGS results
+        fits_file = os.path.join(BangsDirectories.results_dir,
+                str(ID)+'_BANGS.fits.gz')
+
+        model_hdu = fits.open(fits_file)
+        model_sed = model_hdu['marginal photometry']
 
         # Open the file containing the replicated data
         fits_file = os.path.join(BangsDirectories.results_dir,
                 BangsDirectories.pybangs_data,
                 str(ID)+'_BANGS_replic_data.fits.gz')
 
-        hdulist = fits.open(fits_file)
+        replic_hdu = fits.open(fits_file)
+        replic_data = replic_hdu[1]
 
-        # Consider only the extension containing the predicted model fluxes
-        model_sed = hdulist[1]
+        n_replicated = replic_data.data.field(0).size
 
         # the first column is the ID, so the number of bands is n-1
-        n_bands = len(model_sed.columns.names)-1
+        n_bands = len(replic_data.columns.names)-1
+
+        indices = replic_data.data['row_index']
+        noiseless_flux = np.zeros((n_bands, indices.size))
+        for i in range(n_bands):
+            noiseless_flux[i, :] = model_sed.data[indices].field(i) / nanoJy
+
+        # Compute the p-value band-by-band
+        p_value_bands = np.zeros(n_bands)
+        replic_fluxes = np.zeros((n_bands, n_replicated))
+        for i in range(n_bands):
+            
+            obs_discr = (obs_flux[i].repeat(n_replicated)-noiseless_flux[i, :])**2 / obs_flux_err[i].repeat(n_replicated)**2
+            repl_discr = (replic_data.data.field(i+1)/1.E-09-noiseless_flux[i, :])**2 / obs_flux_err[i].repeat(n_replicated)**2
+
+            replic_fluxes[i,:] = replic_data.data.field(i+1)/1.E-09
+            p_value_bands[i] = 1. * np.count_nonzero((repl_discr >
+                obs_discr)) / n_replicated
+
+        markers = np.array("o").repeat(n_bands)
+        loc = np.where(p_value_bands <= p_value_lim)[0]
+        markers[loc] = "o"
+        print "p_value_bands: ", p_value_bands
+
+        ext_obs_flux = obs_flux.reshape(n_bands, 1).repeat(n_replicated, 1)
+        ext_obs_flux_err = obs_flux_err.reshape(n_bands, 1).repeat(n_replicated, 1)
+
+        obs_discr = np.sum((ext_obs_flux-noiseless_flux)**2 / ext_obs_flux_err**2, axis=0)
+        repl_discr = np.sum((replic_fluxes-noiseless_flux)**2 / ext_obs_flux_err**2, axis=0)
+
+        p_value = 1. * np.count_nonzero((repl_discr >
+            obs_discr)) / n_replicated
+        
+        print "p_value: ", p_value
 
         median_flux = np.zeros(n_bands)
         pdf_norm = np.zeros(n_bands)
         _max_y = np.zeros(n_bands)
-        min_flux = np.zeros(n_bands)
-        max_flux = np.zeros(n_bands)
+        max_abs_flux = np.zeros(n_plot_x*n_plot_y)
 
-        y_plot = list(range(n_bands))
-        x_plot = list(range(n_bands))
-
-        has_pdf = list(range(n_bands))
-        kde_pdf = list(range(n_bands))
-        nXgrid = 1000
-
-        width = 5*np.min(np.array(self.filters.data['wl_eff'][1:])-np.array(self.filters.data['wl_eff'][0:-1]))
-
-        kwargs = {'color':'tomato', 'alpha':0.7, 'edgecolor':'black', 'linewidth':0.2}
-
+        # Compute mean residual
+        replic_fluxes = np.zeros((n_bands, n_replicated))
+        mean_replic_fluxes = np.zeros(n_bands)
         for i in range(n_bands):
+            mean_replic_fluxes[i] = np.mean(replic_data.data.field(i+1))/1.E-09
+            replic_fluxes[i,:] = replic_data.data.field(i+1)/1.E-09
 
-            # Convert the fluxes from Jy to nanoJy
-            xdata = model_sed.data.field(i+1) / 1.E-09
-    
-            print "xdata: ", xdata
+        mean_residual = (mean_replic_fluxes-obs_flux)/obs_flux_err 
 
-            min_x = np.min(xdata)
-            max_x = np.max(xdata)
+        # Compute variance-covariance matrix of residual
+        residual_flux = (replic_fluxes-obs_flux.reshape(n_bands,
+            1).repeat(n_replicated, 1)) / obs_flux_err.reshape(n_bands,
+                    1).repeat(n_replicated, 1)
 
-            # if min_x == max_x, then you can not use weighted KDE, since you
-            # just have one value for the x...this usually happens bacause of
-            # IGM absorption, which absorbs the flux blue-ward 1216 AA, making
-            # all flux = 0
-            if min_x == max_x:
-                has_pdf[i] = False
-                median_flux[i] = min_x
-                continue
+        residual_covar = np.cov(residual_flux)
+        print "residual_covar: ", residual_covar
 
-            min_flux[i] = min_x
-            max_flux[i] = max_x
+        # Plot the variance-covariance matrix of residuals
+        sns.set(style="white")
+        labels = list()
+        for lab in self.filters.data['label']:
+            labels.append(lab.split('_')[-1])
+            
+        d = pd.DataFrame(data=np.abs(residual_flux.T),
+                columns=labels)
 
-            # Compute the marginal PDF through a weighted KDE
-            has_pdf[i] = True
-            pdf = WeightedKDE.gaussian_kde(xdata)
+        # Compute the correlation matrix
+        corr = d.corr()
 
-            # Build a grid of value over which computing the actual PDF from its KDE
-            x_grid = np.linspace(min_x, max_x, nXgrid)
+        # Generate a mask for the upper triangle
+        mask = np.zeros_like(corr, dtype=np.bool)
+        mask[np.triu_indices_from(mask)] = True
 
-            # Compute the PDF
-            pdf_grid = np.array(pdf(x_grid))
+        # Set up the matplotlib figure
+        fig, ax = plt.subplots()
 
-            # Compute the PDF normalization, so its integral will be exactly 1
-            pdf_norm[i] = simps(pdf_grid, x_grid)
-            pdf_grid /= pdf_norm[i]
+        # Generate a custom diverging colormap
+        cmap = sns.diverging_palette(220, 10, as_cmap=True)
 
-            # Now compute the cumulative PDF
-            cumul_pdf = cumtrapz(pdf_grid, x_grid, initial = 0.)
-            cumul_pdf /= cumul_pdf[-1]
+        # Draw the heatmap with the mask and correct aspect ratio
+        sns.heatmap(corr, mask=mask, cmap=cmap, vmax=0.4,
+                square=True, annot=True, fmt=".2f", annot_kws={"size": 10},
+                linewidths=.5, cbar_kws={"shrink": .85}, ax=ax)
 
-            # Get the interpolant of the cumulative PDF
-            f_interp = interp1d(cumul_pdf, x_grid)
+        # Rotate by 45 deg the x and y ticks so they do not overlap
+        plt.setp( ax.xaxis.get_majorticklabels(), rotation=45,
+                horizontalalignment='right' )
 
-            # Compute the limits over which you will plot the "violin", for
-            # instance showing only the cumulative PDF up to +/- 3 sigma
-            intv = 0.5*(100.-max_interval)/100.
-            lims = f_interp([intv,1.-intv])
-            prob_lims = pdf(lims) / pdf_norm[i]
+        plt.setp( ax.yaxis.get_majorticklabels(), rotation=45,
+                horizontalalignment='right' )
 
-            # The median corresponds to a cumulative probability = 0.5
-            median_flux[i] = f_interp(0.5)
+        name = prepare_plot_saving(str(ID)+'_BANGS_replic_data_phot_matrix.pdf')
 
-            kde_pdf[i] = pdf
+        fig.savefig(name, dpi=None, facecolor='w', edgecolor='w',
+                orientation='portrait', papertype='a4', format="pdf",
+                transparent=False, bbox_inches="tight", pad_inches=0.1)
 
-            i1 = bisect_left(x_grid, lims[0])
-            i2 = bisect_left(x_grid, lims[1])
-        
-            x_plot[i] = np.concatenate(([lims[0]], x_grid[i1+1:i2], [lims[1]]))
+        fig.clear()
+        plt.close(fig)
 
-            y_plot[i] = np.concatenate(([prob_lims[0]], pdf_grid[i1+1:i2], [prob_lims[1]]))
+        # Select a random set of repliated data
+        np.random.seed(seed=12345678)
+        replic_data_rows = np.random.choice(n_replicated, size=n_plot_x*n_plot_y)    
 
-            _max_y[i] = np.max(y_plot[i])
+        # Now plot the replicated data, along with the data, in different subplots
+        wl_eff = self.filters.data['wl_eff']
 
-        delta_wl = np.array(self.filters.data['wl_eff'][1:])-np.array(self.filters.data['wl_eff'][0:-1])
-        delta_wl = np.concatenate(([delta_wl[0]], delta_wl))
+        fig, axs = plt.subplots(n_plot_x, n_plot_y, sharex=True, sharey=True)
+        fig.subplots_adjust(left=0.08, bottom=0.08, hspace=0, wspace=0)
+        fontsize = 8
+        axes_linewidth = 0.7
 
-        for i in range(n_bands):
+        ix = 0
+        iy = 0
+        for i, ax in enumerate(np.ravel(axs)):
 
-            dwl = delta_wl[i]
-            if i > 1:
-                dwl = np.min(delta_wl[i-1:i])
 
-            if has_pdf[i]:
+#            kwargs = {'alpha':0.7}
+#            (_, caps, _) = ax.errorbar(wl_eff, 
+#                    obs_flux, 
+#                    yerr=obs_flux_err, 
+#                    ls=' ', 
+#                    marker='o', 
+#                    markersize=5, 
+#                    color='orangered',
+#                    markeredgewidth = 0.,
+#                    elinewidth=1.0,
+#                    capsize=2,
+#                    **kwargs)
+#
+#            for cap in caps:
+#                cap.set_color('orangered')
+#                cap.set_markeredgewidth(1)
+#
+            temp_data = replic_data.data[replic_data_rows[i]]
+            replic_fluxes = np.array(temp_data[1:])/1.E-09
 
-                w = 0.4 * dwl / _max_y[i]
+            diff_fluxes = (replic_fluxes-obs_flux) / obs_flux_err
 
-                y_grid = np.full(len(x_plot[i]), self.filters.data['wl_eff'][i])
-                _lim_y = kde_pdf[i](median_flux[i])/pdf_norm[i] * w
+            kwargs = {'alpha':0.4}
+            unique_markers = np.unique(markers)
+            if i != 0:
+                for um in unique_markers:
+                    mask = markers == um 
 
-                ax.fill_betweenx(x_plot[i],
-                        y_grid - y_plot[i]*w,
-                        y_grid + y_plot[i]*w,
-                        **kwargs
-                        )
+                    (_, caps, _) = ax.errorbar(wl_eff[mask], 
+                            diff_fluxes[mask], 
+                            ls=' ', 
+                            marker=um, 
+                            markersize=5, 
+                            color='black',
+                            markeredgewidth = 0.,
+                            elinewidth=1.0,
+                            capsize=2,
+                            **kwargs)
 
-                ax.plot( [self.filters.data['wl_eff'][i]-_lim_y, self.filters.data['wl_eff'][i]+_lim_y],
-                        [median_flux[i], median_flux[i]],
-                        color = 'black',
-                        linewidth = 0.2
-                        )
+                    for cap in caps:
+                        cap.set_color('black')
+                        cap.set_markeredgewidth(1)
 
-            ax.plot( self.filters.data['wl_eff'][i],
-                    median_flux[i],
-                    color = 'black',
-                    marker = "o",
-                    markersize = 5,
-                    alpha = 0.7
-                    )
+            if i == 0:
+                kwargs = {'alpha':0.7}
+                ax.plot(wl_eff, 
+                        mean_residual,
+                        ls=' ', 
+                        marker='*',
+                        markersize=7,
+                        color='orangered',
+                        **kwargs)
 
+            #min_flux[i] = np.min(np.array([replic_fluxes-obs_flux_err, obs_flux-obs_flux_err]))
+            #max_flux[i] = np.max(np.array([replic_fluxes+obs_flux_err, obs_flux+obs_flux_err]))
+            max_abs_flux[i] = np.max(np.abs(diff_fluxes))
 
         # Determine min and max values of y-axis
-        yMax = np.max(max_flux)
-        yMin = np.min(np.concatenate((obs_flux[ok]-obs_flux_err[ok], min_flux)))
-
+        yMax = np.max(max_abs_flux)
+        yMin = -yMax
         dY = yMax-yMin
-
         yMax += dY * 0.1
         yMin -= dY * 0.1
 
-        ax.set_ylim([yMin, yMax])
+        xMin = self.filters.data['wl_eff'][0]
+        xMax = self.filters.data['wl_eff'][-1]
+        dX = xMax-xMin
+        xMax += dX * 0.1
+        xMin -= dX * 0.1
 
-        x0 = self.filters.data['wl_eff'][0]
-        x1 = self.filters.data['wl_eff'][-1]
-        dx = x1-x0
-        ax.set_xlim([x0-0.05*dx, x1+0.05*dx])
+        for ax in np.ravel(axs):        
+            ax.set_ylim([yMin, yMax])
+            ax.set_xlim([xMin, xMax])
 
-        x0, x1 = ax.get_xlim()
-        if yMin < 0.: plt.plot( [x0,x1], [0.,0.], color='gray', lw=0.8 )
+            ax.tick_params(which='minor', axis='both',
+                            length=2, width=axes_linewidth)
 
-        # Define plotting styles
-        ax.set_xlabel("$\lambda_\\textnormal{eff} / \\textnormal{\AA}$ (observed-frame)")
-        ax.set_ylabel("$f_{\\nu}/\\textnormal{nanoJy}$")
+            ax.tick_params(which='major', axis='both',
+                            length=3.5, width=axes_linewidth)
 
-        # Set better location of tick marks
-        set_plot_ticks(ax, n_x=5)
+            x0, x1 = ax.get_xlim()
+            if yMin < 0.: ax.plot( [x0,x1], [0.,0.], color='gray', lw=0.8 )
 
-        kwargs = {'alpha':0.7}
 
-        plt.errorbar(self.filters.data['wl_eff'], 
-                obs_flux, 
-                yerr = obs_flux_err,
-                color = "dodgerblue",
-                ls = " ",
-                marker = "D",
-                markeredgewidth = 0.,
-                markersize = 8,
-                elinewidth=0.5,
-                **kwargs)
+            for item in ([ax.title, ax.xaxis.label, ax.yaxis.label] +
+                         ax.get_xticklabels() + ax.get_yticklabels()):
+                item.set_fontsize(fontsize)
 
+
+            for axis in ['top','bottom','left','right']:
+              ax.spines[axis].set_linewidth(axes_linewidth)
+
+            # Set better location of tick marks
+            set_plot_ticks(ax, n_x=4, prune_x='both', prune_y='both')
+
+        xlabel = "$\lambda_\\textnormal{eff} / \\textnormal{\AA}$ (observed-frame)"
+        #ylabel = "$f_{\\nu}/\\textnormal{nanoJy}$"
+        ylabel = "$\left(f_{\\nu}^\\textnormal{rep}-f_{\\nu}\\right) / \sigma$"
+
+        fig.text(0.5, 0.02, xlabel, ha='center', fontsize=fontsize+1)
+        fig.text(0.03, 0.5, ylabel, va='center', rotation='vertical', fontsize=fontsize+1)
 
         # Title of the plot is the object ID
-        plt.title(str(ID))
+        #plt.title(str(ID))
 
         # Location of printed text
-        x0, x1 = ax.get_xlim()
-        x = x0 + (x1-x0)*0.03
-        y0, y1 = ax.get_ylim()
-        y = y1 - (y1-y0)*0.10
+        #x0, x1 = ax.get_xlim()
+        #x = x0 + (x1-x0)*0.03
+        #y0, y1 = ax.get_ylim()
+        #y = y1 - (y1-y0)*0.10
 
         if print_text:
 
@@ -591,16 +678,18 @@ class Photometry:
                 print "`PosteriorPredictiveChecks` not computed/loaded, hence " \
                 "<chi^2_red> for the object `" + str(ID) + "` is not available"
 
-        if y0 < 0.: plt.plot( [x0,x1], [0.,0.], color='gray', lw=1.0 )
-
         name = prepare_plot_saving(str(ID)+'_BANGS_replic_data_phot.pdf')
+
+        #fig.tight_layout()
 
         fig.savefig(name, dpi=None, facecolor='w', edgecolor='w',
                 orientation='portrait', papertype='a4', format="pdf",
                 transparent=False, bbox_inches="tight", pad_inches=0.1)
+
         plt.close(fig)
 
-        hdulist.close()
+        model_hdu.close()
+        replic_hdu.close()
 
 ##    def plot_residuals(self, residual_file_name=None, residual_plotname=None):
 ##

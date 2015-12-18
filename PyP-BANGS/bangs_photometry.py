@@ -6,7 +6,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as plticker
 import pandas as pd
-import seaborn as sns
+# SEABORN creates by default plots with a filled background!!
+#import seaborn as sns
 from astropy.io import ascii
 from astropy.io import fits
 
@@ -14,7 +15,7 @@ import sys
 sys.path.append("../dependencies")
 import WeightedKDE
 
-from bangs_utils import BangsDirectories, prepare_plot_saving, set_plot_ticks
+from bangs_utils import BangsDirectories, prepare_plot_saving, set_plot_ticks, prepare_violin_plot
 from bangs_filters import PhotometricFilters
 from bangs_summary_catalogue import BangsSummaryCatalogue
 from bangs_residual_photometry import ResidualPhotometry
@@ -22,6 +23,7 @@ from bangs_multinest_catalogue import MultiNestCatalogue
 from bangs_posterior_predictive_checks import PosteriorPredictiveChecks
 
 
+Jy = np.float32(1.E-23)
 microJy = np.float32(1.E-23 * 1.E-06)
 nanoJy = np.float32(1.E-23 * 1.E-09)
 
@@ -47,6 +49,52 @@ class ObservedCatalogue:
         else:
             self.data = ascii.read(file_name, Reader=ascii.basic.CommentedHeader)
 
+
+    def extract_fluxes(self, filters, ID):
+        """ 
+        Extract fluxes and error fluxes for a single object (units are Jy).
+
+        Parameters
+        ----------
+        filters : class
+            Contains the photometric filters
+
+        ID : int, str
+            Contains the object ID
+
+        Returns    
+        -------
+        flux : array
+
+        flux_error : array 
+
+        Notes
+        -----
+        The routine also adds in quadrature the minimum relative error defined int he filters class.
+
+        """
+
+        flux = np.zeros(filters.n_bands, np.float32)
+        flux_err = np.zeros(filters.n_bands, np.float32)
+
+        print "n_bands: ", filters.n_bands
+
+        for j in range(filters.n_bands):
+
+            # observed flux and its error
+            name = filters.data['flux_colName'][j]
+            flux[j] = self.data[self.data['ID']==ID][name] * filters.units / Jy
+
+            name = filters.data['flux_errcolName'][j]
+            flux_err[j] = self.data[self.data['ID']==ID][name] * filters.units / Jy
+
+            if flux_err[j] > 0.:
+                # if defined, add the minimum error in quadrature
+                flux_err[j] = (np.sqrt((flux_err[j]/flux[j])**2 +
+                    np.float32(filters.data['min_rel_err'][j])**2) *
+                    flux[j])
+
+        return flux, flux_err
 
 class Photometry:
 
@@ -171,42 +219,9 @@ class Photometry:
 
             # Compute the marginal PDF through a weighted KDE
             has_pdf[i] = True
-            pdf = WeightedKDE.gaussian_kde(xdata, weights=probability)
 
-            # Build a grid of value over which computing the actual PDF from its KDE
-            x_grid = np.linspace(min_x, max_x, nXgrid)
-
-            # Compute the PDF
-            pdf_grid = np.array(pdf(x_grid))
-
-            # Compute the PDF normalization, so its integral will be exactly 1
-            pdf_norm[i] = simps(pdf_grid, x_grid)
-            pdf_grid /= pdf_norm[i]
-
-            # Now compute the cumulative PDF
-            cumul_pdf = cumtrapz(pdf_grid, x_grid, initial = 0.)
-            cumul_pdf /= cumul_pdf[-1]
-
-            # Get the interpolant of the cumulative PDF
-            f_interp = interp1d(cumul_pdf, x_grid)
-
-            # Compute the limits over which you will plot the "violin", for
-            # instance showing only the cumulative PDF up to +/- 3 sigma
-            intv = 0.5*(100.-max_interval)/100.
-            lims = f_interp([intv,1.-intv])
-            prob_lims = pdf(lims) / pdf_norm[i]
-
-            # The median corresponds to a cumulative probability = 0.5
-            median_flux[i] = f_interp(0.5)
-
-            kde_pdf[i] = pdf
-
-            i1 = bisect_left(x_grid, lims[0])
-            i2 = bisect_left(x_grid, lims[1])
-        
-            x_plot[i] = np.concatenate(([lims[0]], x_grid[i1+1:i2], [lims[1]]))
-
-            y_plot[i] = np.concatenate(([prob_lims[0]], pdf_grid[i1+1:i2], [prob_lims[1]]))
+            # This function provides you with all the necessary info to draw violin plots
+            kde_pdf[i], pdf_norm[i], median_flux[i], x_plot[i], y_plot[i] = prepare_violin_plot(xdata, weights=probability) 
 
             _max_y[i] = np.max(y_plot[i])
 
@@ -427,17 +442,21 @@ class Photometry:
         for i in range(n_bands):
             noiseless_flux[i, :] = model_sed.data[indices].field(i) / nanoJy
 
+        # Consider only those bands with measurements!
+        ok_bands = np.where(obs_flux_err > 0.)[0]
+
         # Compute the p-value band-by-band
         p_value_bands = np.zeros(n_bands)
         replic_fluxes = np.zeros((n_bands, n_replicated))
         for i in range(n_bands):
             
-            obs_discr = (obs_flux[i].repeat(n_replicated)-noiseless_flux[i, :])**2 / obs_flux_err[i].repeat(n_replicated)**2
-            repl_discr = (replic_data.data.field(i+1)/1.E-09-noiseless_flux[i, :])**2 / obs_flux_err[i].repeat(n_replicated)**2
+            if obs_flux_err[i] > 0.:
+                obs_discr = (obs_flux[i].repeat(n_replicated)-noiseless_flux[i, :])**2 / obs_flux_err[i].repeat(n_replicated)**2
+                repl_discr = (replic_data.data.field(i+1)/1.E-09-noiseless_flux[i, :])**2 / obs_flux_err[i].repeat(n_replicated)**2
 
-            replic_fluxes[i,:] = replic_data.data.field(i+1)/1.E-09
-            p_value_bands[i] = 1. * np.count_nonzero((repl_discr >
-                obs_discr)) / n_replicated
+                replic_fluxes[i,:] = replic_data.data.field(i+1)/1.E-09
+                p_value_bands[i] = 1. * np.count_nonzero((repl_discr >
+                    obs_discr)) / n_replicated
 
         markers = np.array("o").repeat(n_bands)
         loc = np.where(p_value_bands <= p_value_lim)[0]
@@ -447,8 +466,8 @@ class Photometry:
         ext_obs_flux = obs_flux.reshape(n_bands, 1).repeat(n_replicated, 1)
         ext_obs_flux_err = obs_flux_err.reshape(n_bands, 1).repeat(n_replicated, 1)
 
-        obs_discr = np.sum((ext_obs_flux-noiseless_flux)**2 / ext_obs_flux_err**2, axis=0)
-        repl_discr = np.sum((replic_fluxes-noiseless_flux)**2 / ext_obs_flux_err**2, axis=0)
+        obs_discr = np.sum((ext_obs_flux[ok_bands,:]-noiseless_flux[ok_bands,:])**2 / ext_obs_flux_err[ok_bands,:]**2, axis=0)
+        repl_discr = np.sum((replic_fluxes[ok_bands,:]-noiseless_flux[ok_bands,:])**2 / ext_obs_flux_err[ok_bands,:]**2, axis=0)
 
         p_value = 1. * np.count_nonzero((repl_discr >
             obs_discr)) / n_replicated
@@ -470,55 +489,57 @@ class Photometry:
         mean_residual = (mean_replic_fluxes-obs_flux)/obs_flux_err 
 
         # Compute variance-covariance matrix of residual
-        residual_flux = (replic_fluxes-obs_flux.reshape(n_bands,
+        residual_fluxes = (replic_fluxes-obs_flux.reshape(n_bands,
             1).repeat(n_replicated, 1)) / obs_flux_err.reshape(n_bands,
                     1).repeat(n_replicated, 1)
 
-        residual_covar = np.cov(residual_flux)
+        residual_covar = np.cov(residual_fluxes)
         print "residual_covar: ", residual_covar
 
         # Plot the variance-covariance matrix of residuals
-        sns.set(style="white")
-        labels = list()
-        for lab in self.filters.data['label']:
-            labels.append(lab.split('_')[-1])
-            
-        d = pd.DataFrame(data=np.abs(residual_flux.T),
-                columns=labels)
+        if 'sns' in sys.modules:
 
-        # Compute the correlation matrix
-        corr = d.corr()
+            sns.set(style="white")
+            labels = list()
+            for lab in self.filters.data['label']:
+                labels.append(lab.split('_')[-1])
+                
+            d = pd.DataFrame(data=np.abs(residual_fluxes.T),
+                    columns=labels)
 
-        # Generate a mask for the upper triangle
-        mask = np.zeros_like(corr, dtype=np.bool)
-        mask[np.triu_indices_from(mask)] = True
+            # Compute the correlation matrix
+            corr = d.corr()
 
-        # Set up the matplotlib figure
-        fig, ax = plt.subplots()
+            # Generate a mask for the upper triangle
+            mask = np.zeros_like(corr, dtype=np.bool)
+            mask[np.triu_indices_from(mask)] = True
 
-        # Generate a custom diverging colormap
-        cmap = sns.diverging_palette(220, 10, as_cmap=True)
+            # Set up the matplotlib figure
+            fig, ax = plt.subplots()
 
-        # Draw the heatmap with the mask and correct aspect ratio
-        sns.heatmap(corr, mask=mask, cmap=cmap, vmax=0.4,
-                square=True, annot=True, fmt=".2f", annot_kws={"size": 10},
-                linewidths=.5, cbar_kws={"shrink": .85}, ax=ax)
+            # Generate a custom diverging colormap
+            cmap = sns.diverging_palette(220, 10, as_cmap=True)
 
-        # Rotate by 45 deg the x and y ticks so they do not overlap
-        plt.setp( ax.xaxis.get_majorticklabels(), rotation=45,
-                horizontalalignment='right' )
+            # Draw the heatmap with the mask and correct aspect ratio
+            sns.heatmap(corr, mask=mask, cmap=cmap, vmax=0.4,
+                    square=True, annot=True, fmt=".2f", annot_kws={"size": 10},
+                    linewidths=.5, cbar_kws={"shrink": .85}, ax=ax)
 
-        plt.setp( ax.yaxis.get_majorticklabels(), rotation=45,
-                horizontalalignment='right' )
+            # Rotate by 45 deg the x and y ticks so they do not overlap
+            plt.setp( ax.xaxis.get_majorticklabels(), rotation=45,
+                    horizontalalignment='right' )
 
-        name = prepare_plot_saving(str(ID)+'_BANGS_replic_data_phot_matrix.pdf')
+            plt.setp( ax.yaxis.get_majorticklabels(), rotation=45,
+                    horizontalalignment='right' )
 
-        fig.savefig(name, dpi=None, facecolor='w', edgecolor='w',
-                orientation='portrait', papertype='a4', format="pdf",
-                transparent=False, bbox_inches="tight", pad_inches=0.1)
+            name = prepare_plot_saving(str(ID)+'_BANGS_replic_data_phot_matrix.pdf')
 
-        fig.clear()
-        plt.close(fig)
+            fig.savefig(name, dpi=None, facecolor='w', edgecolor='w',
+                    orientation='portrait', papertype='a4', format="pdf",
+                    transparent=False, bbox_inches="tight", pad_inches=0.1)
+
+            fig.clear()
+            plt.close(fig)
 
         # Select a random set of repliated data
         np.random.seed(seed=12345678)
@@ -581,14 +602,37 @@ class Photometry:
                         cap.set_markeredgewidth(1)
 
             if i == 0:
+
+                nXgrid = 1000
                 kwargs = {'alpha':0.7}
-                ax.plot(wl_eff, 
-                        mean_residual,
-                        ls=' ', 
-                        marker='*',
-                        markersize=7,
-                        color='orangered',
-                        **kwargs)
+
+                delta_wl = np.array(self.filters.data['wl_eff'][1:])-np.array(self.filters.data['wl_eff'][0:-1])
+                delta_wl = np.concatenate(([delta_wl[0]], delta_wl))
+
+                for j in range(n_bands):
+
+                    residual = residual_fluxes[j,:]
+
+                    # This function provides you with all the necessary info to draw violin plots
+                    kde_pdf, pdf_norm, median_flux, x_plot, y_plot = prepare_violin_plot(residual)
+
+                    w = 0.4 * delta_wl[j] / np.max(y_plot)
+
+                    y_grid = np.full(len(x_plot), self.filters.data['wl_eff'][j])
+
+                    _lim_y = kde_pdf(median_flux)/pdf_norm * w
+
+                    ax.fill_betweenx(x_plot,
+                            y_grid - y_plot*w,
+                            y_grid + y_plot*w,
+                            **kwargs
+                            )
+
+                    ax.plot( [self.filters.data['wl_eff'][j]-_lim_y, self.filters.data['wl_eff'][j]+_lim_y],
+                            [median_flux, median_flux],
+                            color = 'black',
+                            linewidth = 0.2
+                            )
 
             #min_flux[i] = np.min(np.array([replic_fluxes-obs_flux_err, obs_flux-obs_flux_err]))
             #max_flux[i] = np.max(np.array([replic_fluxes+obs_flux_err, obs_flux+obs_flux_err]))

@@ -5,7 +5,7 @@ from matplotlib import rc
 from astropy.io import ascii
 from astropy.io import fits
 
-from bangs_photometry import Photometry
+from bangs_spectra import Spectrum
 from bangs_pdf import PDF
 from bangs_utils import BangsDirectories
 
@@ -31,38 +31,37 @@ logging.basicConfig(level=args.loglevel)
 font = {'size': 16}
 rc('font', **font)
 
+redshiftStr = 'z9'
+mStr = "m10"
+iterStr = "iter10"
+objID = "5"
+
 # Initialize an instance of the main "Photometry" class
-results_dir = "/Users/jchevall/Coding/BANGS/files/results/UVUDF/RAND_0.2/mass_specific_sfr_cb14"
+results_dir = "/Users/jchevall/Coding/BANGS/files/results/JWST/Oct_2015/Marijn/" + redshiftStr
 BangsDirectories.results_dir = results_dir
 
-my_photometry = Photometry()
-ID = 5378
+my_spectrum = Spectrum()
 
-my_PDF = PDF(os.path.join(results_dir, "params_names.json"))
+ID = "Object_" + objID + ".fits.txt." + redshiftStr + "." + mStr + ".fnu."+ iterStr
+#ID = "Object_5.fits.txt.z6.m10.fnu.iter12"
+
+#my_PDF = PDF(os.path.join(results_dir, "params_names.json"))
 #my_PDF.plot_triangle(ID)
 
-
 # We now have access to other classes!
-
-# *****************************************************
-# *********** Filters ****************
-# *****************************************************
-
-# We can load a set of photometric filters
-my_photometry.filters.load(os.path.expandvars("$BANGS_FILTERS/filters_UVUDF.dat"))
 
 # *****************************************************
 # *********** Observed Catalogue ****************
 # *****************************************************
 
 # ********** Loading *****************
-file_name = os.path.expandvars("$BANGS_DATA/UVUDF/hlsp_uvudf_hst_v2.0_cat_Types_no_star.fits")
-my_photometry.observed_catalogue.load(file_name)
 
+file_name = "/Users/jchevall/JWST/Simulations/Oct_2015/fromMarijn/" + redshiftStr + "/" + str(ID) + ".fits"
+my_spectrum.observed_spectrum.load(file_name)
 
 # ********** Plotting of the marginal photometry *****************
-#my_photometry.plot_marginal(ID)
-my_photometry.plot_replicated_data(ID)
+my_spectrum.plot_marginal(ID)
+#my_photometry.plot_replicated_data(ID)
 stop
 
 # *****************************************************

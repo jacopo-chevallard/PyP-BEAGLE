@@ -13,6 +13,8 @@ from walker_random_sampling import WalkerRandomSampling
 from bangs_utils import prepare_data_saving, prepare_plot_saving, \
     BangsDirectories, set_plot_ticks
 
+# 1 jy = 10^-23 erg s^-1 cm^-2 hz^-1
+jy = 1.E-23 
 
 class PosteriorPredictiveChecks:
 
@@ -68,6 +70,98 @@ class PosteriorPredictiveChecks:
         my_table = Table.read(name)
     
         self.data = my_table
+
+    def compute_replicated(self, observed_catalogue, filters, ID,
+            n_replicated=2000):
+
+            strID = str(ID)
+            file = os.path.join(BangsDirectories.results_dir, strID + "_BANGS.fits.gz")
+
+            if os.path.isfile(file):
+
+                # Open the FITS file containing BANGS results for the current object
+                hdulist = fits.open(file)
+                bangs_data = hdulist['MARGINAL PHOTOMETRY'].data
+
+                # Load the posterior probability and create array of row indices
+                probability = hdulist['POSTERIOR PDF'].data['probability']
+                n_samples = len(probability)
+                row_indices = np.arange(n_samples)
+
+                # Now, draw the weighted samples with replacement
+                wrand = WalkerRandomSampling(probability, keys=row_indices)
+                replic_data_rows = wrand.random(n_replicated)
+
+                obs_flux = np.zeros(filters.n_bands, np.float32)
+                obs_flux_err = np.zeros(filters.n_bands, np.float32)
+                model_flux = np.zeros((filters.n_bands, n_samples), np.float32)
+
+                # The replicated data are just the fluxes predicted by your
+                # model, drawn from the posterior probability distribution
+                # accordingly to their probability, with the effect of
+                # observatironal noise added
+                noiseless_flux = np.zeros((filters.n_bands, n_replicated), np.float32)
+                replic_flux = np.zeros((filters.n_bands, n_replicated), np.float32)
+
+                n_data = 0
+
+                obs_flux, obs_flux_err = observed_catalogue.extract_fluxes(filters, ID)
+                n_data = np.count_nonzero(obs_flux_err > 0.)
+
+                for j in range(filters.n_bands):
+
+                    # model flux
+                    name = '_' + filters.data['label'][j] + '_'
+                    model_flux[j,:] = bangs_data[name] / jy
+
+                # You save in this array the noise-less flux predicted by the model        
+                noiseless_flux = model_flux[:, replic_data_rows]
+
+                for j in range(filters.n_bands):
+                    # Here you add the observational noise to the
+                    # noise-less fluxes predicted by the model, obtaining
+                    # the actual replicated data
+                    if obs_flux_err[j] > 0.:
+                        replic_flux[j,:] = noiseless_flux[j, :] +   \
+                        np.random.normal(scale=obs_flux_err[j], size=n_replicated)
+                    else:    
+                        replic_flux[j,:] = -99.99999
+
+                # Write the replicated data to an output FITS file
+                # Create the new FITS file
+                new_hdu = fits.HDUList(fits.PrimaryHDU())
+
+                # Add column allowing you to match each row of the replicated
+                # data to the row of noise-less fluxes predicted by your model,
+                # i.e. those in the "MARGINAL PHOTOMETRY" extension of the
+                # BANGS output FITS file 
+                # NB: the column indexing start with 1 !!
+                ID_col = fits.Column(name='row_index', format='I')
+
+                # Copy the columns defined in the "MARGINAL PHOTOMETRY"
+                # extension to the new FITS file
+                cols = hdulist['MARGINAL PHOTOMETRY'].columns
+
+                new_hdu.append(fits.BinTableHDU.from_columns(ID_col + cols, nrows=n_replicated, fill=True))
+
+                # Fill with the replicated data fluxes
+                j = 0
+                for col_name in new_hdu[1].columns.names:
+                    if col_name in cols.names:
+                        new_hdu[1].data[col_name] = replic_flux[j,:]
+                        j += 1
+
+                # Fill with the row indices
+                new_hdu[1].data['row_index'] = replic_data_rows
+
+                # Save the file
+                name = strID + "_BANGS_replic_data.fits.gz"
+                name = prepare_data_saving(name)
+                new_hdu.writeto(name)
+
+            hdulist.close()
+
+            return replic_flux, noiseless_flux, model_flux, n_data
 
     def compute(self, observed_catalogue, filters, discrepancy=None, 
             n_replicated=2000, file_name=None):
@@ -139,114 +233,26 @@ class PosteriorPredictiveChecks:
 
         my_table = Table(my_cols)
 
-        obs_flux = np.zeros(filters.n_bands, np.float32)
-        obs_flux_err = np.zeros(filters.n_bands, np.float32)
-
         model_flux = np.zeros(filters.n_bands, np.float32)
 
-        # 1 jy = 10^-23 erg s^-1 cm^-2 hz^-1
-        jy = 1.E-23 
 
         for i in range(n_obj):
 
+            ID = objID[i]
             strID = str(objID[i])
             file = os.path.join(BangsDirectories.results_dir, strID + "_BANGS.fits.gz")
 
             if os.path.isfile(file):
 
-                # Open the FITS file containing BANGS results for the current object
+                obs_flux, obs_flux_err = observed_catalogue.extract_fluxes(filters, ID)
+
+                replic_flux, noiseless_flux, model_flux, n_data = self.compute_replicated(observed_catalogue, filters, ID)
+
                 hdulist = fits.open(file)
-                bangs_data = hdulist['MARGINAL PHOTOMETRY'].data
-
-                # Load the posterior probability and create array of row indices
                 probability = hdulist['POSTERIOR PDF'].data['probability']
-                n_samples = len(probability)
-                row_indices = np.arange(n_samples)
 
-                # Now, draw the weighted samples with replacement
-                wrand = WalkerRandomSampling(probability, keys=row_indices)
-                replic_data_rows = wrand.random(n_replicated)
-
-                obs_flux = np.zeros(filters.n_bands, np.float32)
-                obs_flux_err = np.zeros(filters.n_bands, np.float32)
-                model_flux = np.zeros((filters.n_bands, n_samples), np.float32)
-
-                # The replicated data are just the fluxes predicted by your
-                # model, drawn from the posterior probability distribution
-                # accordingly to their probability, with the effect of
-                # observational noise added
-                noiseless_flux = np.zeros((filters.n_bands, n_replicated), np.float32)
-                replic_flux = np.zeros((filters.n_bands, n_replicated), np.float32)
-
-                n_data = 0
-
-                for j in range(filters.n_bands):
-
-                    # observed flux and its error
-                    name = filters.data['flux_colName'][j]
-                    obs_flux[j] = observed_catalogue.data[i][name] * filters.units / jy
-
-                    name = filters.data['flux_errcolName'][j]
-                    obs_flux_err[j] = observed_catalogue.data[i][name] * filters.units  / jy
-                    has_measure = False
-                    if obs_flux_err[j] > 0.:
-                        has_measure = True
-
-                    # model flux
-                    name = '_' + filters.data['label'][j] + '_'
-                    model_flux[j,:] = bangs_data[name] / jy
-
-                    if has_measure > 0.:
-                        # if defined, add the minimum error in quadrature
-                        obs_flux_err[j] = (np.sqrt((obs_flux_err[j]/obs_flux[j])**2 +
-                            np.float32(filters.data['min_rel_err'][j])**2) *
-                            obs_flux[j])
-                        n_data += 1
-                        
-                # You save in this array the noise-less flux predicted by the model        
-                noiseless_flux = model_flux[:, replic_data_rows]
-
-                for j in range(filters.n_bands):
-                    # Here you add the observational noise to the
-                    # noise-less fluxes predicted by the model, obtaining
-                    # the actual replicated data
-                    if obs_flux_err[j] > 0.:
-                        replic_flux[j,:] = noiseless_flux[j, :] +   \
-                        np.random.normal(scale=obs_flux_err[j], size=n_replicated)
-                    else:    
-                        replic_flux[j,:] = -99.99999
-
-                # Write the replicated data to an output FITS file
-                # Create the new FITS file
-                new_hdu = fits.HDUList(fits.PrimaryHDU())
-
-                # Add column allowing you to match each row of the replicated
-                # data to the row of noise-less fluxes predicted by your model,
-                # i.e. those in the "MARGINAL PHOTOMETRY" extension of the
-                # BANGS output FITS file 
-                # NB: the column indexing start with 1 !!
-                ID_col = fits.Column(name='row_index', format='I')
-
-                # Copy the columns defined in the "MARGINAL PHOTOMETRY"
-                # extension to the new FITS file
-                cols = hdulist['MARGINAL PHOTOMETRY'].columns
-
-                new_hdu.append(fits.BinTableHDU.from_columns(ID_col + cols, nrows=n_replicated, fill=True))
-
-                # Fill with the replicated data fluxes
-                j = 0
-                for col_name in new_hdu[1].columns.names:
-                    if col_name in cols.names:
-                        new_hdu[1].data[col_name] = replic_flux[j,:]
-                        j += 1
-
-                # Fill with the row indices
-                new_hdu[1].data['row_index'] = replic_data_rows
-
-                # Save the file
-                name = strID + "_BANGS_replic_data.fits.gz"
-                name = prepare_data_saving(name)
-                new_hdu.writeto(name)
+                n_samples = model_flux.shape[1]
+                n_replicated = replic_flux.shape[1]
 
                 # Extend the arrays containing the observed flux and its
                 # error to match the shape of the replicated data array

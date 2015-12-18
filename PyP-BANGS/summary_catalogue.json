@@ -1,0 +1,24 @@
+{
+
+    {
+    'name':'GALAXY PROPERTIES', 
+    'columns':['redshift','M_tot', 'M_star', 'mass_w_age', 'lumin_w_age',
+    'mass_w_Z','lumin_w_Z', 'N_ion', 'xi_ion', 'UV_slope']
+    },
+
+    {
+    'name':'STAR FORMATION', 
+    'columns':['SFR', 'sSFR']
+    },
+
+    {
+    'name':'DUST ATTENUATION', 
+    'columns':['tauV_eff']
+    },
+
+    {
+    'name':'ABSOLUTE MAGNITUDES'
+    }
+
+}
+

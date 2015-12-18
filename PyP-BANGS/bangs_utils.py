@@ -2,7 +2,13 @@ import os
 import logging
 import numpy as np
 from bisect import bisect_left
+from scipy.integrate import simps, cumtrapz
+from scipy.interpolate import interp1d
 from datetime import datetime
+
+import sys
+sys.path.append("../dependencies")
+import WeightedKDE
 
 import matplotlib.ticker as plticker
 
@@ -222,3 +228,59 @@ def weighted_avg_and_std(values, weights):
     variance = np.average((values-average)**2, weights=weights)  # Fast and numerically precise
 
     return (average, np.sqrt(variance))
+
+
+def prepare_violin_plot(data, 
+        weights=None, 
+        min_x=None,
+        max_x=None,
+        nXgrid=1000,
+        max_interval=99.7):
+
+    if min_x is None:
+        min_x = np.min(data) 
+
+    if max_x is None:
+        max_x = np.max(data) 
+
+    # Compute the marginal PDF through a weighted KDE
+    if weights is not None:
+        pdf = WeightedKDE.gaussian_kde(data, weights=weights)
+    else:
+        pdf = WeightedKDE.gaussian_kde(data)
+
+    # Build a grid of value over which computing the actual PDF from its KDE
+    x_grid = np.linspace(min_x, max_x, nXgrid)
+
+    # Compute the PDF
+    pdf_grid = np.array(pdf(x_grid))
+
+    # Compute the PDF normalization, so its integral will be exactly 1
+    pdf_norm = simps(pdf_grid, x_grid)
+    pdf_grid /= pdf_norm
+
+    # Now compute the cumulative PDF
+    cumul_pdf = cumtrapz(pdf_grid, x_grid, initial=0.)
+    cumul_pdf /= cumul_pdf[-1]
+
+    # Get the interpolant of the cumulative PDF
+    f_interp = interp1d(cumul_pdf, x_grid)
+
+    # Compute the limits over which you will plot the "violin", for
+    # instance showing only the cumulative PDF up to +/- 3 sigma
+    intv = 0.5*(100.-max_interval)/100.
+    lims = f_interp([intv,1.-intv])
+    prob_lims = pdf(lims) / pdf_norm
+
+    # The median corresponds to a cumulative probability = 0.5
+    median = f_interp(0.5)
+
+    i1 = bisect_left(x_grid, lims[0])
+    i2 = bisect_left(x_grid, lims[1])
+
+    x_violin = np.concatenate(([lims[0]], x_grid[i1+1:i2], [lims[1]]))
+
+    y_violin = np.concatenate(([prob_lims[0]], pdf_grid[i1+1:i2], [prob_lims[1]]))
+
+
+    return pdf, pdf_norm, median, x_violin, y_violin

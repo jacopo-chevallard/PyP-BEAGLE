@@ -77,8 +77,6 @@ class ObservedCatalogue:
         flux = np.zeros(filters.n_bands, np.float32)
         flux_err = np.zeros(filters.n_bands, np.float32)
 
-        print "n_bands: ", filters.n_bands
-
         for j in range(filters.n_bands):
 
             # observed flux and its error

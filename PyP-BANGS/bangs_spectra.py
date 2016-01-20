@@ -1,4 +1,5 @@
 import os
+import logging
 from scipy.integrate import simps, cumtrapz
 from scipy.interpolate import interp1d
 from bisect import bisect_left
@@ -16,7 +17,7 @@ sys.path.append("../dependencies")
 import WeightedKDE
 #import FillBetweenStep
 
-from bangs_utils import BangsDirectories, prepare_plot_saving, set_plot_ticks
+from bangs_utils import BangsDirectories, prepare_plot_saving, set_plot_ticks, plot_exists
 from bangs_filters import PhotometricFilters
 from bangs_summary_catalogue import BangsSummaryCatalogue
 #from bangs_residual_photometry import ResidualPhotometry
@@ -65,7 +66,7 @@ class Spectrum:
         self.PPC = PosteriorPredictiveChecks()
 
     def plot_marginal(self, ID, max_interval=95.0,
-            print_text=False, print_title=False, draw_steps=False):    
+            print_text=False, print_title=False, draw_steps=False, replot=False):    
         """ 
         Plot the fluxes predicted by BANGS.
 
@@ -90,6 +91,14 @@ class Spectrum:
         print_text : bool, optional
             Whether to print the object ID on the top of the plot.
         """
+
+        # Name of the output plot
+        plot_name = str(ID) + '_BANGS_marginal_SED_spec.pdf'
+
+        # Check if the plot already exists
+        if plot_exists(plot_name) and not replot:
+            logging.warning('The plot "' + plot_name + '" already exists. \n Exiting the function.')
+            return
 
         # The observed spectrum
         observation = self.observed_spectrum
@@ -289,7 +298,7 @@ class Spectrum:
 
         if y0 < 0.: plt.plot( [x0,x1], [0.,0.], color='gray', lw=1.0 )
 
-        name = prepare_plot_saving(str(ID)+'_BANGS_marginal_SED_spec.pdf')
+        name = prepare_plot_saving(plot_name)
 
         fig.savefig(name, dpi=None, facecolor='w', edgecolor='w',
                 orientation='portrait', papertype='a4', format="pdf",

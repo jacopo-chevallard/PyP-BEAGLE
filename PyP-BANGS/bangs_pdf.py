@@ -1,3 +1,4 @@
+import logging
 import numpy as np
 import os
 import json
@@ -8,7 +9,7 @@ from astropy.io import fits
 
 from getdist import plots, MCSamples
 
-from bangs_utils import BangsDirectories, prepare_plot_saving
+from bangs_utils import BangsDirectories, prepare_plot_saving, plot_exists
 
 class PDF:
 
@@ -19,7 +20,7 @@ class PDF:
         with open(param_names_file) as f:    
             self.adjust_params = json.load(f)
 
-    def plot_triangle(self, ID, params_to_plot=None, suffix=None):
+    def plot_triangle(self, ID, params_to_plot=None, suffix=None, replot=False):
         # NB: you changed the getdist/plot.py _set_locator function
         # replacing line 1172-1176
         #if x and (abs(xmax - xmin) < 0.01 or max(abs(xmin), abs(xmax)) >= 1000):
@@ -42,6 +43,17 @@ class PDF:
         # self.axes_fontsize = 4 + 4 * self.subplot_size_inch
         # to have larger, hence more readable, label and axes font sizes
     
+        # Name of the output plot
+        if suffix is None:
+            plot_name = str(ID)+'_BANGS_triangle.pdf'
+        else:
+            plot_name = str(ID)+'_BANGS_triangle_' + suffix + '.pdf'
+
+        # Check if the plot already exists
+        if plot_exists(plot_name) and not replot:
+            logging.warning('The plot "' + plot_name + '" already exists. \n Exiting the function.')
+            return
+
         fits_file = os.path.join(BangsDirectories.results_dir,
                 str(ID)+'_BANGS.fits.gz')
 
@@ -124,11 +136,6 @@ class PDF:
             ax.add_patch(Rectangle((lev[0], y0), lev[1]-lev[0], y1-y0, facecolor="grey", alpha=0.5))
 
         # Now save the plot
-        if suffix is None:
-            plot_name = str(ID)+'_BANGS_triangle.pdf'
-        else:
-            plot_name = str(ID)+'_BANGS_triangle_' + suffix + '.pdf'
-
         name = prepare_plot_saving(plot_name)
 
         g.export(name)

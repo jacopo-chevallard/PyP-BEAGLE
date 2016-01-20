@@ -18,6 +18,11 @@ class BangsDirectories(object):
     pybangs_plot = os.path.join("pybangs", "plot")
     results_dir = ""
 
+def find_file(name, path):
+    for root, dirs, files in os.walk(path):
+        if name in files:
+            return os.path.join(root, name)
+
 def prepare_data_saving(file_name, results_dir=None, overwrite=False):
     """ 
     Prepare directory to save a data file.  
@@ -56,6 +61,36 @@ def prepare_data_saving(file_name, results_dir=None, overwrite=False):
         os.rename(name, new_name)
 
     return name
+
+def plot_exists(file_name, results_dir=None):
+    """ 
+    Check if a plot already exists in the PyP-BANGS tree.
+
+    Parameters
+    ----------
+    file_name : str
+        Name of the output file (without directory tree).
+
+    results_dir : str, optional
+        Directory containing the BANGS output files. By default uses the
+        RESULTS_DIR constant.
+
+    Returns
+    -------
+    bool
+        Whether the plot aready exists or not.
+    """ 
+
+    if results_dir is None:
+        results_dir = BangsDirectories.results_dir
+
+    directory = os.path.join(results_dir, BangsDirectories.pybangs_plot)
+    name = os.path.join(directory, os.path.basename(file_name))
+
+    if os.path.isfile(name):
+        return True
+    else:
+        return False
 
 def prepare_plot_saving(file_name, results_dir=None, overwrite=False):
     """ 
@@ -234,7 +269,7 @@ def prepare_violin_plot(data,
         weights=None, 
         min_x=None,
         max_x=None,
-        nXgrid=1000,
+        nXgrid=100,
         max_interval=99.7):
 
     if min_x is None:

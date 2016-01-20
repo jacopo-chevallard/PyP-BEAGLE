@@ -7,7 +7,7 @@ from astropy.io import fits
 
 from bangs_spectra import Spectrum
 from bangs_pdf import PDF
-from bangs_utils import BangsDirectories
+from bangs_utils import BangsDirectories, find_file
 
 # 
 parser = argparse.ArgumentParser()
@@ -27,9 +27,13 @@ parser.add_argument(
 args = parser.parse_args()    
 logging.basicConfig(level=args.loglevel)
 
+suffix = "BANGS.fits.gz"
+
 # Global font size
 font = {'size': 16}
 rc('font', **font)
+
+version = "Jan_2016"
 
 redshiftStr = 'z9'
 mStr = "m10"
@@ -37,30 +41,36 @@ iterStr = "iter10"
 objID = "5"
 
 # Initialize an instance of the main "Photometry" class
-results_dir = "/Users/jchevall/Coding/BANGS/files/results/JWST/Oct_2015/Marijn/" + redshiftStr
+data_dir = "/Users/jchevall/JWST/Simulations/Jan_2016/fromMarijn"
+results_dir = "/Users/jchevall/Coding/BANGS/files/results/JWST/" + version + "/Marijn"
 BangsDirectories.results_dir = results_dir
+
+# Consider all files in the results directory
+file_list = list()
+file_IDs = list()
+for file in os.listdir(results_dir):
+    if file.endswith(suffix):
+        file_list.append(file)
+        file = file[0:file.find(suffix)-1]
+        file_IDs.append(file)
 
 my_spectrum = Spectrum()
 
-ID = "Object_" + objID + ".fits.txt." + redshiftStr + "." + mStr + ".fnu."+ iterStr
-#ID = "Object_5.fits.txt.z6.m10.fnu.iter12"
+my_PDF = PDF(os.path.join(results_dir, "params_names.json"))
 
-#my_PDF = PDF(os.path.join(results_dir, "params_names.json"))
-#my_PDF.plot_triangle(ID)
+for ID in file_IDs:
 
-# We now have access to other classes!
+    # Plot the "triangle plot"
+    print "ID: ", ID
+    my_PDF.plot_triangle(ID)
 
-# *****************************************************
-# *********** Observed Catalogue ****************
-# *****************************************************
+# ********** Load observed spectrum *****************
+    file_name = find_file(ID+'.fits', data_dir)
+    my_spectrum.observed_spectrum.load(file_name)
 
-# ********** Loading *****************
+    # ********** Plotting of the marginal photometry *****************
+    my_spectrum.plot_marginal(ID)
 
-file_name = "/Users/jchevall/JWST/Simulations/Oct_2015/fromMarijn/" + redshiftStr + "/" + str(ID) + ".fits"
-my_spectrum.observed_spectrum.load(file_name)
-
-# ********** Plotting of the marginal photometry *****************
-my_spectrum.plot_marginal(ID)
 #my_photometry.plot_replicated_data(ID)
 stop
 

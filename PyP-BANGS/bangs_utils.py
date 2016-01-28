@@ -17,11 +17,68 @@ class BangsDirectories(object):
     pybangs_data = os.path.join("pybangs", "data")
     pybangs_plot = os.path.join("pybangs", "plot")
     results_dir = ""
+    suffix = "BANGS.fits.gz"
 
-def find_file(name, path):
+def get_results_files(results_dir=None):
+    """ 
+    Get all BEAGLE results files.
+
+    Parameters
+    ----------
+    results_dir : str, optional
+        Directory containing the BANGS output files. By default uses the
+        RESULTS_DIR constant.
+
+    Returns
+    -------
+
+       file_list: str array
+        List of all BEAGLE results files contained in the results directory.
+
+       file_IDs: str array
+        List of all IDs of corresponding to the BEAGLE results files contained
+        in the results directory.
+    """ 
+
+    if results_dir is None:
+        results_dir = BangsDirectories.results_dir
+
+    file_list = list()
+    file_IDs = list()
+
+    suffix = BangsDirectories.suffix
+
+    for file in os.listdir(results_dir):
+        if file.endswith(suffix):
+            file_list.append(file)
+            file = file[0:file.find(suffix)-1]
+            file_IDs.append(file)
+
+    return file_list, file_IDs
+
+def find_file(file_name, path):
+    """ 
+    Find a file in a directory.
+
+    Parameters
+    ----------
+    file_name : str
+        Name of the file to be found
+
+    path: str
+        Path where to (recursively) search for file_name
+
+    Returns
+    -------
+       : str
+        Full path to the file_name
+    """ 
+
     for root, dirs, files in os.walk(path):
         if name in files:
             return os.path.join(root, name)
+
+    return None
 
 def prepare_data_saving(file_name, results_dir=None, overwrite=False):
     """ 

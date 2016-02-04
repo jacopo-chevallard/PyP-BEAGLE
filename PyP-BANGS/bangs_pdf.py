@@ -5,6 +5,7 @@ import json
 from matplotlib import rc
 from matplotlib.colors import colorConverter
 from matplotlib.patches import Rectangle
+from collections import OrderedDict
 from astropy.io import fits
 
 from getdist import plots, MCSamples
@@ -18,9 +19,26 @@ class PDF:
         # Names of parameters, used to label the axes, and whether they are log
         # or not
         with open(param_names_file) as f:    
-            self.adjust_params = json.load(f)
+            # The use of the "OrderedDict" ensures that the order of the
+            # entries in the dictionary reflects the order in the file
+            self.adjust_params = json.load(f, object_pairs_hook=OrderedDict)
 
-    def plot_triangle(self, ID, params_to_plot=None, suffix=None, replot=False):
+    def plot_triangle(self, ID, params_to_plot=None, suffix=None, replot=False, M_star=False):
+        """ 
+        Draw a "triangle plot" with the 1D and 2D posterior probability
+
+        Parameters
+        ----------
+        ID : str or int
+            Object ID
+
+
+        M_star : bool, optional
+            If set, the routine will plot the mass currenly locked into stars
+            instead of the mass of star formed (i.e., the plotted mass will
+            accout for the return fraction)
+
+        """ 
         # NB: you changed the getdist/plot.py _set_locator function
         # replacing line 1172-1176
         #if x and (abs(xmax - xmin) < 0.01 or max(abs(xmin), abs(xmax)) >= 1000):
@@ -76,16 +94,23 @@ class PDF:
         else: 
             _params_to_plot = params_to_plot
 
+        # Here you check whether you want to plot the mass currently locked
+        # into stars or not (i.e. accounting for the return fraction as well)
+        if M_star and 'mass' in _params_to_plot:
+            param_values['mass'][:] = np.log10(hdulist['galaxy properties'].data['M_star'][:])
+
         nParamsToPlot = len(_params_to_plot)
 
         names = list()
         labels = list()
         ranges = dict()
         samps = np.zeros((n_rows, nParamsToPlot))
+        keys = list()
 
         j = 0
-        for par_name in _params_to_plot:
-            for key, par in self.adjust_params.iteritems():
+        for key, par in self.adjust_params.iteritems():
+            keys.append(key)
+            for par_name in _params_to_plot:
                 if key == par_name:
                     names.append(key)
                     labels.append(par['label'])
@@ -124,7 +149,7 @@ class PDF:
 
         # Add tick labels at top of diagonal panels
         for i, ax in enumerate([g.subplots[i,i] for i in range(nParamsToPlot)]):
-            par_name = _params_to_plot[i]
+            par_name = keys[i]
             if i < nParamsToPlot-1: 
                 ticklabels = [item.get_text() for item in g.subplots[-1,i].xaxis.get_ticklabels()]
                 ax.xaxis.set_ticklabels(ticklabels)

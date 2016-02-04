@@ -1,3 +1,4 @@
+import logging
 import os
 from scipy.integrate import simps, cumtrapz
 from scipy.interpolate import interp1d
@@ -5,7 +6,7 @@ from bisect import bisect_left
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as plticker
-import pandas as pd
+#import pandas as pd
 # SEABORN creates by default plots with a filled background!!
 #import seaborn as sns
 from astropy.io import ascii
@@ -15,7 +16,7 @@ import sys
 sys.path.append("../dependencies")
 import WeightedKDE
 
-from bangs_utils import BangsDirectories, prepare_plot_saving, set_plot_ticks, prepare_violin_plot
+from bangs_utils import BangsDirectories, prepare_plot_saving, set_plot_ticks, prepare_violin_plot, plot_exists
 from bangs_filters import PhotometricFilters
 from bangs_summary_catalogue import BangsSummaryCatalogue
 from bangs_residual_photometry import ResidualPhotometry
@@ -28,6 +29,8 @@ microJy = np.float32(1.E-23 * 1.E-06)
 nanoJy = np.float32(1.E-23 * 1.E-09)
 
 p_value_lim = 0.05
+
+
 
 class ObservedCatalogue:
 
@@ -50,7 +53,7 @@ class ObservedCatalogue:
             self.data = ascii.read(file_name, Reader=ascii.basic.CommentedHeader)
 
 
-    def extract_fluxes(self, filters, ID):
+    def extract_fluxes(self, filters, ID, aper_corr=1.):
         """ 
         Extract fluxes and error fluxes for a single object (units are Jy).
 
@@ -65,8 +68,10 @@ class ObservedCatalogue:
         Returns    
         -------
         flux : array
+            In units of Jy
 
         flux_error : array 
+            In units of Jy
 
         Notes
         -----
@@ -81,10 +86,10 @@ class ObservedCatalogue:
 
             # observed flux and its error
             name = filters.data['flux_colName'][j]
-            flux[j] = self.data[self.data['ID']==ID][name] * filters.units / Jy
+            flux[j] = self.data[self.data['ID']==ID][name] * aper_corr * filters.units / Jy
 
             name = filters.data['flux_errcolName'][j]
-            flux_err[j] = self.data[self.data['ID']==ID][name] * filters.units / Jy
+            flux_err[j] = self.data[self.data['ID']==ID][name] * aper_corr * filters.units / Jy
 
             if flux_err[j] > 0.:
                 # if defined, add the minimum error in quadrature
@@ -111,7 +116,7 @@ class Photometry:
         self.PPC = PosteriorPredictiveChecks()
 
     def plot_marginal(self, ID, max_interval=99.7, 
-            print_text=False, print_title=False):    
+            print_text=False, print_title=False, replot=False):    
         """ 
         Plot the fluxes predicted by BANGS.
 
@@ -135,7 +140,18 @@ class Photometry:
 
         print_text : bool, optional
             Whether to print the object ID on the top of the plot.
+
+        replot: bool, optional
+            Whether to redo the plot, even if it already exists
         """
+
+        # Name of the output plot
+        plot_name = str(ID)+'_BANGS_marginal_SED_phot.pdf'
+
+        # Check if the plot already exists
+        if plot_exists(plot_name) and not replot:
+            logging.warning('The plot "' + plot_name + '" already exists. \n Exiting the function.')
+            return
 
         # From the (previously loaded) observed catalogue select the row
         # corresponding to the input ID
@@ -148,23 +164,9 @@ class Photometry:
             aper_corr = 1.
 
         # Put observed photometry and its error in arrays
-        obs_flux = np.zeros(self.filters.n_bands)
-        obs_flux_err = np.zeros(self.filters.n_bands)
-
-        for i, band in enumerate(self.filters.data['flux_colName']):
-            obs_flux[i] = observation[0][band]*aper_corr*self.filters.units / nanoJy
-
-        # Add to the error array the minimum relative error thet BANGS allows
-        # one to add to the errors quoted in the catalogue
-        for i, err in enumerate(self.filters.data['flux_errcolName']):
-            tmp_err = observation[0][err]
-            if tmp_err > 0.:
-                obs_flux_err[i] = observation[0][err]*aper_corr*self.filters.units / nanoJy
-                obs_flux_err[i] = (np.sqrt( (obs_flux_err[i]/obs_flux[i])**2 +
-                        np.float32(self.filters.data['min_rel_err'][i])**2) *
-                        obs_flux[i])
-            else:
-                obs_flux_err[i] = tmp_err
+        obs_flux, obs_flux_err = self.observed_catalogue.extract_fluxes(self.filters, ID)
+        obs_flux *= 1.E+09
+        obs_flux_err *= 1.E+09
 
         ok = np.where(obs_flux_err > 0.)[0]
 
@@ -342,7 +344,7 @@ class Photometry:
 
         if y0 < 0.: plt.plot( [x0,x1], [0.,0.], color='gray', lw=1.0 )
 
-        name = prepare_plot_saving(str(ID)+'_BANGS_marginal_SED_phot.pdf')
+        name = prepare_plot_saving(plot_name)
 
         fig.savefig(name, dpi=None, facecolor='w', edgecolor='w',
                 orientation='portrait', papertype='a4', format="pdf",
@@ -352,7 +354,7 @@ class Photometry:
         hdulist.close()
 
     def plot_replicated_data(self, ID, max_interval=99.7, n_replic_to_plot=16,
-            print_text=False):    
+            print_text=False, replot=False):    
         """ 
         Plot the replicated data.
 
@@ -374,7 +376,18 @@ class Photometry:
         print_text : bool, optional
             Whether to print further information on the plot, such as
             chi-square, p-value, or leave it empty and neat.
+
+        replot: bool, optional
+            Whether to redo the plot, even if it already exists
         """
+
+        # Name of the output plot
+        plot_name = str(ID)+'_BANGS_replic_data_phot.pdf'
+
+        # Check if the plot already exists
+        if plot_exists(plot_name) and not replot:
+            logging.warning('The plot "' + plot_name + '" already exists. \n Exiting the function.')
+            return
 
         n_replic_to_plot = np.array(n_replic_to_plot)
         if n_replic_to_plot.size == 1:
@@ -395,23 +408,9 @@ class Photometry:
             aper_corr = 1.
 
         # Put observed photometry and its error in arrays
-        obs_flux = np.zeros(self.filters.n_bands)
-        obs_flux_err = np.zeros(self.filters.n_bands)
-
-        for i, band in enumerate(self.filters.data['flux_colName']):
-            obs_flux[i] = observation[0][band]*aper_corr*self.filters.units / nanoJy
-
-        # Add to the error array the minimum relative error that BANGS allows
-        # one to add to the errors quoted in the catalogue
-        for i, err in enumerate(self.filters.data['flux_errcolName']):
-            tmp_err = observation[0][err]
-            if tmp_err > 0.:
-                obs_flux_err[i] = observation[0][err]*aper_corr*self.filters.units / nanoJy
-                obs_flux_err[i] = (np.sqrt( (obs_flux_err[i]/obs_flux[i])**2 +
-                        np.float32(self.filters.data['min_rel_err'][i])**2) *
-                        obs_flux[i])
-            else:
-                obs_flux_err[i] = tmp_err
+        obs_flux, obs_flux_err = self.observed_catalogue.extract_fluxes(self.filters, ID)
+        obs_flux *= 1.E+09
+        obs_flux_err *= 1.E+09
 
         ok = np.where(obs_flux_err > 0.)[0]
 
@@ -502,11 +501,11 @@ class Photometry:
             for lab in self.filters.data['label']:
                 labels.append(lab.split('_')[-1])
                 
-            d = pd.DataFrame(data=np.abs(residual_fluxes.T),
-                    columns=labels)
+            #d = pd.DataFrame(data=np.abs(residual_fluxes.T),
+            #        columns=labels)
 
             # Compute the correlation matrix
-            corr = d.corr()
+            #corr = d.corr()
 
             # Generate a mask for the upper triangle
             mask = np.zeros_like(corr, dtype=np.bool)
@@ -720,9 +719,10 @@ class Photometry:
                 print "`PosteriorPredictiveChecks` not computed/loaded, hence " \
                 "<chi^2_red> for the object `" + str(ID) + "` is not available"
 
-        name = prepare_plot_saving(str(ID)+'_BANGS_replic_data_phot.pdf')
 
         #fig.tight_layout()
+
+        name = prepare_plot_saving(plot_name)
 
         fig.savefig(name, dpi=None, facecolor='w', edgecolor='w',
                 orientation='portrait', papertype='a4', format="pdf",

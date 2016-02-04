@@ -56,6 +56,12 @@ def get_results_files(results_dir=None):
 
     return file_list, file_IDs
 
+
+def touch(file_name, times=None):
+    with open(file_name, 'a'):
+        os.utime(file_name, times)
+
+
 def find_file(file_name, path):
     """ 
     Find a file in a directory.

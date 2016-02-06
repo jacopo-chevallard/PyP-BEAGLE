@@ -34,17 +34,17 @@ class PhotometricFilters:
     def load(self, file_name):
         """ 
         Load various information about a set of photometric filters used
-        during a BANGS run. 
+        during a BEAGLE run. 
 
         Parameters
         ----------
         file_name : str
-            Contains the filter file used in the BANGS run.
+            Contains the filter file used in the BEAGLE run.
 
         Notes
         -----
-        For consistency with BANGS (and to mnimize errors), it uses the
-        '$BANGS_FILTERS' environment variable to load the 'filters.log' and
+        For consistency with BEAGLE (and to mnimize errors), it uses the
+        '$BEAGLE_FILTERS' environment variable to load the 'filters.log' and
         'filterfrm.res' files.
         """
 
@@ -65,7 +65,7 @@ class PhotometricFilters:
 
         min_rel_err = Column(name='min_rel_err', dtype=np.float32, length=self.n_bands)
 
-        # read the filter file used to run BANGS
+        # read the filter file used to run BEAGLE
         i = 0
         for line in open(file_name):
             if line.strip() and not line.startswith("#"):
@@ -85,7 +85,7 @@ class PhotometricFilters:
                     i += 1    
 
         # Read filter transmission functions
-        filt_log = os.path.expandvars("$BANGS_FILTERS/filters.log")
+        filt_log = os.path.expandvars("$BEAGLE_FILTERS/filters.log")
         n_wl_points = list()
         for line in open(filt_log):
             n_wl_points.append(int(line.split()[-1]))
@@ -98,7 +98,7 @@ class PhotometricFilters:
             self.start_line.append(int(np.sum(n_wl_points[0:int(indx)-1]) + int(indx)) )
             self.end_line.append(int(self.start_line[i]+n_wl_points[int(indx)-1]))
 
-        filt_trans = os.path.expandvars("$BANGS_FILTERS/filterfrm.res")
+        filt_trans = os.path.expandvars("$BEAGLE_FILTERS/filterfrm.res")
         lines = open(filt_trans).readlines()
 
         for i in range(len(index)):

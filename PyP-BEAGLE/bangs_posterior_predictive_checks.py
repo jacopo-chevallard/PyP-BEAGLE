@@ -72,10 +72,47 @@ class PosteriorPredictiveChecks:
         self.data = my_table
 
     def compute_replicated(self, observed_catalogue, filters, ID,
-            n_replicated=2000):
+            n_replicated=2000, seed=1234):
 
             strID = str(ID)
             file = os.path.join(BangsDirectories.results_dir, strID + "_BANGS.fits.gz")
+            
+            # Name of the output file containing the replicated data
+            out_name = strID + "_BANGS_replic_data.fits.gz"
+            out_name = prepare_data_saving(out_name)
+
+            # Check if the file containing the replicated data already exists, in which case just read it!
+            if os.path.isfile(out_name):
+
+                # Read the model fluxes from the BEAGLE output file
+                hdulist = fits.open(file)
+                bangs_data = hdulist['MARGINAL PHOTOMETRY'].data
+
+                n_samples = len(hdulist['MARGINAL PHOTOMETRY'].data.field(0))
+                cols = hdulist['MARGINAL PHOTOMETRY'].columns
+
+                model_flux = np.zeros((filters.n_bands, n_samples), np.float32)
+
+                for j in range(filters.n_bands):
+                    name = '_' + filters.data['label'][j] + '_'
+                    model_flux[j,:] = bangs_data[name] / jy
+
+                # Close the BEAGLE output file and open the file containing replicated data
+                hdulist.close()
+                hdulist = fits.open(out_name)
+
+                # Get the row indices, indicating which rows from the output
+                # BEAGLE file were used in the creation of the replicated data
+                replic_data_rows = hdulist[1].data['row_index']
+
+                noiseless_flux = model_flux[:, replic_data_rows]
+
+                replic_flux = np.zeros((filters.n_bands, len(replic_data_rows)), np.float32)
+                for col_name in hdulist[1].columns.names:
+                    if col_name in cols.names:
+                        replic_flux[j,:] = hdulist[1].data[col_name]
+
+                return replic_flux, noiseless_flux, model_flux, n_data
 
             if os.path.isfile(file):
 
@@ -89,7 +126,7 @@ class PosteriorPredictiveChecks:
                 row_indices = np.arange(n_samples)
 
                 # Now, draw the weighted samples with replacement
-                wrand = WalkerRandomSampling(probability, keys=row_indices)
+                wrand = WalkerRandomSampling(probability, keys=row_indices, rand_seed=seed)
                 replic_data_rows = wrand.random(n_replicated)
 
                 obs_flux = np.zeros(filters.n_bands, np.float32)
@@ -155,9 +192,7 @@ class PosteriorPredictiveChecks:
                 new_hdu[1].data['row_index'] = replic_data_rows
 
                 # Save the file
-                name = strID + "_BANGS_replic_data.fits.gz"
-                name = prepare_data_saving(name)
-                new_hdu.writeto(name)
+                new_hdu.writeto(out_name)
 
             hdulist.close()
 
@@ -244,6 +279,8 @@ class PosteriorPredictiveChecks:
 
             if os.path.isfile(file):
 
+                print ""
+                print "HERE"
                 obs_flux, obs_flux_err = observed_catalogue.extract_fluxes(filters, ID)
 
                 replic_flux, noiseless_flux, model_flux, n_data = self.compute_replicated(observed_catalogue, filters, ID)

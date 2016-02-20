@@ -1,3 +1,4 @@
+import fnmatch
 import os
 import logging
 import numpy as np
@@ -16,18 +17,27 @@ class BangsDirectories(object):
 
     pybangs_data = os.path.join("pybangs", "data")
     pybangs_plot = os.path.join("pybangs", "plot")
-    results_dir = ""
-    suffix = "BANGS.fits.gz"
 
-def get_results_files(results_dir=None):
+    results_dir = ''
+
+    suffix = 'BANGS'
+
+    MN_suffix = '_BANGS_MNstats.dat'
+
+    param_file = ''
+
+def get_files_list(results_dir=None, suffix=None):
     """ 
-    Get all BEAGLE results files.
+    Get all files ending with suffix.
 
     Parameters
     ----------
     results_dir : str, optional
-        Directory containing the BANGS output files. By default uses the
+        Directory containing the files to list. By default uses the
         RESULTS_DIR constant.
+
+    suffix: str, optional
+       Suffix of the files to list. Bu default ``BangsDirectories.suffix``
 
     Returns
     -------
@@ -43,10 +53,12 @@ def get_results_files(results_dir=None):
     if results_dir is None:
         results_dir = BangsDirectories.results_dir
 
+    if suffix is None:
+        suffix = BangsDirectories.suffix + '.fits.gz'
+
     file_list = list()
     file_IDs = list()
 
-    suffix = BangsDirectories.suffix
 
     for file in os.listdir(results_dir):
         if file.endswith(suffix):
@@ -69,7 +81,7 @@ def find_file(file_name, path):
     Parameters
     ----------
     file_name : str
-        Name of the file to be found
+        Name of the file to be found (can contain wildcards)
 
     path: str
         Path where to (recursively) search for file_name
@@ -80,9 +92,12 @@ def find_file(file_name, path):
         Full path to the file_name
     """ 
 
+    print "file_name: ", file_name
+
     for root, dirs, files in os.walk(path):
-        if name in files:
-            return os.path.join(root, name)
+        for file in files:
+            if fnmatch.fnmatch(file, file_name):
+                return os.path.join(root, file)
 
     return None
 

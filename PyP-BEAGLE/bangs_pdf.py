@@ -5,6 +5,7 @@ import json
 from matplotlib import rc
 from matplotlib.colors import colorConverter
 from matplotlib.patches import Rectangle
+import matplotlib.pyplot as plt
 from collections import OrderedDict
 from astropy.io import fits
 
@@ -23,7 +24,7 @@ class PDF:
             # entries in the dictionary reflects the order in the file
             self.adjust_params = json.load(f, object_pairs_hook=OrderedDict)
 
-    def plot_triangle(self, ID, params_to_plot=None, suffix=None, replot=False, M_star=False):
+    def plot_triangle(self, ID, params_to_plot=None, suffix=None, replot=False, M_star=False, show=False):
         """ 
         Draw a "triangle plot" with the 1D and 2D posterior probability
 
@@ -68,7 +69,7 @@ class PDF:
             plot_name = str(ID)+'_BANGS_triangle_' + suffix + '.pdf'
 
         # Check if the plot already exists
-        if plot_exists(plot_name) and not replot:
+        if plot_exists(plot_name) and not replot and not show:
             logging.warning('The plot "' + plot_name + '" already exists. \n Exiting the function.')
             return
 
@@ -160,12 +161,16 @@ class PDF:
             lev = samples.get1DDensity(par_name).getLimits(settings['contours'][0])
             ax.add_patch(Rectangle((lev[0], y0), lev[1]-lev[0], y1-y0, facecolor="grey", alpha=0.5))
 
-        # Now save the plot
-        name = prepare_plot_saving(plot_name)
+        if show:
+            plt.show()
+        else:
+            # Now save the plot
+            name = prepare_plot_saving(plot_name)
+            g.export(name)
 
-        g.export(name)
-
+        plt.close()
         hdulist.close()
+
 
 ##                # Overplot the posterior median point
 ##                self.marginal.DrawPosteriorMedian(Appearance.PosteriorMedian)

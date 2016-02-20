@@ -3,7 +3,7 @@ import os
 import logging
 import cPickle
 
-from bangs_utils import prepare_data_saving, BangsDirectories
+from bangs_utils import prepare_data_saving, BangsDirectories, get_files_list
 
 class MultiNestMode:
 
@@ -35,7 +35,7 @@ class MultiNestObject:
 class MultiNestCatalogue:
 
 
-    def load(self, file_name):
+    def load(self, file_name=None, n_par=None, file_list=None):
         """ 
         Load a 'MultiNest catalogue'.
 
@@ -54,16 +54,31 @@ class MultiNestCatalogue:
         values for the different parameters for object 2 and mode 1
         """
 
-        name = os.path.join(BangsDirectories.results_dir,
-                BangsDirectories.pybangs_data, file_name)
+        if file_name is None:
+            try:
+                tmp = BangsDirectories.param_file 
+                file_name = tmp.split('.')[-2] + '_MultiNest.cat'
+            except:
+                pass
 
-        logging.info("Loading the `MultiNestCatalogue`: " + name)
+        name = prepare_data_saving(file_name)
+        print "name: ", name,  os.path.isfile(name)
 
-        file = open(name, 'rb')
-        self.MNObjects = cPickle.load(file)
-        file.close()
+        if os.path.isfile(name):
+            logging.info("Loading the `MultiNestCatalogue`: " + name)
+            file = open(name, 'rb')
+            self.MNObjects = cPickle.load(file)
+            file.close()
 
-    def compute(self, n_par, file_list, file_name):
+        if n_par is not None:
+            try:
+                self.compute(n_par, file_list=file_list)
+                return
+            except:
+                return
+
+
+    def compute(self, n_par, file_list=None, file_name=None):
         """ 
         Compute a 'MultiNest catalogue'
 
@@ -88,8 +103,20 @@ class MultiNestCatalogue:
         values for the different parameters for object 2 and mode 1
         """
 
-        self.MNObjects = list()
+        if file_name is None:
+            try:
+                tmp = BangsDirectories.param_file 
+                file_name = tmp.split('.')[-2] + '_MultiNest.cat'
+            except:
+                pass
 
+        if file_list is None:
+            try:
+                file_list, IDs = get_files_list(suffix=BangsDirectories.MN_suffix)
+            except:
+                return
+
+        self.MNObjects = list()
 
         # Loop over all files containing BANGS results
         for j, file in enumerate(file_list):

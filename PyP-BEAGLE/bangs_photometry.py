@@ -116,7 +116,7 @@ class Photometry:
         self.PPC = PosteriorPredictiveChecks()
 
     def plot_marginal(self, ID, max_interval=99.7, 
-            print_text=False, print_title=False, replot=False):    
+            print_text=False, print_title=False, replot=False, show=False):    
         """ 
         Plot the fluxes predicted by BANGS.
 
@@ -149,7 +149,7 @@ class Photometry:
         plot_name = str(ID)+'_BANGS_marginal_SED_phot.pdf'
 
         # Check if the plot already exists
-        if plot_exists(plot_name) and not replot:
+        if plot_exists(plot_name) and not replot and not show:
             logging.warning('The plot "' + plot_name + '" already exists. \n Exiting the function.')
             return
 
@@ -344,11 +344,15 @@ class Photometry:
 
         if y0 < 0.: plt.plot( [x0,x1], [0.,0.], color='gray', lw=1.0 )
 
-        name = prepare_plot_saving(plot_name)
+        if show:
+            plt.show()
+        else:
+            name = prepare_plot_saving(plot_name)
 
-        fig.savefig(name, dpi=None, facecolor='w', edgecolor='w',
-                orientation='portrait', papertype='a4', format="pdf",
-                transparent=False, bbox_inches="tight", pad_inches=0.1)
+            fig.savefig(name, dpi=None, facecolor='w', edgecolor='w',
+                    orientation='portrait', papertype='a4', format="pdf",
+                    transparent=False, bbox_inches="tight", pad_inches=0.1)
+
         plt.close(fig)
 
         hdulist.close()

@@ -16,7 +16,8 @@ import sys
 sys.path.append("../dependencies")
 import WeightedKDE
 
-from bangs_utils import BangsDirectories, prepare_plot_saving, set_plot_ticks, prepare_violin_plot, plot_exists
+from bangs_utils import BangsDirectories, prepare_plot_saving, set_plot_ticks, \
+        prepare_violin_plot, plot_exists, pause, extract_row
 from bangs_filters import PhotometricFilters
 from bangs_summary_catalogue import BangsSummaryCatalogue
 from bangs_residual_photometry import ResidualPhotometry
@@ -82,14 +83,16 @@ class ObservedCatalogue:
         flux = np.zeros(filters.n_bands, np.float32)
         flux_err = np.zeros(filters.n_bands, np.float32)
 
+        row = extract_row(self.data, ID)
+
         for j in range(filters.n_bands):
 
             # observed flux and its error
             name = filters.data['flux_colName'][j]
-            flux[j] = self.data[self.data['ID']==ID][name] * aper_corr * filters.units / Jy
+            flux[j] = row[name] * aper_corr * filters.units / Jy
 
             name = filters.data['flux_errcolName'][j]
-            flux_err[j] = self.data[self.data['ID']==ID][name] * aper_corr * filters.units / Jy
+            flux_err[j] = row[name] * aper_corr * filters.units / Jy
 
             if flux_err[j] > 0.:
                 # if defined, add the minimum error in quadrature
@@ -116,7 +119,7 @@ class Photometry:
         self.PPC = PosteriorPredictiveChecks()
 
     def plot_marginal(self, ID, max_interval=99.7, 
-            print_text=False, print_title=False, replot=False, show=False):    
+            print_text=False, print_title=False, replot=False, show=False, units='nanoJy'):    
         """ 
         Plot the fluxes predicted by BANGS.
 
@@ -155,7 +158,7 @@ class Photometry:
 
         # From the (previously loaded) observed catalogue select the row
         # corresponding to the input ID
-        observation = self.observed_catalogue.data[self.observed_catalogue.data['ID'] == ID]
+        observation = extract_row(self.observed_catalogue.data, ID)
 
         # Check if you need to apply an aperture correction to the catalogue fluxes
         if 'aper_corr' in self.observed_catalogue.data.dtype.names:
@@ -322,7 +325,8 @@ class Photometry:
 
             # Print the average reduced chi-square
             try:
-                aver_chi_square = self.PPC.data['aver_chi_square'][self.PPC.data['ID'] == ID]
+                row = extract_row(self.PPC.data, ID)
+                aver_chi_square = row['aver_chi_square']
                 y = y1 - (y1-y0)*0.15
                 ax.text(x, y, "$\langle\chi^2\\rangle=" + "{:.2f}".format(aver_chi_square) + "$", fontsize=10 )
             except AttributeError:
@@ -330,8 +334,9 @@ class Photometry:
                 "<chi^2> for the object `" + str(ID) + "` is not available"
 
             try:
-                aver_red_chi_square = self.PPC.data['aver_red_chi_square'][self.PPC.data['ID'] == ID]
-                n_data = self.PPC.data['n_used_bands'][self.PPC.data['ID'] == ID]
+                row = extract_row(self.PPC.data, ID)
+                aver_red_chi_square = row['aver_red_chi_square']
+                n_data = row['n_used_bands']
                 y = y1 - (y1-y0)*0.20
                 ax.text(x, y,
                         "$\langle\chi^2/(\\textnormal{N}_\\textnormal{data}-1)\\rangle=" \
@@ -403,7 +408,7 @@ class Photometry:
 
         # From the (previously loaded) observed catalogue select the row
         # corresponding to the input ID
-        observation = self.observed_catalogue.data[self.observed_catalogue.data['ID'] == ID]
+        observation = extract_row(self.observed_catalogue.data, ID)
 
         # Check if you need to apply an aperture correction to the catalogue fluxes
         if 'aper_corr' in self.observed_catalogue.data.dtype.names:
@@ -703,7 +708,8 @@ class Photometry:
 
             # Print the average reduced chi-square
             try:
-                aver_chi_square = self.PPC.data['aver_chi_square'][self.PPC.data['ID'] == ID]
+                row = extract_row(self.PPC.data, ID)
+                aver_chi_square = row['aver_chi_square']
                 y = y1 - (y1-y0)*0.15
                 ax.text(x, y, "$\langle\chi^2\\rangle=" + "{:.2f}".format(aver_chi_square) + "$", fontsize=10 )
             except AttributeError:
@@ -711,8 +717,9 @@ class Photometry:
                 "<chi^2> for the object `" + str(ID) + "` is not available"
 
             try:
-                aver_red_chi_square = self.PPC.data['aver_red_chi_square'][self.PPC.data['ID'] == ID]
-                n_data = self.PPC.data['n_used_bands'][self.PPC.data['ID'] == ID]
+                row = extract_row(self.PPC.data, ID)
+                aver_red_chi_square = row['aver_red_chi_square']
+                n_data = row['n_used_bands']
                 y = y1 - (y1-y0)*0.20
                 ax.text(x, y,
                         "$\langle\chi^2/(\\textnormal{N}_\\textnormal{data}-1)\\rangle=" \

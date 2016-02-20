@@ -13,6 +13,25 @@ import WeightedKDE
 
 import matplotlib.ticker as plticker
 
+def extract_row(table, ID, key=None):
+
+    if key is None:
+        key='ID'
+
+    if isinstance(table[key][0], basestring):
+        row = table[table[key] == str(ID)]
+    else:
+        row = table[table[key] == int(ID)]
+
+    return row
+
+def pause():
+
+    try:
+        wait = input("PRESS ENTER TO CONTINUE.")
+    except KeyboardInterrupt:
+        raise SystemExit
+
 class BangsDirectories(object):
 
     pybangs_data = os.path.join("pybangs", "data")
@@ -60,7 +79,7 @@ def get_files_list(results_dir=None, suffix=None):
     file_IDs = list()
 
 
-    for file in os.listdir(results_dir):
+    for file in sorted(os.listdir(results_dir)):
         if file.endswith(suffix):
             file_list.append(file)
             file = file[0:file.find(suffix)-1]
@@ -272,6 +291,9 @@ def match_ID(ID_list_1, ID_list_2, sorted=False):
     """
 
     # Firstly, check weather ID_list_1 is longer than ID_list_2 or viceversa
+
+    if not isinstance(ID_list_1, (int, long)) or not isinstance(ID_list_1, (int, long)):
+        raise ValueError("The input list must be pf type int!")
 
     n1 = len(ID_list_1)
     n2 = len(ID_list_2)

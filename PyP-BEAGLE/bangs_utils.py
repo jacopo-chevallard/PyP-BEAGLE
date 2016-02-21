@@ -292,8 +292,19 @@ def match_ID(ID_list_1, ID_list_2, sorted=False):
 
     # Firstly, check weather ID_list_1 is longer than ID_list_2 or viceversa
 
-    if not isinstance(ID_list_1, (int, long)) or not isinstance(ID_list_1, (int, long)):
-        raise ValueError("The input list must be pf type int!")
+    for ID in ID_list_1: 
+        try: 
+            if not ID.isdigit():    
+                raise ValueError("The input list must be convertable to type int!")
+        except:
+            pass
+
+    for ID in ID_list_2: 
+        try: 
+            if not ID.isdigit():    
+                raise ValueError("The input list must be convertable to type int!")
+        except:
+            pass
 
     n1 = len(ID_list_1)
     n2 = len(ID_list_2)

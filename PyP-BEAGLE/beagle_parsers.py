@@ -40,6 +40,15 @@ def standard_parser():
         dest="param_file"
     )
 
+    parser.add_argument(
+        '-s', '--summary-config',
+        help="JSON file containing the configuration for the computation of the summary catalogue",
+        action="store", 
+        type=str, 
+        dest="summary_config",
+        default="summary_config.json"
+    )
+
     # Number of processors to use in the multi-processor parts of the analysis
     parser.add_argument(
         '-np',

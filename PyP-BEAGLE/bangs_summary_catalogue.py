@@ -1,5 +1,7 @@
 import os
 import logging
+from collections import OrderedDict
+import json
 import numpy as np
 from scipy.integrate import cumtrapz
 from scipy.interpolate import interp1d
@@ -81,25 +83,16 @@ class BangsSummaryCatalogue:
 
         self.hdulist = fits.open(name)
 
-    def compute(self, file_list, file_name, levels=[68.,95.]):
+    def compute(self, file_list, config_file, file_name=None, overwrite=False, levels=[68.,95.]):
         """ 
         """ 
 
+        if file_name is None:
+            file_name = "BEAGLE_summary_catalogue.fits"
 
-        hdu_col = list()
+        with open(config_file) as f:    
+            hdu_col = json.load(f, object_pairs_hook=OrderedDict)
 
-        hdu_col.append({'name':'GALAXY PROPERTIES', 'columns':['redshift',
-            'M_tot', 'M_star', 'mass_w_age', 'lumin_w_age', 'mass_w_Z',
-            'lumin_w_Z', 'N_ion', 'xi_ion', 'UV_slope']})
-
-        hdu_col.append({'name':'STAR FORMATION', 'columns':['SFR', 'sSFR']})
-
-        hdu_col.append({'name':'DUST ATTENUATION', 'columns':['tauV_eff']})
-
-        hdu_col.append({'name':'MARGINAL PHOTOMETRY'})
-
-        hdu_col.append({'name':'POSTERIOR PDF', 'columns':['mass', 'redshift',
-            'tauV_eff', 'tau', 'metallicity', 'specific_sfr']})
 
         # You consider the first file in the list and use as a "mold" to create
         # the structure (binary tables and their columns) of the output FITS file
@@ -120,7 +113,8 @@ class BangsSummaryCatalogue:
             hdu_name = hdu['name']
 
             # The first column of each output extension contains the object ID
-            new_columns.append(fits.Column(name='ID', format='K'))
+            #new_columns.append(fits.Column(name='ID', format='K'))
+            new_columns.append(fits.Column(name='ID', format='20A'))
 
             # You just consider the columns defined in the structure
             if 'columns' in hdu:
@@ -172,7 +166,8 @@ class BangsSummaryCatalogue:
             end = file.find('_BANGS')
 
             # Extract the object ID from the file_name
-            ID = np.int(np.float(os.path.basename(file[0:end])))
+            #ID = np.int(np.float(os.path.basename(file[0:end])))
+            ID = os.path.basename(file[0:end])
 
             probability = hdulist['posterior pdf'].data['probability']
 
@@ -198,6 +193,5 @@ class BangsSummaryCatalogue:
 
             hdulist.close()
 
-        if file_name is not None:
-            name = prepare_data_saving(file_name)
-            self.hdulist.writeto(name)
+        name = prepare_data_saving(file_name)
+        self.hdulist.writeto(name, clobber=overwrite)

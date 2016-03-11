@@ -3,7 +3,7 @@ import os
 import logging
 import cPickle
 
-from bangs_utils import prepare_data_saving, BangsDirectories, get_files_list
+from beagle_utils import prepare_data_saving, BeagleDirectories, get_files_list
 
 class MultiNestMode:
 
@@ -56,7 +56,7 @@ class MultiNestCatalogue:
 
         if file_name is None:
             try:
-                tmp = BangsDirectories.param_file 
+                tmp = BeagleDirectories.param_file 
                 file_name = tmp.split('.')[-2] + '_MultiNest.cat'
             except:
                 pass
@@ -85,7 +85,7 @@ class MultiNestCatalogue:
         Parameters
         ----------
         n_par : int
-            Number of free parameters in the BANGS run.
+            Number of free parameters in the BEAGLE run.
 
         file_list : iterable 
             Contains the list of MultiNest output files '*MNstats.dat'.
@@ -105,30 +105,30 @@ class MultiNestCatalogue:
 
         if file_name is None:
             try:
-                tmp = BangsDirectories.param_file 
+                tmp = BeagleDirectories.param_file 
                 file_name = tmp.split('.')[-2] + '_MultiNest.cat'
             except:
                 pass
 
         if file_list is None:
             try:
-                file_list, IDs = get_files_list(suffix=BangsDirectories.MN_suffix)
+                file_list, IDs = get_files_list(suffix=BeagleDirectories.MN_suffix)
             except:
                 return
 
         self.MNObjects = list()
 
-        # Loop over all files containing BANGS results
+        # Loop over all files containing BEAGLE results
         for j, file in enumerate(file_list):
 
             # Object ID is what comes before the suffix (excluding the
             # directory tree!)
-            end = file.find('_BANGS')
+            end = file.find('_BEAGLE')
             objID = os.path.basename(file[:end]) 
 
             # Open the MultiNest "stats" file
             # Read the global evidence and total number of modes
-            f = open(os.path.join(BangsDirectories.results_dir, file), 'r')
+            f = open(os.path.join(BeagleDirectories.results_dir, file), 'r')
             for i, line in enumerate(f):
                 if i == 0:
                     logEvidence = float(line.split()[5])
@@ -154,7 +154,7 @@ class MultiNestCatalogue:
             MNObj = MultiNestObject(objID, logEvidence)
 
             # Now we read the evidence, post mean, maximum likelihood and map for each mode
-            f = open(os.path.join(BangsDirectories.results_dir, file), 'r')
+            f = open(os.path.join(BeagleDirectories.results_dir, file), 'r')
             for i, line in enumerate(f):
                 
                 # Evidence

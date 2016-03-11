@@ -7,7 +7,7 @@ import sys
 sys.path.append("../dependencies")
 import WeightedKDE
 
-from bangs_utils import weighted_avg_and_std, BangsDirectories, match_ID, prepare_plot_saving
+from beagle_utils import weighted_avg_and_std, BeagleDirectories, match_ID, prepare_plot_saving
 
 class ResidualPhotometry:
 
@@ -21,14 +21,14 @@ class ResidualPhotometry:
             Name of the file containing the cPicke dump.
         """ 
 
-        name = os.path.join(BangsDirectories.results_dir,
-                BangsDirectories.pybangs_data, file_name)
+        name = os.path.join(BeagleDirectories.results_dir,
+                BeagleDirectories.pypbeagle_data, file_name)
 
         file = open(name, 'rb')
         self.residual_kde_pdf = cPickle.load(file)
         file.close()
 
-    def compute(self, observed_catalogue, bangs_summary_catalogue,
+    def compute(self, observed_catalogue, beagle_summary_catalogue,
             filters, summary_stat=None, cPickleName=None):
 
         """ 
@@ -39,7 +39,7 @@ class ResidualPhotometry:
         observed_catalogue : `ObservedCatalogue` class object
             
 
-        bangs_summary_catalogue : `BangsSummaryCatalogue` class object
+        beagle_summary_catalogue : `BeagleSummaryCatalogue` class object
             
 
         filters : `PhotometricFilters` class object
@@ -54,23 +54,23 @@ class ResidualPhotometry:
         if summary_stat is None:
             summary_stat = "median"
 
-        bangs_data = bangs_summary_catalogue.hdulist['MARGINAL PHOTOMETRY'].data
+        beagle_data = beagle_summary_catalogue.hdulist['MARGINAL PHOTOMETRY'].data
 
         catalogue_data = observed_catalogue.data
 
-        indx_bangs, indx_catalogue = match_ID(bangs_data['ID'], catalogue_data['ID'])
+        indx_beagle, indx_catalogue = match_ID(beagle_data['ID'], catalogue_data['ID'])
 
-        bangs_data = bangs_data[indx_bangs]
+        beagle_data = beagle_data[indx_beagle]
         catalogue_data = catalogue_data[indx_catalogue]
 
-        print "ID: ", bangs_data['ID']
+        print "ID: ", beagle_data['ID']
         print "ID: ", catalogue_data['ID']
 
         # As a sanity check, check if the ID match among the two catalogues, by
         # random picking some indices here and there...
-        #if (bangs_data['ID'][0] != catalogue_data['ID'][0]) or \
-        #(bangs_data['ID'][-1] != catalogue_data['ID'][-1]):
-        #    raise ValueError("The object IDs between the BANGS summary catalogue and \
+        #if (beagle_data['ID'][0] != catalogue_data['ID'][0]) or \
+        #(beagle_data['ID'][-1] != catalogue_data['ID'][-1]):
+        #    raise ValueError("The object IDs between the BEAGLE summary catalogue and \
         #        the observed catalogue do not match!")
 
         self.residual_kde_pdf = list() 
@@ -83,8 +83,8 @@ class ResidualPhotometry:
             obs_flux_err = catalogue_data[filters.data['flux_errcolName'][i]] * filters.units  / jy
 
             name = '_' + filters.data['label'][i] + '_'
-            model_flux = bangs_data[name+'_'+summary_stat] / jy
-            model_flux_err = 0.5 * (bangs_data[name+'_68.00'][:,1]-bangs_data[name+'_68.00'][:,0]) / jy
+            model_flux = beagle_data[name+'_'+summary_stat] / jy
+            model_flux_err = 0.5 * (beagle_data[name+'_68.00'][:,1]-beagle_data[name+'_68.00'][:,0]) / jy
 
             mask = np.zeros(len(obs_flux), dtype=bool)
 
@@ -106,7 +106,7 @@ class ResidualPhotometry:
 
     def plot(self, 
             filters, 
-            plot_name="BANGS_residual_photometry.pdf", 
+            plot_name="BEAGLE_residual_photometry.pdf", 
             x_range=(-1.,1.), 
             n_x=1000, 
             summary_stat="median"):

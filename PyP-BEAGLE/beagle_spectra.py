@@ -17,12 +17,12 @@ sys.path.append("../dependencies")
 import WeightedKDE
 #import FillBetweenStep
 
-from bangs_utils import BangsDirectories, prepare_plot_saving, set_plot_ticks, plot_exists
-from bangs_filters import PhotometricFilters
-from bangs_summary_catalogue import BangsSummaryCatalogue
-#from bangs_residual_photometry import ResidualPhotometry
-from bangs_multinest_catalogue import MultiNestCatalogue
-from bangs_posterior_predictive_checks import PosteriorPredictiveChecks
+from beagle_utils import BeagleDirectories, prepare_plot_saving, set_plot_ticks, plot_exists
+from beagle_filters import PhotometricFilters
+from beagle_summary_catalogue import BeagleSummaryCatalogue
+#from beagle_residual_photometry import ResidualPhotometry
+from beagle_multinest_catalogue import MultiNestCatalogue
+from beagle_posterior_predictive_checks import PosteriorPredictiveChecks
 
 
 microJy = np.float32(1.E-23 * 1.E-06)
@@ -57,7 +57,7 @@ class Spectrum:
 
         self.observed_spectrum = ObservedSpectrum()
 
-        self.summary_catalogue = BangsSummaryCatalogue()
+        self.summary_catalogue = BeagleSummaryCatalogue()
 
         self.multinest_catalogue = MultiNestCatalogue()
 
@@ -68,9 +68,9 @@ class Spectrum:
     def plot_marginal(self, ID, max_interval=95.0,
             print_text=False, print_title=False, draw_steps=False, replot=False):    
         """ 
-        Plot the fluxes predicted by BANGS.
+        Plot the fluxes predicted by BEAGLE.
 
-        The fluxes here considered are those predicted by BANGS, given the
+        The fluxes here considered are those predicted by BEAGLE, given the
         posterior distribution of the model parameters. These are *not*
         replicated data.
 
@@ -93,7 +93,7 @@ class Spectrum:
         """
 
         # Name of the output plot
-        plot_name = str(ID) + '_BANGS_marginal_SED_spec.pdf'
+        plot_name = str(ID) + '_BEAGLE_marginal_SED_spec.pdf'
 
         # Check if the plot already exists
         if plot_exists(plot_name) and not replot:
@@ -103,7 +103,7 @@ class Spectrum:
         # The observed spectrum
         observation = self.observed_spectrum
 
-        # Add to the error array the minimum relative error thet BANGS allows
+        # Add to the error array the minimum relative error thet BEAGLE allows
         # one to add to the errors quoted in the catalogue
         #for i, err in enumerate(self.filters.data['flux_errcolName']):
         #    tmp_err = observation[0][err]
@@ -120,8 +120,10 @@ class Spectrum:
         fig = plt.figure()
         ax = fig.add_subplot(1, 1, 1)
 
-        # Open the file containing BANGS results
-        fits_file = os.path.join(BangsDirectories.results_dir, str(ID)+'_BANGS.fits.gz')
+        # Open the file containing BEAGLE results
+        fits_file = os.path.join(BeagleDirectories.results_dir,
+                str(ID) + '_' + BeagleDirectories.suffix + '.fits.gz')
+
         hdulist = fits.open(fits_file)
 
         # Read the template wl array, and the 2D flux array

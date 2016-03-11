@@ -16,13 +16,13 @@ import sys
 sys.path.append("../dependencies")
 import WeightedKDE
 
-from bangs_utils import BangsDirectories, prepare_plot_saving, set_plot_ticks, \
+from beagle_utils import BeagleDirectories, prepare_plot_saving, set_plot_ticks, \
         prepare_violin_plot, plot_exists, pause, extract_row
-from bangs_filters import PhotometricFilters
-from bangs_summary_catalogue import BangsSummaryCatalogue
-from bangs_residual_photometry import ResidualPhotometry
-from bangs_multinest_catalogue import MultiNestCatalogue
-from bangs_posterior_predictive_checks import PosteriorPredictiveChecks
+from beagle_filters import PhotometricFilters
+from beagle_summary_catalogue import BeagleSummaryCatalogue
+from beagle_residual_photometry import ResidualPhotometry
+from beagle_multinest_catalogue import MultiNestCatalogue
+from beagle_posterior_predictive_checks import PosteriorPredictiveChecks
 
 
 Jy = np.float32(1.E-23)
@@ -110,7 +110,7 @@ class Photometry:
 
         self.observed_catalogue = ObservedCatalogue()
 
-        self.summary_catalogue = BangsSummaryCatalogue()
+        self.summary_catalogue = BeagleSummaryCatalogue()
 
         self.multinest_catalogue = MultiNestCatalogue()
 
@@ -121,9 +121,9 @@ class Photometry:
     def plot_marginal(self, ID, max_interval=99.7, 
             print_text=False, print_title=False, replot=False, show=False, units='nanoJy'):    
         """ 
-        Plot the fluxes predicted by BANGS.
+        Plot the fluxes predicted by BEAGLE.
 
-        The fluxes here considered are those predicted by BANGS, given the
+        The fluxes here considered are those predicted by BEAGLE, given the
         posterior distribution of the model parameters. These are *not*
         replicated data.
 
@@ -149,7 +149,7 @@ class Photometry:
         """
 
         # Name of the output plot
-        plot_name = str(ID)+'_BANGS_marginal_SED_phot.pdf'
+        plot_name = str(ID)+'_BEAGLE_marginal_SED_phot.pdf'
 
         # Check if the plot already exists
         if plot_exists(plot_name) and not replot and not show:
@@ -176,8 +176,10 @@ class Photometry:
         fig = plt.figure()
         ax = fig.add_subplot(1, 1, 1)
 
-        # Open the file containing BANGS results
-        fits_file = os.path.join(BangsDirectories.results_dir, str(ID)+'_BANGS.fits.gz')
+        # Open the file containing BEAGLE results
+        fits_file = os.path.join(BeagleDirectories.results_dir,
+                str(ID) + '_' + BeagleDirectories.suffix + '.fits.gz')
+
         hdulist = fits.open(fits_file)
 
         # Consider only the extension containing the predicted model fluxes
@@ -391,7 +393,7 @@ class Photometry:
         """
 
         # Name of the output plot
-        plot_name = str(ID)+'_BANGS_replic_data_phot.pdf'
+        plot_name = str(ID)+'_BEAGLE_replic_data_phot.pdf'
 
         # Check if the plot already exists
         if plot_exists(plot_name) and not replot:
@@ -423,17 +425,17 @@ class Photometry:
 
         ok = np.where(obs_flux_err > 0.)[0]
 
-        # Open the file containing BANGS results
-        fits_file = os.path.join(BangsDirectories.results_dir,
-                str(ID)+'_BANGS.fits.gz')
+        # Open the file containing BEAGLE results
+        fits_file = os.path.join(BeagleDirectories.results_dir,
+                str(ID)+'_BEAGLE.fits.gz')
 
         model_hdu = fits.open(fits_file)
         model_sed = model_hdu['marginal photometry']
 
         # Open the file containing the replicated data
-        fits_file = os.path.join(BangsDirectories.results_dir,
-                BangsDirectories.pybangs_data,
-                str(ID)+'_BANGS_replic_data.fits.gz')
+        fits_file = os.path.join(BeagleDirectories.results_dir,
+                BeagleDirectories.pypbeagle_data,
+                str(ID)+'_BEAGLE_replic_data.fits.gz')
 
         replic_hdu = fits.open(fits_file)
         replic_data = replic_hdu[1]
@@ -538,7 +540,7 @@ class Photometry:
             plt.setp( ax.yaxis.get_majorticklabels(), rotation=45,
                     horizontalalignment='right' )
 
-            name = prepare_plot_saving(str(ID)+'_BANGS_replic_data_phot_matrix.pdf')
+            name = prepare_plot_saving(str(ID)+'_BEAGLE_replic_data_phot_matrix.pdf')
 
             fig.savefig(name, dpi=None, facecolor='w', edgecolor='w',
                     orientation='portrait', papertype='a4', format="pdf",
@@ -751,9 +753,9 @@ class Photometry:
 ##                    "An observed catalogue must be loaded before plotting the
 ##                    residual"
 ##
-##        if not hasattr(self, 'bangs_summary_catalogue'):
+##        if not hasattr(self, 'beagle_summary_catalogue'):
 ##            except AttributeError:
-##                    "A `bangs_summary_catalogue` must be loaded before plotting the
+##                    "A `beagle_summary_catalogue` must be loaded before plotting the
 ##                    residual"
 ##
 ##        self.residual = ResidualPhotometry()
@@ -762,7 +764,7 @@ class Photometry:
 ##            self.residual.load(self.residual_file_name)
 ##        except:
 ##            self.residual.compute(self.observed_catalogue,
-##                self.bangs_summary_catalogue, self.self.filters.
+##                self.beagle_summary_catalogue, self.self.filters.
 ##                cPickleName=self.residual_file_name)
                 
 

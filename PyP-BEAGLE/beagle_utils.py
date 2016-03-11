@@ -32,10 +32,10 @@ def pause():
     except KeyboardInterrupt:
         raise SystemExit
 
-class BangsDirectories(object):
+class BeagleDirectories(object):
 
-    pybangs_data = os.path.join("pybangs", "data")
-    pybangs_plot = os.path.join("pybangs", "plot")
+    pypbeagle_data = os.path.join("pyp-beagle", "data")
+    pypbeagle_plot = os.path.join("pyp-beagle", "plot")
 
     results_dir = ''
 
@@ -56,7 +56,7 @@ def get_files_list(results_dir=None, suffix=None):
         RESULTS_DIR constant.
 
     suffix: str, optional
-       Suffix of the files to list. Bu default ``BangsDirectories.suffix``
+       Suffix of the files to list. Bu default ``BeagleDirectories.suffix``
 
     Returns
     -------
@@ -70,10 +70,10 @@ def get_files_list(results_dir=None, suffix=None):
     """ 
 
     if results_dir is None:
-        results_dir = BangsDirectories.results_dir
+        results_dir = BeagleDirectories.results_dir
 
     if suffix is None:
-        suffix = BangsDirectories.suffix + '.fits.gz'
+        suffix = BeagleDirectories.suffix + '.fits.gz'
 
     file_list = list()
     file_IDs = list()
@@ -130,7 +130,7 @@ def prepare_data_saving(file_name, results_dir=None, overwrite=False):
         Name of the output file (without directory tree).
 
     results_dir : str, optional
-        Directory containing the BANGS output files. By default uses the
+        Directory containing the BEAGLE output files. By default uses the
         RESULTS_DIR constant.
 
     overwrite: bool, optional
@@ -144,9 +144,9 @@ def prepare_data_saving(file_name, results_dir=None, overwrite=False):
     """ 
 
     if results_dir is None:
-        results_dir = BangsDirectories.results_dir
+        results_dir = BeagleDirectories.results_dir
 
-    directory = os.path.join(results_dir, BangsDirectories.pybangs_data)
+    directory = os.path.join(results_dir, BeagleDirectories.pypbeagle_data)
     if not os.path.exists(directory):
         logging.info("Creating the directory: " + directory)
         os.makedirs(directory)
@@ -161,7 +161,7 @@ def prepare_data_saving(file_name, results_dir=None, overwrite=False):
 
 def plot_exists(file_name, results_dir=None):
     """ 
-    Check if a plot already exists in the PyP-BANGS tree.
+    Check if a plot already exists in the PyP-BEAGLE tree.
 
     Parameters
     ----------
@@ -169,7 +169,7 @@ def plot_exists(file_name, results_dir=None):
         Name of the output file (without directory tree).
 
     results_dir : str, optional
-        Directory containing the BANGS output files. By default uses the
+        Directory containing the BEAGLE output files. By default uses the
         RESULTS_DIR constant.
 
     Returns
@@ -179,9 +179,9 @@ def plot_exists(file_name, results_dir=None):
     """ 
 
     if results_dir is None:
-        results_dir = BangsDirectories.results_dir
+        results_dir = BeagleDirectories.results_dir
 
-    directory = os.path.join(results_dir, BangsDirectories.pybangs_plot)
+    directory = os.path.join(results_dir, BeagleDirectories.pypbeagle_plot)
     name = os.path.join(directory, os.path.basename(file_name))
 
     if os.path.isfile(name):
@@ -199,7 +199,7 @@ def prepare_plot_saving(file_name, results_dir=None, overwrite=False):
         Name of the output file (without directory tree).
 
     results_dir : str, optional
-        Directory containing the BANGS output files. By default uses the
+        Directory containing the BEAGLE output files. By default uses the
         RESULTS_DIR constant.
 
     overwrite: bool, optional
@@ -213,9 +213,9 @@ def prepare_plot_saving(file_name, results_dir=None, overwrite=False):
     """ 
 
     if results_dir is None:
-        results_dir = BangsDirectories.results_dir
+        results_dir = BeagleDirectories.results_dir
 
-    directory = os.path.join(results_dir, BangsDirectories.pybangs_plot)
+    directory = os.path.join(results_dir, BeagleDirectories.pypbeagle_plot)
     if not os.path.exists(directory):
         logging.info("Creating the directory: " + directory)
         os.makedirs(directory)

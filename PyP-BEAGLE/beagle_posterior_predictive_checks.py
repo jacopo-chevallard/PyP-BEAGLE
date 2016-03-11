@@ -10,8 +10,8 @@ sys.path.append("../dependencies")
 import WeightedKDE
 from walker_random_sampling import WalkerRandomSampling
 
-from bangs_utils import prepare_data_saving, prepare_plot_saving, \
-    BangsDirectories, set_plot_ticks
+from beagle_utils import prepare_data_saving, prepare_plot_saving, \
+    BeagleDirectories, set_plot_ticks
 
 # 1 jy = 10^-23 erg s^-1 cm^-2 hz^-1
 jy = 1.E-23 
@@ -64,8 +64,8 @@ class PosteriorPredictiveChecks:
             Name of the file.
         """
 
-        name = os.path.join(BangsDirectories.results_dir,
-                BangsDirectories.pybangs_data, file_name)
+        name = os.path.join(BeagleDirectories.results_dir,
+                BeagleDirectories.pypbeagle_data, file_name)
 
         my_table = Table.read(name)
     
@@ -75,10 +75,11 @@ class PosteriorPredictiveChecks:
             n_replicated=2000, seed=1234):
 
             strID = str(ID)
-            file = os.path.join(BangsDirectories.results_dir, strID + "_BANGS.fits.gz")
+            file = os.path.join(BeagleDirectories.results_dir,
+                    str_ID + '_' + BeagleDirectories.suffix + '.fits.gz')
             
             # Name of the output file containing the replicated data
-            out_name = strID + "_BANGS_replic_data.fits.gz"
+            out_name = strID + "_BEAGLE_replic_data.fits.gz"
             out_name = prepare_data_saving(out_name)
 
             # Check if the file containing the replicated data already exists, in which case just read it!
@@ -86,7 +87,7 @@ class PosteriorPredictiveChecks:
 
                 # Read the model fluxes from the BEAGLE output file
                 hdulist = fits.open(file)
-                bangs_data = hdulist['MARGINAL PHOTOMETRY'].data
+                beagle_data = hdulist['MARGINAL PHOTOMETRY'].data
 
                 n_samples = len(hdulist['MARGINAL PHOTOMETRY'].data.field(0))
                 cols = hdulist['MARGINAL PHOTOMETRY'].columns
@@ -95,7 +96,7 @@ class PosteriorPredictiveChecks:
 
                 for j in range(filters.n_bands):
                     name = '_' + filters.data['label'][j] + '_'
-                    model_flux[j,:] = bangs_data[name] / jy
+                    model_flux[j,:] = beagle_data[name] / jy
 
                 # Close the BEAGLE output file and open the file containing replicated data
                 hdulist.close()
@@ -116,9 +117,9 @@ class PosteriorPredictiveChecks:
 
             if os.path.isfile(file):
 
-                # Open the FITS file containing BANGS results for the current object
+                # Open the FITS file containing BEAGLE results for the current object
                 hdulist = fits.open(file)
-                bangs_data = hdulist['MARGINAL PHOTOMETRY'].data
+                beagle_data = hdulist['MARGINAL PHOTOMETRY'].data
 
                 # Load the posterior probability and create array of row indices
                 probability = hdulist['POSTERIOR PDF'].data['probability']
@@ -149,7 +150,7 @@ class PosteriorPredictiveChecks:
 
                     # model flux
                     name = '_' + filters.data['label'][j] + '_'
-                    model_flux[j,:] = bangs_data[name] / jy
+                    model_flux[j,:] = beagle_data[name] / jy
 
                 # You save in this array the noise-less flux predicted by the model        
                 noiseless_flux = model_flux[:, replic_data_rows]
@@ -171,7 +172,7 @@ class PosteriorPredictiveChecks:
                 # Add column allowing you to match each row of the replicated
                 # data to the row of noise-less fluxes predicted by your model,
                 # i.e. those in the "MARGINAL PHOTOMETRY" extension of the
-                # BANGS output FITS file 
+                # BEAGLE output FITS file 
                 # NB: the column indexing start with 1 !!
                 ID_col = fits.Column(name='row_index', format='I')
 
@@ -205,10 +206,10 @@ class PosteriorPredictiveChecks:
 
         Parameters
         ----------
-        observed_catalogue : `bangs_photometry.ObservedCatalogue`
+        observed_catalogue : `beagle_photometry.ObservedCatalogue`
             Class containing an observed photometric catalogue.
 
-        filters : `bangs_filters.PhotometricFilters`
+        filters : `beagle_filters.PhotometricFilters`
             Class containing a set of photometric filters.
 
         discrepancy : function, optional
@@ -219,7 +220,7 @@ class PosteriorPredictiveChecks:
 
         file_name : str, optional
             Name of the output catalogue, wuthout including the direcory tree.
-            It will be saved into the RESULTS_DIR/PYBANGS_DATA folder (which
+            It will be saved into the RESULTS_DIR/pypbeagle_DATA folder (which
             will be created if not present).
         """
 
@@ -232,7 +233,7 @@ class PosteriorPredictiveChecks:
         n_obj = len(observed_catalogue.data['ID'])
         
         # Defines columns containing the number of photometric bands actually
-        # used in the BANGS run, for a given object,
+        # used in the BEAGLE run, for a given object,
         n_used_bands = Column(name='n_used_bands', dtype=np.int32, length=n_obj)
 
         deg_of_freedom = Column(name='dof', dtype=np.int32, length=n_obj)
@@ -275,7 +276,8 @@ class PosteriorPredictiveChecks:
 
             ID = objID[i]
             strID = str(objID[i])
-            file = os.path.join(BangsDirectories.results_dir, strID + "_BANGS.fits.gz")
+            file = os.path.join(BeagleDirectories.results_dir,
+                    str_ID + '_' + BeagleDirectories.suffix + '.fits.gz')
 
             if os.path.isfile(file):
 
@@ -330,7 +332,7 @@ class PosteriorPredictiveChecks:
             my_table.write(name)
 
     def plot_chi2(self, 
-            plot_name="BANGS_average_chi_square.pdf"):
+            plot_name="BEAGLE_average_chi_square.pdf"):
         """ 
         Plots the distribution (histogram) of the average chi-square.
 
@@ -406,7 +408,7 @@ class PosteriorPredictiveChecks:
         plt.close(fig)
 
     def plot_p_value(self, 
-            plot_name="BANGS_p_value.pdf", broken_axis=False):
+            plot_name="BEAGLE_p_value.pdf", broken_axis=False):
         """ 
         Plots the distribution (histogram) of the p-value.
 

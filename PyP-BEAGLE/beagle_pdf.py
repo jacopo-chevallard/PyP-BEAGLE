@@ -11,7 +11,7 @@ from astropy.io import fits
 
 from getdist import plots, MCSamples
 
-from bangs_utils import BangsDirectories, prepare_plot_saving, plot_exists
+from beagle_utils import BeagleDirectories, prepare_plot_saving, plot_exists
 
 class PDF:
 
@@ -64,17 +64,17 @@ class PDF:
     
         # Name of the output plot
         if suffix is None:
-            plot_name = str(ID)+'_BANGS_triangle.pdf'
+            plot_name = str(ID)+'_BEAGLE_triangle.pdf'
         else:
-            plot_name = str(ID)+'_BANGS_triangle_' + suffix + '.pdf'
+            plot_name = str(ID)+'_BEAGLE_triangle_' + suffix + '.pdf'
 
         # Check if the plot already exists
         if plot_exists(plot_name) and not replot and not show:
             logging.warning('The plot "' + plot_name + '" already exists. \n Exiting the function.')
             return
 
-        fits_file = os.path.join(BangsDirectories.results_dir,
-                str(ID)+'_BANGS.fits.gz')
+        fits_file = os.path.join(BeagleDirectories.results_dir,
+                str(ID) + '_' + BeagleDirectories.suffix + '.fits.gz')
 
         hdulist = fits.open(fits_file)
 

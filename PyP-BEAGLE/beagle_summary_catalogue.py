@@ -7,7 +7,7 @@ from scipy.integrate import cumtrapz
 from scipy.interpolate import interp1d
 from astropy.io import fits
 
-from bangs_utils import prepare_data_saving, BangsDirectories
+from beagle_utils import prepare_data_saving, BeagleDirectories
 
 def get1DInterval(param_values, probability, levels):
 
@@ -63,12 +63,12 @@ def get1DInterval(param_values, probability, levels):
     return mean, median, interval
 
 
-class BangsSummaryCatalogue:
+class BeagleSummaryCatalogue:
 
 
     def load(self, file_name):
         """ 
-        Load a 'BANGS summary catalogue'
+        Load a 'BEAGLE summary catalogue'
 
         Parameters
         ----------
@@ -76,10 +76,10 @@ class BangsSummaryCatalogue:
             Name of the file containing the catalogue.
         """
 
-        name = os.path.join(BangsDirectories.results_dir,
-                BangsDirectories.pybangs_data, file_name)
+        name = os.path.join(BeagleDirectories.results_dir,
+                BeagleDirectories.pypbeagle_data, file_name)
 
-        logging.info("Loading the `BangsSummaryCatalogue` file: " + name)
+        logging.info("Loading the `BeagleSummaryCatalogue` file: " + name)
 
         self.hdulist = fits.open(name)
 
@@ -96,7 +96,7 @@ class BangsSummaryCatalogue:
 
         # You consider the first file in the list and use as a "mold" to create
         # the structure (binary tables and their columns) of the output FITS file
-        firstfile = os.path.join(BangsDirectories.results_dir, file_list[0])
+        firstfile = os.path.join(BeagleDirectories.results_dir, file_list[0])
         hdulist = fits.open(firstfile)
 
         n_objects = len(file_list)
@@ -162,8 +162,8 @@ class BangsSummaryCatalogue:
         # Now you can go through each file, and compute the required quantities
 
         for i, file in enumerate(file_list):
-            hdulist = fits.open(os.path.join(BangsDirectories.results_dir, file))
-            end = file.find('_BANGS')
+            hdulist = fits.open(os.path.join(BeagleDirectories.results_dir, file))
+            end = file.find('_BEAGLE')
 
             # Extract the object ID from the file_name
             #ID = np.int(np.float(os.path.basename(file[0:end])))

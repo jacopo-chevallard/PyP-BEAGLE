@@ -130,8 +130,8 @@ class PDF:
                     "range_confidence":0.001,
                     "fine_bins":200,
                     "fine_bins_2d":80,
-                    "smooth_scale_1D":0.5,
-                    "smooth_scale_2D":0.7,
+                    "smooth_scale_1D":0.3,
+                    "smooth_scale_2D":0.5,
                     "tight_gap_fraction":0.15
                     }
 

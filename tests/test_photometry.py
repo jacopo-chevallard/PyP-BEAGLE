@@ -11,6 +11,8 @@ from astropy.io import fits
 import numpy as np
 import random
 
+import sys
+sys.path.append('../PyP-BEAGLE')
 from beagle_photometry import Photometry
 from beagle_pdf import PDF
 from beagle_utils import BeagleDirectories, get_files_list

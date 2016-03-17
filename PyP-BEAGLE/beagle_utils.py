@@ -80,7 +80,7 @@ def get_files_list(results_dir=None, suffix=None):
 
 
     for file in sorted(os.listdir(results_dir)):
-        if file.endswith(suffix):
+        if file.endswith(suffix) and os.path.getsize(os.path.join(results_dir, file)) > 0:
             file_list.append(file)
             file = file[0:file.find(suffix)-1]
             file_IDs.append(file)

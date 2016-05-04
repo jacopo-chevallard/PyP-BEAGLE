@@ -54,9 +54,10 @@ class PhotometricFilters:
         self.n_bands = 0
         with open(file_name) as f:
             for line in f:
-                if 'index:' in line:
+                if 'index:' in line and not line.startswith("#"):
                     self.n_bands += 1
 
+        transmission = list()
         index = Column(name='index', dtype=np.int32, length=self.n_bands)
         wl_eff = Column(name='wl_eff', dtype=np.float32, length=self.n_bands)
         colName = Column(name='flux_colName', dtype='S20', length=self.n_bands)
@@ -110,7 +111,10 @@ class PhotometricFilters:
 
             wl_eff[i] = np.sum(wl*t_wl) / np.sum(t_wl)
 
-        my_cols = [index, colName, errcolName, label, wl_eff, min_rel_err]
+            transmission.append({'wl':wl, 't_wl':t_wl})
+
+        trans = Column(name='transmission', data=transmission)
+        my_cols = [index, colName, errcolName, label, wl_eff, min_rel_err, trans]
         
         self.columns = my_cols
         self.data = Table(my_cols)

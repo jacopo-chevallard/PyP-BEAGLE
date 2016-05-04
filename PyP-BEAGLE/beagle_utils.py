@@ -23,6 +23,9 @@ def extract_row(table, ID, key=None):
     else:
         row = table[table[key] == int(ID)]
 
+    if row is None or not row:
+        raise ValueError("Cannot extract the row corresponding to the keyvalue '"+ID+"'")
+
     return row
 
 def pause():
@@ -39,9 +42,9 @@ class BeagleDirectories(object):
 
     results_dir = ''
 
-    suffix = 'BANGS'
+    suffix = 'BEAGLE'
 
-    MN_suffix = '_BANGS_MNstats.dat'
+    MN_suffix = '_BEAGLE_MNstats.dat'
 
     param_file = ''
 

@@ -1,5 +1,5 @@
 import sys
-sys.path.append("/Users/jchevall/Coding/PyP-BEAGLE/PyP-BEAGLE")
+sys.path.append("../PyP-BEAGLE")
 import os
 import argparse
 import glob

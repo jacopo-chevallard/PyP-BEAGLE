@@ -1,143 +1,75 @@
+import sys
+sys.path.append("/Users/jchevall/Coding/PyP-BEAGLE/PyP-BEAGLE")
 import os
 import argparse
+import ConfigParser
 import logging
 from matplotlib import rc
 from astropy.io import ascii
 from astropy.io import fits
 
-from bangs_spectra import Spectrum
-from bangs_pdf import PDF
-from bangs_utils import BangsDirectories, find_file
+from beagle_spectra import Spectrum
+from beagle_pdf import PDF
+from beagle_utils import BeagleDirectories, get_files_list, find_file
+from beagle_parsers import standard_parser
 
-# 
-parser = argparse.ArgumentParser()
 
-parser.add_argument(
-    '-d', '--debug',
-    help="Print lots of debugging statements",
-    action="store_const", dest="loglevel", const=logging.DEBUG,
-    default=logging.WARNING,
-)
+if __name__ == '__main__':
 
-parser.add_argument(
-    '-v', '--verbose',
-    help="Be verbose",
-    action="store_const", dest="loglevel", const=logging.INFO,
-)
-args = parser.parse_args()    
-logging.basicConfig(level=args.loglevel)
+    # 
+    parser = standard_parser()
 
-suffix = "BANGS.fits.gz"
+    # Get parsed arguments
+    args = parser.parse_args()    
 
-# Global font size
-font = {'size': 16}
-rc('font', **font)
+    # Set logging level
+    logging.basicConfig(level=args.loglevel)
 
-version = "Jan_2016"
+    # Set directory containing BEAGLE results files
+    BeagleDirectories.results_dir = args.results_dir
 
-redshiftStr = 'z9'
-mStr = "m10"
-iterStr = "iter10"
-objID = "5"
+    # Read parameter file
+    config = ConfigParser.SafeConfigParser()
 
-# Initialize an instance of the main "Photometry" class
-data_dir = "/Users/jchevall/JWST/Simulations/March_2016"
-results_dir = "/Users/jchevall/Coding/BEAGLE/files/results/JWST/March_2016"
-BangsDirectories.results_dir = results_dir
+    param_file = args.param_file
+    BeagleDirectories.param_file = param_file 
 
-# Consider all files in the results directory
-file_list = list()
-file_IDs = list()
-for file in os.listdir(results_dir):
-    if file.endswith(suffix):
-        file_list.append(file)
-        file = file[0:file.find(suffix)-1]
-        file_IDs.append(file)
+    print "param_file: ", param_file
+    name = os.path.join(BeagleDirectories.results_dir, param_file) 
+    config.read(name)
 
-my_spectrum = Spectrum()
+    # File containing list of input spectra
+    inputSpectraFileName = os.path.expandvars(config.get('main', 'LIST OF SPECTRA'))
+    inputSpectraFile = open(inputSpectraFileName, 'r')
 
-my_PDF = PDF(os.path.join(results_dir, "params_names.json"))
+    # Global font size
+    font = {'size': 16}
+    rc('font', **font)
 
-for ID in file_IDs:
+    # Get list of results files and object IDs from the results directory
+    file_list, IDs = get_files_list()
 
-    # Plot the "triangle plot"
-    print "ID: ", ID
-    my_PDF.plot_triangle(ID)
+    # Initialize an instance of the main "Spectrum" class
+    my_spectrum = Spectrum()
 
-# ********** Load observed spectrum *****************
-    file_name = find_file(ID+'.fits', data_dir)
-    my_spectrum.observed_spectrum.load(file_name)
+    my_spectrum.observed_spectrum.configure(config=config)
 
-    # ********** Plotting of the marginal photometry *****************
-    my_spectrum.plot_marginal(ID)
+    # Set parameter names and labels
+    my_PDF = PDF(os.path.join(BeagleDirectories.results_dir, "params_names.json"))
 
-#my_photometry.plot_replicated_data(ID)
-stop
+    for ID in IDs:
 
-# *****************************************************
-# *********** "BANGS summary catalogue" ****************
-# *****************************************************
+        # Plot the "triangle plot"
+        print "ID: ", ID
 
-file_name = "BANGS_summary_catalogue.fits"
+        for line in inputSpectraFile:
+            # Get rid of the "\n" char at the end of the line
+            line = line.strip()
+            line = os.path.join(os.path.dirname(inputSpectraFileName), line)
+            if ID in line:
+                my_spectrum.observed_spectrum.load(line)
+                my_spectrum.plot_marginal(ID)
+                break
 
-# ********* Load ***************
-#my_photometry.summary_catalogue.load(file_name)
-
-# ********* Compute ***************
-#file_list = ("1021_BANGS.fits.gz", "5866_BANGS.fits.gz")
-#for file in os.listdir(results_dir):
-#    if file.endswith("BANGS.fits.gz"):
-#        file_list.append(file)
-
-#my_photometry.summary_catalogue.compute(file_list, file_name)
-
-# *****************************************************
-# *********** "BANGS MultiNest catalogue" ****************
-# *****************************************************
-
-file_name = "UVUDF_MultiNest.cat"
-
-# ********* Load ***************
-my_photometry.multinest_catalogue.load(file_name)
-
-# ********* Compute ***************
-#file_list = list()
-#for file in os.listdir(results_dir):
-#    if file.endswith("MNstats.dat"):
-#        file_list.append(file)
-
-#n_par = 6
-#my_photometry.multinest_catalogue.compute( n_par, file_list, file_name)
-
-# *****************************************************
-# *********** Posterior Predictive Checks  ****************
-# *****************************************************
-
-file_name = "PPC.fits"
-
-# ********* Load ***************
-my_photometry.PPC.load( file_name) 
-
-# ********* Compute ***************
-#my_photometry.PPC.compute(my_photometry.observed_catalogue, 
-#        my_photometry.filters, 
-#        file_name=file_name)
-
-# ********* Plot ***************
-
-#my_photometry.PPC.plot_chi2()
-
-my_photometry.PPC.plot_p_value(broken_axis=True)
-
-stop
-
-# *****************************************************
-# *********** Residual Photometry  ****************
-# *****************************************************
-
-my_photometry.residual.compute(my_photometry.observed_catalogue,
-        my_photometry.summary_catalogue, my_photometry.filters)
-
-# *****************************************************
-# *********** PDF  ****************
-# *****************************************************
+        mock_file_name = line.split("_BEAGLE_")[0] + "_BEAGLE_MAP.fits.gz"
+        my_PDF.plot_triangle(ID, mock_file_name=mock_file_name)

@@ -1,0 +1,37 @@
+[
+
+    {
+        "name": "GALAXY PROPERTIES",
+        "columns": ["M_tot", "M_star", "mass_w_age", "lumin_w_age", "mass_w_Z", "lumin_w_Z", "N_ion", "xi_ion", "xi_ion_unatt", "xi_ion_unatt_stellar", "UV_slope"]
+    },
+
+
+    {
+        "name": "STAR FORMATION",
+        "columns": ["SFR", "sSFR"]
+    },
+
+    {
+        "name": "DUST ATTENUATION",
+        "columns": ["tauV_eff", "A1500", "A1500_stellar"]
+    },
+
+    {
+        "name": "NEBULAR EMISSION",
+        "columns": ["logU", "Z_ISM", "xi_d", "logOH", "HeBaA@1640_EW", "HeBaA@1640_EW", "O2@3726_EW", "O2@3729_EW", "HBaB@4861_EW", "O3@4959_EW", "O3@5007_EW"]
+    },
+
+    {
+        "name": "SPECTRAL INDICES",
+        "columns": ["HLyA@1216", "C3@1909"]
+    },
+
+    {
+        "name": "MARGINAL PHOTOMETRY"
+    },
+
+    {
+        "name": "POSTERIOR PDF"
+    }
+
+]

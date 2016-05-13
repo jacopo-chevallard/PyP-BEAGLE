@@ -1,5 +1,6 @@
 import os
 import logging
+import ConfigParser
 from scipy.integrate import simps, cumtrapz
 from scipy.interpolate import interp1d
 from bisect import bisect_left
@@ -24,13 +25,53 @@ from beagle_summary_catalogue import BeagleSummaryCatalogue
 from beagle_multinest_catalogue import MultiNestCatalogue
 from beagle_posterior_predictive_checks import PosteriorPredictiveChecks
 
-
+TOKEN_SEP = ":"
 microJy = np.float32(1.E-23 * 1.E-06)
 nanoJy = np.float32(1.E-23 * 1.E-09)
 
 p_value_lim = 0.05
 
 class ObservedSpectrum:
+
+    def __init__(self):
+
+        self.description  = None
+
+    def configure(self, param_file=None, config=None):
+
+        if param_file is None:
+            param_file = os.path.join(BeagleDirectories.results_dir, BeagleDirectories.param_file)
+
+        if config is None:
+            config = ConfigParser.SafeConfigParser()
+            config.read(param_file)
+
+        line = config.get('main', 'SPECTRUM FILE DESCRIPTION')
+
+        self.description = { 
+                "wl"        : {"colName" : None, "conversion" : None, "dispersion" : None, "type" : None}, 
+                "flux"      : {"colName" : None, "conversion" : None}, 
+                "fluxerr"   : {"colName" : None},  
+                "sky"       : {"colName" : None},  
+                "mask"      : {"colName" : None},  
+                "redshift"  : {"keyword" : None},  
+                "min_rel_err" : None,  
+                }
+
+        for key, value in self.description.iteritems():
+
+            token = key + TOKEN_SEP
+
+            if isinstance(value, dict):
+                for in_key, in_value in value.iteritems():
+                    in_token = token + in_key + TOKEN_SEP
+                    if in_token in line:
+                        self.description[key][in_key] = line.split(in_token)[1].split(" ")[0]
+
+            else:
+                if token in line:
+                    self.description[key] = line.split(token)[1].split(" ")[0]
+                
 
     def load(self, file_name):
 
@@ -44,12 +85,53 @@ class ObservedSpectrum:
             Contains the file name of the spectrum.
         """
 
-        if file_name.endswith(('fits', 'fit', 'FITS', 'FIT')):
-            self.data = fits.open(file_name)[1].data
-            self.columns = fits.open(file_name)[1].columns
-        else:
-            self.data = ascii.read(file_name, Reader=ascii.basic.CommentedHeader)
+        if self.description is None:
+            msg = ("The `ObservedSpectrum.description` must be set through "
+                    "the `configure` method!")
+            raise AttributeError(msg)
 
+
+        hdu = fits.open(file_name)
+        data = hdu[1].data
+
+        self.data = dict()
+
+        # Set the array containing the wavelength bins of the spectrum 
+        try:
+            self.data['wl'] = np.array(data[self.description["wl"]["colName"]])
+        except:
+            msg = ("`" + self.description["wl"]["colName"] + "` not found "
+                    "in the current spectrum!")
+            raise AttributeError(msg)
+
+        if self.description["wl"]["conversion"] is not None:
+            self.data['wl'] *= np.float(self.description["wl"]["conversion"])
+
+        # Set the array containing the flux
+        try:
+            self.data['flux'] = np.array(data[self.description["flux"]["colName"]])
+        except:
+            msg = ("`" + self.description["flux"]["colName"] + "` not found "
+                    "in the current spectrum!")
+            raise AttributeError(msg)
+
+        if self.description["flux"]["conversion"] is not None:
+            self.data['flux'] *= np.float(self.description["flux"]["conversion"])
+
+        # Set the array containing the flux error
+        if self.description["fluxerr"]["colName"] is not None:
+            try:
+                self.data['fluxerr'] = np.array(data[self.description["fluxerr"]["colName"]])
+            except:
+                msg = ("`" + self.description["fluxerr"]["colName"] + "` not found "
+                        "in the current spectrum!")
+                raise AttributeError(msg)
+
+        # Set the redshift
+        if self.description["redshift"]["keyword"] is not None:
+            self.data['redshift'] = np.float(hdu[1].header[self.description["redshift"]["keyword"]])
+
+        hdu.close()
 
 class Spectrum:
 
@@ -183,7 +265,7 @@ class Spectrum:
 
         kwargs = {'alpha':0.9}
         if ( draw_steps ):
-            ax.step(observation.data['wl'],
+            ax.step(observation.data['wl']/1.E+04,
                     observation.data['flux'],
                     where="mid",
                     color = "red",
@@ -191,7 +273,7 @@ class Spectrum:
                     **kwargs
                     )
         else:
-            ax.plot(observation.data['wl'],
+            ax.plot(observation.data['wl']/1.E+04,
                     observation.data['flux'],
                     color = "red",
                     linewidth = 2.50,

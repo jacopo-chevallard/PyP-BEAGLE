@@ -33,7 +33,7 @@ p_value_lim = 0.05
 
 
 
-class ObservedCatalogue:
+class ObservedCatalogue(object):
 
     def load(self, file_name):
 

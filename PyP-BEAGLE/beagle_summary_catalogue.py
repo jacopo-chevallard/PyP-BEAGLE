@@ -63,7 +63,7 @@ def get1DInterval(param_values, probability, levels):
     return mean, median, interval
 
 
-class BeagleSummaryCatalogue:
+class BeagleSummaryCatalogue(object):
 
 
     def load(self, file_name):

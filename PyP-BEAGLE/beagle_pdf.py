@@ -13,7 +13,7 @@ from getdist import plots, MCSamples
 
 from beagle_utils import BeagleDirectories, prepare_plot_saving, plot_exists
 
-class PDF:
+class PDF(object):
 
     def __init__(self, param_names_file):
 

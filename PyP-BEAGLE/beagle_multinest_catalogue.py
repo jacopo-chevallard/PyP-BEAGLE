@@ -5,7 +5,7 @@ import cPickle
 
 from beagle_utils import prepare_data_saving, BeagleDirectories, get_files_list
 
-class MultiNestMode:
+class MultiNestMode(object):
 
     def __init__(self, logEvidence, post_mean, max_likelihood, max_a_post):
 
@@ -15,7 +15,7 @@ class MultiNestMode:
         self.max_a_post = max_a_post
 
 
-class MultiNestObject:
+class MultiNestObject(object):
 
     def __init__(self, ID, logEvidence):
 
@@ -32,7 +32,7 @@ class MultiNestObject:
         self.mode.append(newMode)
 
 
-class MultiNestCatalogue:
+class MultiNestCatalogue(object):
 
 
     def load(self, file_name=None, n_par=None, file_list=None):

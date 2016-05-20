@@ -90,13 +90,17 @@ if __name__ == '__main__':
     rand_IDs = IDs
     #rand_IDs = ('COSMOS', )
 
-    specFiles = glob.glob("/Users/jchevall/Coding/BEAGLE/files/results/JWST/March_2016/Pierre/*.fits.gz")
+    #specFiles = glob.glob("/Users/jchevall/Coding/BEAGLE/files/results/JWST/March_2016/Pierre/*.fits.gz")
+
+    #for ID in rand_IDs:
+    #    if any(ID in spec for spec in specFiles):
+    #        my_photometry.plot_marginal(ID)
+    #        my_PDF.plot_triangle(ID, M_star=True)
+    rand_IDs = ('21129', )
 
     for ID in rand_IDs:
-        if any(ID in spec for spec in specFiles):
-            my_photometry.plot_marginal(ID)
-            my_PDF.plot_triangle(ID, M_star=True)
-    stop
+        my_photometry.plot_marginal(ID)
+        my_PDF.plot_triangle(ID, M_star=True)
 
     #pool = mp.Pool(4)
     #results = list()

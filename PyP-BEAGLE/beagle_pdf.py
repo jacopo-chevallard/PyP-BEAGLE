@@ -15,16 +15,22 @@ from beagle_utils import BeagleDirectories, prepare_plot_saving, plot_exists
 
 class PDF(object):
 
-    def __init__(self, param_names_file):
+    def __init__(self, params_file):
 
         # Names of parameters, used to label the axes, and whether they are log
         # or not
-        with open(param_names_file) as f:    
+        with open(params_file) as f:    
             # The use of the "OrderedDict" ensures that the order of the
             # entries in the dictionary reflects the order in the file
             self.adjust_params = json.load(f, object_pairs_hook=OrderedDict)
 
-    def plot_triangle(self, ID, params_to_plot=None, suffix=None, replot=False, M_star=False, show=False, mock_file_name=None):
+    def plot_triangle(self, ID, 
+            mock_file_name=None,
+            params_to_plot=None, 
+            suffix=None, 
+            replot=False, 
+            M_star=False, 
+            show=False):
         """ 
         Draw a "triangle plot" with the 1D and 2D posterior probability
 
@@ -112,11 +118,10 @@ class PDF(object):
 
         # By default you plot all parameters
         if params_to_plot is None:
-            _params_to_plot = []
+            _params_to_plot = list()
             for param in param_values.dtype.names:
-                if param != 'probability': 
-                    if param != 'ln_likelihood':
-                        _params_to_plot.append(param)
+                if 'probability' not in param and 'ln_likelihood' not in param: 
+                    _params_to_plot.append(param)
         else: 
             _params_to_plot = params_to_plot
 

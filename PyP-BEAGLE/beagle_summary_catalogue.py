@@ -66,7 +66,7 @@ def get1DInterval(param_values, probability, levels):
 class BeagleSummaryCatalogue(object):
 
 
-    def load(self, file_name):
+    def load(self, file_name=None):
         """ 
         Load a 'BEAGLE summary catalogue'
 
@@ -76,10 +76,16 @@ class BeagleSummaryCatalogue(object):
             Name of the file containing the catalogue.
         """
 
-        name = os.path.join(BeagleDirectories.results_dir,
-                BeagleDirectories.pypbeagle_data, file_name)
+        if file_name is None:
+            file_name = "BEAGLE_summary_catalogue.fits"
 
-        logging.info("Loading the `BeagleSummaryCatalogue` file: " + name)
+        logging.info("Loading the `BeagleSummaryCatalogue` file: " + file_name)
+
+        name = file_name
+        if not os.path.dirname(file_name):
+            name = os.path.join(BeagleDirectories.results_dir, 
+                    BeagleDirectories.pypbeagle_data, 
+                    file_name)
 
         self.hdulist = fits.open(name)
 

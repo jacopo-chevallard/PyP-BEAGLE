@@ -231,6 +231,13 @@ def prepare_plot_saving(file_name, results_dir=None, overwrite=False):
 
     return name
 
+def set_font_size(ax, fontsize):
+
+    for item in ([ax.title, ax.xaxis.label, ax.yaxis.label] +
+                 ax.get_xticklabels() + ax.get_yticklabels()):
+        item.set_fontsize(fontsize)
+
+
 def set_plot_ticks(ax, n_x=4, n_y=4, prune_x=None, prune_y=None):
     """ 
     Set the major and minor ticks of plots.
@@ -403,6 +410,14 @@ def prepare_violin_plot(data,
 
     # Compute the PDF
     pdf_grid = np.array(pdf(x_grid))
+
+    # ******************************************************************
+    # NB: in this case it is correct to integrate the pdf, and not just to sum,
+    # since the result of the weighted KDE algorithm is a *density*. You can
+    # check this by checking the value of `pdf_norm` below, which is indeed ~1.
+    # This also justify the use of `cumtrapz` below (and not just of `cumsum`,
+    # as in `beagle_summary_catalogue.get1DInterval`).
+    # ******************************************************************
 
     # Compute the PDF normalization, so its integral will be exactly 1
     pdf_norm = simps(pdf_grid, x_grid)

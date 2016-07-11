@@ -8,6 +8,7 @@ from scipy.interpolate import interp1d
 from astropy.io import fits
 
 from beagle_utils import prepare_data_saving, BeagleDirectories
+from significant_digits import to_precision, float_nsf
 
 def get1DInterval(param_values, probability, levels):
 
@@ -43,7 +44,15 @@ def get1DInterval(param_values, probability, levels):
     """
 
     sort_ = np.argsort(param_values)
-    cumul_pdf = cumtrapz(probability[sort_], param_values[sort_], initial = 0.)
+
+    # ******************************************************************
+    # Here you must simply use `cumsum`, and not `cumtrapz` as in
+    # beagle_utils.prepare_violin_plot, since the output of MultiNest are a set
+    # of weights (which sum up to 1) associated to each set of parameters (the
+    # `p_j` of equation 9 of Feroz+2009), and not a probability density (as the
+    # MultiNest README would suggest).
+    # ******************************************************************
+    cumul_pdf = np.cumsum(probability[sort_])
     cumul_pdf /= cumul_pdf[len(cumul_pdf)-1]
 
     # Get the interpolant of the cumulative probability
@@ -195,3 +204,36 @@ class BeagleSummaryCatalogue:
 
         name = prepare_data_saving(file_name)
         self.hdulist.writeto(name, clobber=overwrite)
+
+
+
+    def make_latex_table(self, param_names, 
+            IDs=None,
+            level=68., 
+            summary_statistics='median',
+            significant_digits=2):
+
+        n = significant_digits
+        
+        n_rows = len(self.hdulist[1].data['ID'])
+
+        if IDs is None:
+            IDs = self.hdulist[1].data['ID']
+
+        for ID in IDs:
+            print "\nID: ", ID, 
+            row = np.arange(n_rows)[self.hdulist[1].data['ID'] == ID][0]
+            for param in param_names:
+                colName = param + '_' + summary_statistics
+                for hdu in self.hdulist:
+                    if hasattr(hdu, 'columns'):
+                        if colName in hdu.columns.names:
+                            sum_stat = hdu.data[colName][row]
+                            errColName = param + '_' + "{:.2f}".format(level)
+                            error = hdu.data[errColName][row]
+
+                            print to_precision(sum_stat, n+2), '_{-' + to_precision(sum_stat-error[0], n) \
+                                    + '}^{+' + to_precision(error[1]-sum_stat, n) + '} &',
+                            break
+
+                        

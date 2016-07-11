@@ -61,14 +61,21 @@ class MultiNestCatalogue:
             except:
                 pass
 
-        name = prepare_data_saving(file_name)
-        print "name: ", name,  os.path.isfile(name)
+
+        name = file_name
+        if os.path.dirname(name) is None:
+            name = os.path.join(BeagleDirectories.results_dir, 
+                    BeagleDirectories.pypbeagle_data, 
+                    file_name)
 
         if os.path.isfile(name):
             logging.info("Loading the `MultiNestCatalogue`: " + name)
             file = open(name, 'rb')
             self.MNObjects = cPickle.load(file)
             file.close()
+            return
+
+        name = prepare_data_saving(file_name)
 
         if n_par is not None:
             try:

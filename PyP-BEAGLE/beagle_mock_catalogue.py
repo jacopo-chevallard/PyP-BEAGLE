@@ -4,7 +4,6 @@ from collections import OrderedDict
 import json
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.integrate import cumtrapz
 from scipy.interpolate import interp1d
 from astropy.io import fits
 from  itertools import izip_longest

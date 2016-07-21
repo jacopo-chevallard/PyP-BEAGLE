@@ -1,6 +1,5 @@
 import logging
 import os
-from scipy.integrate import simps, cumtrapz
 from scipy.interpolate import interp1d
 from bisect import bisect_left
 import numpy as np

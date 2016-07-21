@@ -1,7 +1,6 @@
 import os
 import logging
 import ConfigParser
-from scipy.integrate import simps, cumtrapz
 from scipy.interpolate import interp1d
 from bisect import bisect_left
 import numpy as np
@@ -239,8 +238,15 @@ class Spectrum(object):
         for i in range(n_wl):
 
             # Compute the cumulative probability
+            # ******************************************************************
+            # Here you must simply use `cumsum`, and not `cumtrapz` as in
+            # beagle_utils.prepare_violin_plot, since the output of MultiNest are a set
+            # of weights (which sum up to 1) associated to each set of parameters (the
+            # `p_j` of equation 9 of Feroz+2009), and not a probability density (as the
+            # MultiNest README would suggest).
+            # ******************************************************************
             sort_ = sort_indices[:,i]
-            cumul_pdf = cumtrapz(probability[sort_], model_fluxes[sort_,i], initial = 0.)
+            cumul_pdf = np.cumsum(probability[sort_])
             cumul_pdf /= cumul_pdf[len(cumul_pdf)-1]
             
             # Get the interpolant of the cumulative probability

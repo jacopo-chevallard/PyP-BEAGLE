@@ -16,7 +16,7 @@ from beagle_utils import prepare_data_saving, prepare_plot_saving, \
 # 1 jy = 10^-23 erg s^-1 cm^-2 hz^-1
 jy = 1.E-23 
 
-class PosteriorPredictiveChecks:
+class PosteriorPredictiveChecks(object):
 
     def chi_square(self, y, E_y, sig_y):
         """ 

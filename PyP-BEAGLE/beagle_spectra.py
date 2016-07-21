@@ -7,7 +7,7 @@ from bisect import bisect_left
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as plticker
-import pandas as pd
+#import pandas as pd
 # SEABORN creates by default plots with a filled background!!
 #import seaborn as sns
 from astropy.io import ascii
@@ -24,6 +24,7 @@ from beagle_summary_catalogue import BeagleSummaryCatalogue
 #from beagle_residual_photometry import ResidualPhotometry
 from beagle_multinest_catalogue import MultiNestCatalogue
 from beagle_posterior_predictive_checks import PosteriorPredictiveChecks
+from beagle_mock_catalogue import BeagleMockCatalogue
 
 TOKEN_SEP = ":"
 microJy = np.float32(1.E-23 * 1.E-06)
@@ -31,7 +32,7 @@ nanoJy = np.float32(1.E-23 * 1.E-09)
 
 p_value_lim = 0.05
 
-class ObservedSpectrum:
+class ObservedSpectrum(object):
 
     def __init__(self):
 
@@ -133,9 +134,9 @@ class ObservedSpectrum:
 
         hdu.close()
 
-class Spectrum:
+class Spectrum(object):
 
-    def __init__(self):
+    def __init__(self, params_file):
 
         self.observed_spectrum = ObservedSpectrum()
 
@@ -143,11 +144,15 @@ class Spectrum:
 
         self.multinest_catalogue = MultiNestCatalogue()
 
+        self.mock_catalogue = BeagleMockCatalogue(params_file)
+
         #self.residual = ResidualPhotometry()
 
         self.PPC = PosteriorPredictiveChecks()
 
-    def plot_marginal(self, ID, max_interval=95.0,
+    def plot_marginal(self, ID, 
+            observation_name=None,
+            max_interval=95.0,
             print_text=False, print_title=False, draw_steps=False, replot=False):    
         """ 
         Plot the fluxes predicted by BEAGLE.
@@ -174,6 +179,11 @@ class Spectrum:
             Whether to print the object ID on the top of the plot.
         """
 
+        # If needed load the observed spectrum
+        if observation_name is not None:
+            print "\nobservation_name: ", observation_name, '\n'
+            self.observed_spectrum.load(observation_name)
+    
         # Name of the output plot
         plot_name = str(ID) + '_BEAGLE_marginal_SED_spec.pdf'
 

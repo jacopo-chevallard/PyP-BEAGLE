@@ -13,6 +13,19 @@ import WeightedKDE
 
 import matplotlib.ticker as plticker
 
+def is_FITS_file(file_name):
+
+    fits_ext = ('fits', 'fits')
+    arch_ext = ('', '.gz', '.z', '.zip')
+    name = file_name.lower()
+    for fExt in fits_ext:
+        for aExt in arch_ext:
+            suffix = fExt + aExt
+            if name.endswith(suffix):
+                return True
+
+    return False
+            
 def extract_row(table, ID, key=None):
 
     if key is None:
@@ -185,6 +198,36 @@ def plot_exists(file_name, results_dir=None):
         results_dir = BeagleDirectories.results_dir
 
     directory = os.path.join(results_dir, BeagleDirectories.pypbeagle_plot)
+    name = os.path.join(directory, os.path.basename(file_name))
+
+    if os.path.isfile(name):
+        return True
+    else:
+        return False
+
+def data_exists(file_name, results_dir=None):
+    """ 
+    Check if a file already exists in the PyP-BEAGLE tree.
+
+    Parameters
+    ----------
+    file_name : str
+        Name of the output file (without directory tree).
+
+    results_dir : str, optional
+        Directory containing the BEAGLE output files. By default uses the
+        RESULTS_DIR constant.
+
+    Returns
+    -------
+    bool
+        Whether the plot aready exists or not.
+    """ 
+
+    if results_dir is None:
+        results_dir = BeagleDirectories.results_dir
+
+    directory = os.path.join(results_dir, BeagleDirectories.pypbeagle_data)
     name = os.path.join(directory, os.path.basename(file_name))
 
     if os.path.isfile(name):

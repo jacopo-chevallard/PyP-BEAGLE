@@ -29,7 +29,7 @@ def jy_to_erg(jy):
             # Catch the custom exception
             print 'Error: ', arg.msg
 
-class PhotometricFilters:
+class PhotometricFilters(object):
 
     def load(self, file_name):
         """ 

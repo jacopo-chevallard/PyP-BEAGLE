@@ -17,7 +17,7 @@ sys.path.append("../dependencies")
 import WeightedKDE
 
 from beagle_utils import BeagleDirectories, prepare_plot_saving, set_plot_ticks, \
-        prepare_violin_plot, plot_exists, pause, extract_row
+        prepare_violin_plot, plot_exists, pause, extract_row, is_FITS_file
 from beagle_filters import PhotometricFilters
 from beagle_summary_catalogue import BeagleSummaryCatalogue
 from beagle_residual_photometry import ResidualPhotometry
@@ -33,7 +33,7 @@ p_value_lim = 0.05
 
 
 
-class ObservedCatalogue:
+class ObservedCatalogue(object):
 
     def load(self, file_name):
 
@@ -47,7 +47,7 @@ class ObservedCatalogue:
             Contains the file name of the catalogue.
         """
 
-        if file_name.endswith(('fits', 'fit', 'FITS', 'FIT')):
+        if is_FITS_file(file_name):
             self.data = fits.open(file_name)[1].data
             self.columns = fits.open(file_name)[1].columns
         else:

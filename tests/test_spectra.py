@@ -12,6 +12,9 @@ from beagle_spectra import Spectrum
 from beagle_pdf import PDF
 from beagle_utils import BeagleDirectories, get_files_list, find_file
 from beagle_parsers import standard_parser
+import beagle_multiprocess
+
+from pathos.multiprocessing import ProcessingPool 
 
 
 if __name__ == '__main__':
@@ -49,27 +52,65 @@ if __name__ == '__main__':
     # Get list of results files and object IDs from the results directory
     file_list, IDs = get_files_list()
 
+    params_file = os.path.join(BeagleDirectories.results_dir, "params_names.json")
     # Initialize an instance of the main "Spectrum" class
-    my_spectrum = Spectrum()
+    my_spectrum = Spectrum(params_file)
 
     my_spectrum.observed_spectrum.configure(config=config)
 
     # Set parameter names and labels
-    my_PDF = PDF(os.path.join(BeagleDirectories.results_dir, "params_names.json"))
+    my_PDF = PDF(params_file)
+
+    #file_name = "BEAGLE_summary_catalogue.fits"
+    #name = os.path.join(BeagleDirectories.results_dir, args.summary_config) 
+    #my_spectrum.summary_catalogue.compute(file_list, name)
+
+    my_spectrum.summary_catalogue.load()
+    my_spectrum.mock_catalogue.load()
+    my_spectrum.mock_catalogue.compare(my_spectrum.summary_catalogue, overwrite=True)
+
+    stop
+
+    observations_list = list()
+    file_names = list()
+    mock_file_names = list()
+    ID_names = list()
 
     for ID in IDs:
 
         # Plot the "triangle plot"
-        print "ID: ", ID
+        #print "ID: ", ID
 
         for line in inputSpectraFile:
             # Get rid of the "\n" char at the end of the line
             line = line.strip()
             line = os.path.join(os.path.dirname(inputSpectraFileName), line)
             if ID in line:
-                my_spectrum.observed_spectrum.load(line)
-                my_spectrum.plot_marginal(ID)
+                observations_list.append((ID, line))
+                file_names.append(line)
+                ID_names.append(ID)
+                mock_file_name = line.split("_BEAGLE_")[0] + "_BEAGLE_MAP.fits.gz"
+                mock_file_names.append(mock_file_name)
                 break
 
-        mock_file_name = line.split("_BEAGLE_")[0] + "_BEAGLE_MAP.fits.gz"
-        my_PDF.plot_triangle(ID, mock_file_name=mock_file_name)
+
+    my_spectrum.mock_catalogue.compute(mock_file_names, overwrite=True)
+    stop
+
+    #p=Pool(processes=1)
+    print "ID_names: ", ID_names[0]
+    print "file_names: ", file_names[0]
+    pool = ProcessingPool(nodes=16)
+    kwargs = {'observation_name':file_names}
+    args = ID_names
+    #pool.map(my_spectrum.plot_marginal, args, kwargs)
+    #pool.map(my_spectrum.plot_marginal, ID_names, observation_name=file_names)
+    pool.map(my_PDF.plot_triangle, ID_names, mock_file_names)
+    #stop
+
+    #for ID, line in observations_list:
+       # args, kwargs = ID, {'observation_name':line}
+       # p.apply_async(my_spectrum.plot_marginal, args, kwargs)
+        #my_spectrum.plot_marginal(ID, observation_name=line)
+        #mock_file_name = line.split("_BEAGLE_")[0] + "_BEAGLE_MAP.fits.gz"
+        #my_PDF.plot_triangle(ID, mock_file_name=mock_file_name)

@@ -9,7 +9,7 @@ import WeightedKDE
 
 from beagle_utils import weighted_avg_and_std, BeagleDirectories, match_ID, prepare_plot_saving
 
-class ResidualPhotometry:
+class ResidualPhotometry(object):
 
     def load(self, file_name):
         """ 

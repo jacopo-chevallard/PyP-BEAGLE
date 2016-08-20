@@ -118,7 +118,8 @@ class Photometry:
         self.PPC = PosteriorPredictiveChecks()
 
     def plot_marginal(self, ID, max_interval=99.7, 
-            print_text=False, print_title=False, replot=False, show=False, units='nanoJy'):    
+            print_text=False, print_title=False, replot=False, show=False, units='nanoJy',
+            x_log=False):    
         """ 
         Plot the fluxes predicted by BEAGLE.
 
@@ -170,7 +171,6 @@ class Photometry:
         obs_flux *= 1.E+09
         obs_flux_err *= 1.E+09
 
-        ok = np.where(obs_flux_err > 0.)[0]
 
         fig = plt.figure()
         ax = fig.add_subplot(1, 1, 1)
@@ -199,12 +199,24 @@ class Photometry:
         kde_pdf = list(range(n_bands))
         nXgrid = 1000
 
-        width = 5*np.min(np.array(self.filters.data['wl_eff'][1:])-np.array(self.filters.data['wl_eff'][0:-1]))
+        if x_log:
+            wl_eff = np.log10(self.filters.data['wl_eff'])
+        else:
+            wl_eff = np.array(self.filters.data['wl_eff'])
+
+        # Sort wl_eff array
+        sor = np.argsort(wl_eff)
+
+        obs_flux, obs_flux_err, wl_eff = obs_flux[sor], obs_flux_err[sor], wl_eff[sor]
+
+        ok = np.where(obs_flux_err > 0.)[0]
+
+        width = 5*np.min(wl_eff[1:]-wl_eff[0:-1])
 
         kwargs = {'color':'tomato', 'alpha':0.7, 'edgecolor':'black', 'linewidth':0.2}
 
         for i in range(n_bands):
-            xdata = model_sed.data.field(i) / nanoJy
+            xdata = model_sed.data.field(sor[i]) / nanoJy
 
             min_x = np.min(xdata)
             max_x = np.max(xdata)
@@ -229,7 +241,7 @@ class Photometry:
 
             _max_y[i] = np.max(y_plot[i])
 
-        delta_wl = np.array(self.filters.data['wl_eff'][1:])-np.array(self.filters.data['wl_eff'][0:-1])
+        delta_wl = wl_eff[1:]-wl_eff[0:-1]
         delta_wl = np.concatenate(([delta_wl[0]], delta_wl))
 
         for i in range(n_bands):
@@ -242,7 +254,7 @@ class Photometry:
 
                 w = 0.4 * dwl / _max_y[i]
 
-                y_grid = np.full(len(x_plot[i]), self.filters.data['wl_eff'][i])
+                y_grid = np.full(len(x_plot[i]), wl_eff[i])
                 _lim_y = kde_pdf[i](median_flux[i])/pdf_norm[i] * w
 
                 ax.fill_betweenx(x_plot[i],
@@ -251,13 +263,13 @@ class Photometry:
                         **kwargs
                         )
 
-                ax.plot( [self.filters.data['wl_eff'][i]-_lim_y, self.filters.data['wl_eff'][i]+_lim_y],
+                ax.plot([wl_eff[i]-_lim_y, wl_eff[i]+_lim_y],
                         [median_flux[i], median_flux[i]],
                         color = 'black',
                         linewidth = 0.2
                         )
 
-            ax.plot( self.filters.data['wl_eff'][i],
+            ax.plot(wl_eff[i],
                     median_flux[i],
                     color = 'black',
                     marker = "o",
@@ -277,8 +289,8 @@ class Photometry:
 
         ax.set_ylim([yMin, yMax])
 
-        x0 = self.filters.data['wl_eff'][0]
-        x1 = self.filters.data['wl_eff'][-1]
+        x0 = wl_eff[0]
+        x1 = wl_eff[-1]
         dx = x1-x0
         ax.set_xlim([x0-0.05*dx, x1+0.05*dx])
 
@@ -286,7 +298,11 @@ class Photometry:
         if yMin < 0.: plt.plot( [x0,x1], [0.,0.], color='gray', lw=0.8 )
 
         # Define plotting styles
-        ax.set_xlabel("$\lambda_\\textnormal{eff} / \\textnormal{\AA}$ (observed-frame)")
+        if x_log:
+            ax.set_xlabel("$\\log (\lambda_\\textnormal{eff} / \\textnormal{\AA}$ (observed-frame))")
+        else:
+            ax.set_xlabel("$\lambda_\\textnormal{eff} / \\textnormal{\AA}$ (observed-frame)")
+
         ax.set_ylabel("$f_{\\nu}/\\textnormal{nanoJy}$")
 
         # Set better location of tick marks
@@ -294,7 +310,7 @@ class Photometry:
 
         kwargs = {'alpha':0.8}
 
-        plt.errorbar(self.filters.data['wl_eff'], 
+        plt.errorbar(wl_eff, 
                 obs_flux, 
                 yerr = obs_flux_err,
                 color = "dodgerblue",

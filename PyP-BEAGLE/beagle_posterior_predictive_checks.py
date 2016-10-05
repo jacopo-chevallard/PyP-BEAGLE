@@ -76,7 +76,7 @@ class PosteriorPredictiveChecks(object):
 
             strID = str(ID)
             file = os.path.join(BeagleDirectories.results_dir,
-                    str_ID + '_' + BeagleDirectories.suffix + '.fits.gz')
+                    strID + '_' + BeagleDirectories.suffix + '.fits.gz')
             
             # Name of the output file containing the replicated data
             out_name = strID + "_BEAGLE_replic_data.fits.gz"
@@ -277,7 +277,7 @@ class PosteriorPredictiveChecks(object):
             ID = objID[i]
             strID = str(objID[i])
             file = os.path.join(BeagleDirectories.results_dir,
-                    str_ID + '_' + BeagleDirectories.suffix + '.fits.gz')
+                    strID + '_' + BeagleDirectories.suffix + '.fits.gz')
 
             if os.path.isfile(file):
 

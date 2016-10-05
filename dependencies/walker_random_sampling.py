@@ -13,7 +13,7 @@ class WalkerRandomSampling(object):
     http://code.activestate.com/recipes/576564-walkers-alias-method-for-random-objects-with-diffe/
     """
     
-    def __init__(self, weights, keys=None):
+    def __init__(self, weights, keys=None, rand_seed=None):
         """Builds the Walker tables ``prob`` and ``inx`` for calls to `random()`.
         The weights (a list or tuple or iterable) can be in any order and they
         do not even have to sum to 1."""
@@ -22,6 +22,9 @@ class WalkerRandomSampling(object):
             self.keys = keys
         else:
             self.keys = array(keys)
+
+        if rand_seed is not None:
+            seed(rand_seed)
 
         if isinstance(weights, (list, tuple)):
             weights = array(weights, dtype=float)

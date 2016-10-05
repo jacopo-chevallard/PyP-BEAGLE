@@ -96,7 +96,7 @@ if __name__ == '__main__':
     #    if any(ID in spec for spec in specFiles):
     #        my_photometry.plot_marginal(ID)
     #        my_PDF.plot_triangle(ID, M_star=True)
-    rand_IDs = ('21129', )
+    #rand_IDs = ('21129', )
 
     for ID in rand_IDs:
         my_photometry.plot_marginal(ID)

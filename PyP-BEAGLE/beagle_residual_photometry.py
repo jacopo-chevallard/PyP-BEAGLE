@@ -97,7 +97,12 @@ class ResidualPhotometry(object):
             residualErr = np.sqrt((2.5/model_flux[mask]*model_flux_err[mask])**2 + (2.5/obs_flux[mask]*obs_flux_err[mask])**2)
 
             # Compute the distribution of the residual by means of a weighted kernel density estimation
-            kde_pdf = WeightedKDE.gaussian_kde(residual, weights = 1./residualErr)
+            # Sometimes at high redshift, short wavelength filters all contain model_flux = 0 when wavelength
+            # of filter outside of wavelength range of templates, hence testing the length of residual
+            if len(residual) > 0:
+                kde_pdf = WeightedKDE.gaussian_kde(residual, weights = 1./residualErr)
+            else:
+                kde_pdf = 0
 
             self.residual_kde_pdf.append(kde_pdf)
 

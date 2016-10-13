@@ -154,7 +154,7 @@ class BeagleMockCatalogue(object):
         n_files = len(file_list)
         data['ID'] = np.chararray(n_files, itemsize=20)
         for i, file in enumerate(file_list):
-            hdulist = fits.open(file)
+            hdulist = fits.open(os.path.join(BeagleDirectories.results_dir, file))
             data['ID'][i] = os.path.basename(file).split('_BEAGLE')[0]
             for key, value in params_dict.iteritems():
                 val = hdulist[value["extName"]].data[value["colName"]]

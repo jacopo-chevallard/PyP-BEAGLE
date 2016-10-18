@@ -87,7 +87,12 @@ class PDF(object):
 
             # This cycles over all keys containing the parameter names
             for key, value in self.adjust_params.iteritems():
-                d = { "extName" : "POSTERIOR PDF", "colName" : key}
+                if "extName" in value:
+                    extName = value["extName"]
+                else:
+                    extName = "POSTERIOR PDF"
+
+                d = { "extName" : extName, "colName" : key}
                 log = {"log" : False}
                 log.update(value)
                 # This cycles over the dictioary items for one parameter
@@ -109,7 +114,14 @@ class PDF(object):
 
         hdulist = fits.open(fits_file)
 
-        param_values = hdulist['posterior pdf'].data
+        param_values = OrderedDict()
+        for key, value in self.adjust_params.iteritems():
+            extName = "POSTERIOR PDF"
+            if "extName" in value:
+                extName = value["extName"]
+
+            param_values[key] = hdulist[extName].data[key]
+
         probability = hdulist['posterior pdf'].data['probability']
 
         n_rows = probability.size
@@ -119,9 +131,8 @@ class PDF(object):
         # By default you plot all parameters
         if params_to_plot is None:
             _params_to_plot = list()
-            for param in param_values.dtype.names:
-                if 'probability' not in param and 'ln_likelihood' not in param: 
-                    _params_to_plot.append(param)
+            for key, value in self.adjust_params.iteritems():
+                _params_to_plot.append(key)
         else: 
             _params_to_plot = params_to_plot
 

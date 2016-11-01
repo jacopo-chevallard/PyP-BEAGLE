@@ -40,19 +40,28 @@ if __name__ == '__main__':
 
     # Read parameter file
     config = ConfigParser.SafeConfigParser()
-
+    
+    # Save name of the parameter file
     param_file = args.param_file
     BeagleDirectories.param_file = param_file 
 
-    print "param_file: ", param_file
-    name = os.path.join(BeagleDirectories.results_dir, param_file) 
+    # Create the full path to the parameter file, taking advantage of the fact
+    # that BEAGLE makes a copy of the input parameter file in the results
+    # folder
+    name = os.path.join(BeagleDirectories.results_dir, BeagleDirectories.beagle_input_files, param_file) 
+
+    # Parse the parameter file
+    # NB: remember that to access the parsed parameter file, the first line of the file must contain the string
+    # [main]
+    # without the "#" symbol
     config.read(name)
 
-    # Global font size
+    # Set global font size
     font = {'size': 16}
     rc('font', **font)
 
-    # Get list of results files and object IDs from the results directory
+    # Get list of results files and object IDs from the results directory (it
+    # automatically exclude files with size 0)
     file_list, IDs = get_files_list()
 
     # Initialize an instance of the main "Photometry" class
@@ -61,98 +70,44 @@ if __name__ == '__main__':
     # Set parameter names and labels
     my_PDF = PDF(os.path.join(BeagleDirectories.results_dir, "params_names.json"))
 
-    # We now have access to other classes!
-
-    # *****************************************************
-    # *********** Filters ****************
-    # *****************************************************
-
-    # We can load a set of photometric filters
+    # Read name of filter file from the parsed parameter file
     filters_file = os.path.expandvars(config.get('main', 'FILTERS FILE'))
 
+    # Load a set of photometric filters
     my_photometry.filters.load(filters_file)
 
-    # *****************************************************
-    # *********** Observed Catalogue ****************
-    # *****************************************************
-
-    # ********** Loading *****************
+    # Read name of observed catalogue from the parsed parameter file
     file_name = os.path.expandvars(config.get('main', 'PHOTOMETRIC CATALOGUE'))
-    print "file_name: ", file_name
+
+    # Load observed catalogue
     my_photometry.observed_catalogue.load(file_name)
 
-   # random.seed(12345)
-   # rand_IDs = random.sample(IDs, 200)
-   # rand_IDs = ('XDFB-3345164827', 'XDFB-3701762974', 'XDFI-3751560108', 'XDFI-3827975128', 
-   #         'XDFV-3676055820', 'XDFV-4264462281', 'XDFY-4313762847', 'XDFY-4307762415', 
-   #         'XDFZ-4256373146', 'XDFZ-3870255364')
-
-    rand_IDs = IDs
-    #rand_IDs = ('COSMOS', )
-
-    #specFiles = glob.glob("/Users/jchevall/Coding/BEAGLE/files/results/JWST/March_2016/Pierre/*.fits.gz")
-
-    #for ID in rand_IDs:
-    #    if any(ID in spec for spec in specFiles):
-    #        my_photometry.plot_marginal(ID)
-    #        my_PDF.plot_triangle(ID, M_star=True)
-    #rand_IDs = ('21129', )
-
-    for ID in rand_IDs:
+    # Cycle across all files found in the results directory and create the
+    # triangle and marginal plots
+    for ID in IDs:
         my_photometry.plot_marginal(ID)
         my_PDF.plot_triangle(ID, M_star=True)
 
-    #pool = mp.Pool(4)
-    #results = list()
+    # Uncomment the following line if you need to perform further operations
+    # with PyP-BEAGLE (see below)
+    return
 
-    #copy_reg.pickle(types.MethodType, _reduce_method)
+    # Compute the "summary catalogue", i.e. summary statistics for all the
+    # quantities deifned in the "summary_config.json" file
+    my_photometry.summary_catalogue.compute(file_list)
 
-    #for ID in IDs[0:7]:
-       # print "ID: ", ID
-        #pool.apply_async(print_ID, args=[config])
-        #pool.map(getattr_proxy(my_photometry, "print_ID"), ID)
-        #pool.apply_async(getattr_proxy(my_photometry, "plot_marginal"), ID)
-        #pool.apply_async(my_photometry.plot_marginal, args=[my_photometry.plot_marginal, ID])
-        #pool.apply_async(wrap_make_photometry_plots, (ID, my_photometry, my_PDF))
-
-        #pool.apply_async(my_print_ID, (ID,), dict(photometry=my_photometry, PDF=my_PDF))
-     #   my_other_print_ID(ID, my_photometry)
-        #pool.apply_async(my_other_print_ID, args=[ID, my_photometry], callback=results.append)
-
-    #while len(results) < 8:
-    #    continue
-
-    #pool.close()
-
-    # ********** Plotting of the marginal photometry *****************
-    #my_photometry.plot_marginal(ID)
-    #my_photometry.plot_replicated_data(ID)
-
-    # *****************************************************
-    # *********** "BANGS summary catalogue" ****************
-    # *****************************************************
-
-    file_name = "BANGS_summary_catalogue.fits"
-
-    # ********* Load ***************
+    # In some occasions you may just want to load a pre-computed summary catalogue
     #my_photometry.summary_catalogue.load(file_name)
 
-    # ********* Compute ***************
-    #file_list = ("1021_BANGS.fits.gz", "5866_BANGS.fits.gz")
-    #for file in os.listdir(results_dir):
-    #    if file.endswith("BANGS.fits.gz"):
-    #        file_list.append(file)
+    #########################################
+    ############### MultiNest catalogue - start
+    #########################################
+    # This part is specific for analyses for which one need to consider the
+    # presence of multi-modal solutions
+    # Contact the PyP-BEAGLE authors for details
 
-    name = os.path.join(BeagleDirectories.results_dir, args.summary_config) 
-    my_photometry.summary_catalogue.compute(file_list, name)
+    #file_name = "UVUDF_MultiNest.cat"
 
-    # *****************************************************
-    # *********** "BANGS MultiNest catalogue" ****************
-    # *****************************************************
-
-    file_name = "UVUDF_MultiNest.cat"
-
-    # ********* Load ***************
     #my_photometry.multinest_catalogue.load(file_name)
 
     # ********* Compute ***************
@@ -164,35 +119,24 @@ if __name__ == '__main__':
     #n_par = 6
     #my_photometry.multinest_catalogue.compute( n_par, file_list, file_name)
 
-    # *****************************************************
-    # *********** Posterior Predictive Checks  ****************
-    # *****************************************************
+    #########################################
+    ############### MultiNest catalogue - end
+    #########################################
 
-    file_name = "PPC.fits"
+    # Compute posterior predictive checks (see Sec. 5.1 of arxiv.org/abs/1603.03037)
+    my_photometry.PPC.compute(my_photometry.observed_catalogue, 
+            my_photometry.filters)
 
-    # ********* Load ***************
+    # Load pre-computed posterior predictive checks
     #my_photometry.PPC.load( file_name) 
 
-    # ********* Compute ***************
-    my_photometry.PPC.compute(my_photometry.observed_catalogue, 
-            my_photometry.filters, 
-            file_name=file_name)
+    # Plot the chi-square test statistics
+    my_photometry.PPC.plot_chi2()
 
-    # ********* Plot ***************
-
-    #my_photometry.PPC.plot_chi2()
-
+    # Plot the integrated tail probability (p-value)
     my_photometry.PPC.plot_p_value(broken_axis=True)
 
-    stop
-
-    # *****************************************************
-    # *********** Residual Photometry  ****************
-    # *****************************************************
-
+    # Compute residual photometry, i.e. difference between data and simulated
+    # data (see Sec. 5.1 of arxiv.org/abs/1603.03037)
     my_photometry.residual.compute(my_photometry.observed_catalogue,
             my_photometry.summary_catalogue, my_photometry.filters)
-
-    # *****************************************************
-    # *********** PDF  ****************
-    # *****************************************************

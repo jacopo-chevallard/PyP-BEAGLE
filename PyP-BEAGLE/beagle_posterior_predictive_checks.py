@@ -224,6 +224,9 @@ class PosteriorPredictiveChecks(object):
             will be created if not present).
         """
 
+        if file_name is None:
+            file_name = "PPC.fits"
+
         if discrepancy is None:
             discrepancy = self.chi_square
 
@@ -327,9 +330,8 @@ class PosteriorPredictiveChecks(object):
         self.columns = my_cols
         self.data = my_table
 
-        if file_name is not None:
-            name = prepare_data_saving(file_name)
-            my_table.write(name)
+        name = prepare_data_saving(file_name)
+        my_table.write(name)
 
     def plot_chi2(self, 
             plot_name="BEAGLE_average_chi_square.pdf"):

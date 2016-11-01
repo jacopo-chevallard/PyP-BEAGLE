@@ -50,6 +50,7 @@ def pause():
 
 class BeagleDirectories(object):
 
+    beagle_input_files = "BEAGLE-input-files"
     pypbeagle_data = os.path.join("pyp-beagle", "data")
     pypbeagle_plot = os.path.join("pyp-beagle", "plot")
 

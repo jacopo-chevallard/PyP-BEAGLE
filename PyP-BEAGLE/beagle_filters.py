@@ -73,6 +73,8 @@ class PhotometricFilters(object):
                 # Split the line into different columns using whitespaces
                 if 'units:value:' in line:
                     self.units = ast.literal_eval(line.split('units:value:')[1])
+                elif 'flux:conversion:' in line:
+                    self.units = ast.literal_eval(line.split('flux:conversion:')[1])
                 elif 'units:' in line:
                     self.units = jy_to_erg(line.split('units:')[1])
                 elif 'index:' in line:

@@ -38,7 +38,7 @@ if __name__ == '__main__':
     BeagleDirectories.param_file = param_file 
 
     print "param_file: ", param_file
-    name = os.path.join(BeagleDirectories.results_dir, param_file) 
+    name = os.path.join(BeagleDirectories.results_dir, 'BEAGLE-input-files', param_file) 
     config.read(name)
 
     # File containing list of input spectra

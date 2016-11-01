@@ -8,3 +8,16 @@ Required packages, not included in Anaconda Python, which can be installed throu
 * atpy
 
 * getdist
+
+
+## Using PyP-BEAGLE
+
+To start using PyP-BEAGLE, take a look at the example files in the tests folder. 
+
+To run the ``test_photometry.py`` example on your output you will to copy to the results folder the ``PyP-BEAGLE/files/params_names.json`` file, and edit it to reflect the ``fitted`` parameters set in your parameter file.
+
+Running 
+```shell
+test_photometry.py --help
+```
+will then give you indications on how to proceed.

@@ -53,7 +53,7 @@ class ObservedCatalogue(object):
             self.data = ascii.read(file_name, Reader=ascii.basic.CommentedHeader)
 
 
-    def extract_fluxes(self, filters, ID, aper_corr=1.):
+    def extract_fluxes(self, filters, ID, key='ID', aper_corr=1.):
         """ 
         Extract fluxes and error fluxes for a single object (units are Jy).
 
@@ -82,7 +82,7 @@ class ObservedCatalogue(object):
         flux = np.zeros(filters.n_bands, np.float32)
         flux_err = np.zeros(filters.n_bands, np.float32)
 
-        row = extract_row(self.data, ID)
+        row = extract_row(self.data, ID, key=key)
 
         for j in range(filters.n_bands):
 
@@ -119,7 +119,7 @@ class Photometry:
 
     def plot_marginal(self, ID, max_interval=99.7, 
             print_text=False, print_title=False, replot=False, show=False, units='nanoJy',
-            x_log=False):    
+            x_log=False, key='ID'):    
         """ 
         Plot the fluxes predicted by BEAGLE.
 
@@ -158,7 +158,7 @@ class Photometry:
 
         # From the (previously loaded) observed catalogue select the row
         # corresponding to the input ID
-        observation = extract_row(self.observed_catalogue.data, ID)
+        observation = extract_row(self.observed_catalogue.data, ID, key=key)
 
         # Check if you need to apply an aperture correction to the catalogue fluxes
         if 'aper_corr' in self.observed_catalogue.data.dtype.names:
@@ -167,7 +167,7 @@ class Photometry:
             aper_corr = 1.
 
         # Put observed photometry and its error in arrays
-        obs_flux, obs_flux_err = self.observed_catalogue.extract_fluxes(self.filters, ID)
+        obs_flux, obs_flux_err = self.observed_catalogue.extract_fluxes(self.filters, ID, key=key)
         obs_flux *= 1.E+09
         obs_flux_err *= 1.E+09
 
@@ -342,7 +342,7 @@ class Photometry:
 
             # Print the average reduced chi-square
             try:
-                row = extract_row(self.PPC.data, ID)
+                row = extract_row(self.PPC.data, ID, key=key)
                 aver_chi_square = row['aver_chi_square']
                 y = y1 - (y1-y0)*0.15
                 ax.text(x, y, "$\langle\chi^2\\rangle=" + "{:.2f}".format(aver_chi_square) + "$", fontsize=10 )
@@ -351,7 +351,7 @@ class Photometry:
                 "<chi^2> for the object `" + str(ID) + "` is not available"
 
             try:
-                row = extract_row(self.PPC.data, ID)
+                row = extract_row(self.PPC.data, ID, key=key)
                 aver_red_chi_square = row['aver_red_chi_square']
                 n_data = row['n_used_bands']
                 y = y1 - (y1-y0)*0.20
@@ -380,7 +380,7 @@ class Photometry:
         hdulist.close()
 
     def plot_replicated_data(self, ID, max_interval=99.7, n_replic_to_plot=16,
-            print_text=False, replot=False):    
+            print_text=False, replot=False, key='ID'):    
         """ 
         Plot the replicated data.
 
@@ -425,7 +425,7 @@ class Photometry:
 
         # From the (previously loaded) observed catalogue select the row
         # corresponding to the input ID
-        observation = extract_row(self.observed_catalogue.data, ID)
+        observation = extract_row(self.observed_catalogue.data, ID, key=key)
 
         # Check if you need to apply an aperture correction to the catalogue fluxes
         if 'aper_corr' in self.observed_catalogue.data.dtype.names:
@@ -434,7 +434,7 @@ class Photometry:
             aper_corr = 1.
 
         # Put observed photometry and its error in arrays
-        obs_flux, obs_flux_err = self.observed_catalogue.extract_fluxes(self.filters, ID)
+        obs_flux, obs_flux_err = self.observed_catalogue.extract_fluxes(self.filters, ID, key=key)
         obs_flux *= 1.E+09
         obs_flux_err *= 1.E+09
 
@@ -725,7 +725,7 @@ class Photometry:
 
             # Print the average reduced chi-square
             try:
-                row = extract_row(self.PPC.data, ID)
+                row = extract_row(self.PPC.data, ID, key=key)
                 aver_chi_square = row['aver_chi_square']
                 y = y1 - (y1-y0)*0.15
                 ax.text(x, y, "$\langle\chi^2\\rangle=" + "{:.2f}".format(aver_chi_square) + "$", fontsize=10 )
@@ -734,7 +734,7 @@ class Photometry:
                 "<chi^2> for the object `" + str(ID) + "` is not available"
 
             try:
-                row = extract_row(self.PPC.data, ID)
+                row = extract_row(self.PPC.data, ID, key=key)
                 aver_red_chi_square = row['aver_red_chi_square']
                 n_data = row['n_used_bands']
                 y = y1 - (y1-y0)*0.20

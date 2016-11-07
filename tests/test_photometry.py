@@ -90,7 +90,7 @@ if __name__ == '__main__':
 
     # Uncomment the following line if you need to perform further operations
     # with PyP-BEAGLE (see below)
-    return
+    sys.exit()
 
     # Compute the "summary catalogue", i.e. summary statistics for all the
     # quantities deifned in the "summary_config.json" file

@@ -49,6 +49,15 @@ def standard_parser():
         default="summary_config.json"
     )
 
+    parser.add_argument(
+        '--ID-key',
+        help="Name of the column containing the object ID in the source catalogue",
+        action="store", 
+        type=str, 
+        dest="ID_key",
+        default="ID"
+    )
+
     # Number of processors to use in the multi-processor parts of the analysis
     parser.add_argument(
         '-np',

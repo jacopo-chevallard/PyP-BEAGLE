@@ -117,9 +117,9 @@ class Photometry:
 
         self.PPC = PosteriorPredictiveChecks()
 
-    def plot_marginal(self, ID, max_interval=99.7, 
+    def plot_marginal(self, ID, key='ID', max_interval=99.7, 
             print_text=False, print_title=False, replot=False, show=False, units='nanoJy',
-            x_log=False, key='ID'):    
+            x_log=False):
         """ 
         Plot the fluxes predicted by BEAGLE.
 
@@ -215,8 +215,8 @@ class Photometry:
 
         kwargs = {'color':'tomato', 'alpha':0.7, 'edgecolor':'black', 'linewidth':0.2}
 
-        for i in range(n_bands):
-            xdata = model_sed.data.field(sor[i]) / nanoJy
+        for i, band_name in enumerate((self.filters.data['label'][sor])):
+            xdata = model_sed.data['_'+band_name+'_'] / nanoJy
 
             min_x = np.min(xdata)
             max_x = np.max(xdata)
@@ -435,9 +435,17 @@ class Photometry:
 
         # Put observed photometry and its error in arrays
         obs_flux, obs_flux_err = self.observed_catalogue.extract_fluxes(self.filters, ID, key=key)
+
+        # Sort wl_eff array
+        wl_eff = np.array(self.filters.data['wl_eff'])
+        sor = np.argsort(wl_eff)
+
+        obs_flux, obs_flux_err, wl_eff = obs_flux[sor], obs_flux_err[sor], wl_eff[sor]
+
         obs_flux *= 1.E+09
         obs_flux_err *= 1.E+09
 
+        # Consider only those bands with measurements!
         ok = np.where(obs_flux_err > 0.)[0]
 
         # Open the file containing BEAGLE results
@@ -462,22 +470,20 @@ class Photometry:
 
         indices = replic_data.data['row_index']
         noiseless_flux = np.zeros((n_bands, indices.size))
-        for i in range(n_bands):
-            noiseless_flux[i, :] = model_sed.data[indices].field(i) / nanoJy
 
-        # Consider only those bands with measurements!
-        ok_bands = np.where(obs_flux_err > 0.)[0]
+        for i, band_name in enumerate((self.filters.data['label'][sor])):
+            noiseless_flux[i, :] = model_sed.data['_'+band_name+'_'] / nanoJy
 
         # Compute the p-value band-by-band
         p_value_bands = np.zeros(n_bands)
         replic_fluxes = np.zeros((n_bands, n_replicated))
-        for i in range(n_bands):
+        for i, band_name in enumerate((self.filters.data['label'][sor])):
             
             if obs_flux_err[i] > 0.:
                 obs_discr = (obs_flux[i].repeat(n_replicated)-noiseless_flux[i, :])**2 / obs_flux_err[i].repeat(n_replicated)**2
-                repl_discr = (replic_data.data.field(i+1)/1.E-09-noiseless_flux[i, :])**2 / obs_flux_err[i].repeat(n_replicated)**2
+                repl_discr = (replic_data.data['_'+band_name+'_']/1.E-09-noiseless_flux[i, :])**2 / obs_flux_err[i].repeat(n_replicated)**2
 
-                replic_fluxes[i,:] = replic_data.data.field(i+1)/1.E-09
+                replic_fluxes[i,:] = replic_data.data['_'+band_name+'_']/1.E-09
                 p_value_bands[i] = 1. * np.count_nonzero((repl_discr >
                     obs_discr)) / n_replicated
 
@@ -489,8 +495,8 @@ class Photometry:
         ext_obs_flux = obs_flux.reshape(n_bands, 1).repeat(n_replicated, 1)
         ext_obs_flux_err = obs_flux_err.reshape(n_bands, 1).repeat(n_replicated, 1)
 
-        obs_discr = np.sum((ext_obs_flux[ok_bands,:]-noiseless_flux[ok_bands,:])**2 / ext_obs_flux_err[ok_bands,:]**2, axis=0)
-        repl_discr = np.sum((replic_fluxes[ok_bands,:]-noiseless_flux[ok_bands,:])**2 / ext_obs_flux_err[ok_bands,:]**2, axis=0)
+        obs_discr = np.sum((ext_obs_flux[ok,:]-noiseless_flux[ok,:])**2 / ext_obs_flux_err[ok,:]**2, axis=0)
+        repl_discr = np.sum((replic_fluxes[ok,:]-noiseless_flux[ok,:])**2 / ext_obs_flux_err[ok,:]**2, axis=0)
 
         p_value = 1. * np.count_nonzero((repl_discr >
             obs_discr)) / n_replicated
@@ -505,9 +511,9 @@ class Photometry:
         # Compute mean residual
         replic_fluxes = np.zeros((n_bands, n_replicated))
         mean_replic_fluxes = np.zeros(n_bands)
-        for i in range(n_bands):
-            mean_replic_fluxes[i] = np.mean(replic_data.data.field(i+1))/1.E-09
-            replic_fluxes[i,:] = replic_data.data.field(i+1)/1.E-09
+        for i, band_name in enumerate((self.filters.data['label'][sor])):
+            mean_replic_fluxes[i] = np.mean(replic_data.data['_'+band_name+'_'])/1.E-09
+            replic_fluxes[i,:] = replic_data.data['_'+band_name+'_']/1.E-09
 
         mean_residual = (mean_replic_fluxes-obs_flux)/obs_flux_err 
 
@@ -568,9 +574,6 @@ class Photometry:
         np.random.seed(seed=12345678)
         replic_data_rows = np.random.choice(n_replicated, size=n_plot_x*n_plot_y)    
 
-        # Now plot the replicated data, along with the data, in different subplots
-        wl_eff = self.filters.data['wl_eff']
-
         fig, axs = plt.subplots(n_plot_x, n_plot_y, sharex=True, sharey=True)
         fig.subplots_adjust(left=0.08, bottom=0.08, hspace=0, wspace=0)
         fontsize = 8
@@ -629,7 +632,7 @@ class Photometry:
                 nXgrid = 1000
                 kwargs = {'alpha':0.7}
 
-                delta_wl = np.array(self.filters.data['wl_eff'][1:])-np.array(self.filters.data['wl_eff'][0:-1])
+                delta_wl = wl_eff[1:]-wl_eff[0:-1]
                 delta_wl = np.concatenate(([delta_wl[0]], delta_wl))
 
                 for j in range(n_bands):
@@ -641,7 +644,7 @@ class Photometry:
 
                     w = 0.4 * delta_wl[j] / np.max(y_plot)
 
-                    y_grid = np.full(len(x_plot), self.filters.data['wl_eff'][j])
+                    y_grid = np.full(len(x_plot), wl_eff[j])
 
                     _lim_y = kde_pdf(median_flux)/pdf_norm * w
 
@@ -651,7 +654,7 @@ class Photometry:
                             **kwargs
                             )
 
-                    ax.plot( [self.filters.data['wl_eff'][j]-_lim_y, self.filters.data['wl_eff'][j]+_lim_y],
+                    ax.plot( [wl_eff[j]-_lim_y, wl_eff[j]+_lim_y],
                             [median_flux, median_flux],
                             color = 'black',
                             linewidth = 0.2
@@ -668,8 +671,8 @@ class Photometry:
         yMax += dY * 0.1
         yMin -= dY * 0.1
 
-        xMin = self.filters.data['wl_eff'][0]
-        xMax = self.filters.data['wl_eff'][-1]
+        xMin = wl_eff[0]
+        xMax = wl_eff[-1]
         dX = xMax-xMin
         xMax += dX * 0.1
         xMin -= dX * 0.1

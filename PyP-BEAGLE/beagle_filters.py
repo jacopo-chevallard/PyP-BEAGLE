@@ -108,7 +108,7 @@ class PhotometricFilters(object):
             n_wl = self.end_line[i]-self.start_line[i]
             wl = np.zeros(n_wl)
             t_wl = np.zeros(n_wl)
-            for j, l in enumerate(lines[self.start_line[i]+1:self.end_line[i]]):
+            for j, l in enumerate(lines[self.start_line[i]:self.end_line[i]-1]):
                 wl[j], t_wl[j] = l.split()
 
             wl_eff[i] = np.sum(wl*t_wl) / np.sum(t_wl)

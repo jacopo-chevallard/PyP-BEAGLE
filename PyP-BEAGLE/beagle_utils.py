@@ -13,6 +13,14 @@ import WeightedKDE
 
 import matplotlib.ticker as plticker
 
+
+def is_integer(s):
+    try:
+        int(s)
+        return True
+    except ValueError:
+        return False
+
 def is_FITS_file(file_name):
 
     fits_ext = ('fits', 'fits')
@@ -26,6 +34,19 @@ def is_FITS_file(file_name):
 
     return False
             
+def extract_IDs(table, key=None):
+
+    ID_keys = ["ID", "ID_", "_ID"]
+
+    if key is not None:
+        return table[key]
+
+    for name in table.dtype.names:
+        if name == "ID" or name.startswith("ID") or name.endswith("ID"):
+            return table[name]
+
+    raise ValueError("Cannot extract a column containing the objects IDs!")
+
 def extract_row(table, ID, key=None):
 
     if key is None:

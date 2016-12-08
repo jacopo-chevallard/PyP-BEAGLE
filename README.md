@@ -10,6 +10,8 @@
 
   * getdist
 
+  * pathos
+
 * copy the file ``script/matplotlibrc`` into your ``$HOME/.matplotlib`` folder (if the folder does not exist, create it). If you already have a customized  ``matplotlibrc`` file, then try to run the PyP-BEAGLE example files located in the ``tests`` folder, and use GNU ``diff`` command to find out which additions to your ``matplotlibrc`` are required to run PyP-BEAGLE.
 
 * set the Beagle environment variables using the ``BEAGLE_env_variable.bash`` or ``BEAGLE_env_variable.csh`` located in the ``scripts`` folder. For this, you can simply add at the end of your ``.bashrc`` file the line

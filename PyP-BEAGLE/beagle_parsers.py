@@ -41,6 +41,14 @@ def standard_parser():
     )
 
     parser.add_argument(
+        '--mock-catalogue',
+        help="Mock catalogue containing the 'true' parameter values.",
+        action="store", 
+        type=str, 
+        dest="mock_file_name"
+    )
+
+    parser.add_argument(
         '-s', '--summary-config',
         help="JSON file containing the configuration for the computation of the summary catalogue",
         action="store", 

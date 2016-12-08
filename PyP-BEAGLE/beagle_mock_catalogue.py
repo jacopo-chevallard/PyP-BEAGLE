@@ -12,7 +12,8 @@ import bokeh.plotting as bk_plt
 import bokeh.models as bk_mdl
 
 from beagle_utils import prepare_data_saving, prepare_plot_saving, \
-        BeagleDirectories, is_FITS_file, data_exists, plot_exists, set_plot_ticks
+        BeagleDirectories, is_FITS_file, data_exists, plot_exists, set_plot_ticks, \
+        is_integer
 
 def grouper(n, iterable, fillvalue=None):
     "grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx"
@@ -82,7 +83,7 @@ def errorbar(fig, x, y, xerr=None, yerr=None, kwargs={}):
 
 class BeagleMockCatalogue(object):
 
-    def __init__(self, params_file):
+    def __init__(self, params_file, ID_key="ID", file_name=None):
 
         # Names of parameters, used to label the axes, whether they are log or
         # not, and possibly the extension name and column name containing the
@@ -91,6 +92,11 @@ class BeagleMockCatalogue(object):
             # The use of the "OrderedDict" ensures that the order of the
             # entries in the dictionary reflects the order in the file
             self.adjust_params = json.load(f, object_pairs_hook=OrderedDict)
+
+        self.ID_key = ID_key
+
+        if file_name is not None:
+            self.load(file_name)
 
     def load(self, file_name=None):
         """ 
@@ -113,11 +119,51 @@ class BeagleMockCatalogue(object):
                     BeagleDirectories.pypbeagle_data, 
                     file_name)
 
+        self.hdulist = None
+
         if is_FITS_file(name):
-            self.data = fits.open(name)[1].data
-            self.columns = fits.open(name)[1].columns
+            hdulist = fits.open(name)
+            if len(hdulist) > 2:
+                self.hdulist = hdulist
+            else:
+                self.data = fits.open(name)[1].data
+                self.columns = fits.open(name)[1].columns
         else:
             self.data = ascii.read(name, Reader=ascii.basic.CommentedHeader)
+
+    def get_param_values(self, ID, names):
+
+        values = np.zeros(len(names), dtype=np.float32)
+
+        for i, name in enumerate(names):
+
+            if "extName" in self.adjust_params[name]:
+                extName = self.adjust_params[name]["extName"]
+            else:
+                extName = "POSTERIOR PDF"
+
+            if "colName" in self.adjust_params[name]:
+                colName = self.adjust_params[name]["colName"]
+            else:
+                colName = name
+
+
+            if self.hdulist is not None:
+                data = self.hdulist[extName].data
+            else:
+                data = self.data
+
+            if self.ID_key in data.dtype.names:
+                values[i] = data[colName][data[self.ID_key] == ID]
+            else:
+                if is_integer(ID):
+                    row = int(ID)
+                else:
+                    row = int(ID.split('_')[0])
+
+                values[i] = data[colName][row-1]
+
+        return values
 
     def compute(self, file_list, file_name=None, overwrite=False):
         """ 

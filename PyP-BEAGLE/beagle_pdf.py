@@ -25,7 +25,7 @@ class PDF(object):
             self.adjust_params = json.load(f, object_pairs_hook=OrderedDict)
 
     def plot_triangle(self, ID, 
-            mock_file_name=None,
+            mock_catalogue=None,
             params_to_plot=None, 
             suffix=None, 
             replot=False, 
@@ -79,36 +79,6 @@ class PDF(object):
             logging.warning('The plot "' + plot_name + '" already exists. \n Exiting the function.')
             return
 
-        # Check if a file name containing the "true" value of the adjustable parameters has been provided
-        mock_param_values = None
-        if mock_file_name is not None:
-            mock_param_values = list()
-            hdulist = fits.open(mock_file_name)
-
-            # This cycles over all keys containing the parameter names
-            for key, value in self.adjust_params.iteritems():
-                if "extName" in value:
-                    extName = value["extName"]
-                else:
-                    extName = "POSTERIOR PDF"
-
-                d = { "extName" : extName, "colName" : key}
-                log = {"log" : False}
-                log.update(value)
-                # This cycles over the dictioary items for one parameter
-                for in_key, in_value in value.iteritems():
-                    if in_key == "mock":
-                        # This will merge the default dictionary `d` with the
-                        # one found in the json file
-                        d.update(in_value)
-
-                val = hdulist[d["extName"]].data[d["colName"]]
-                if log["log"]:
-                    val = np.log10(val)
-                mock_param_values.append(val)
-            hdulist.close()
-
-
         fits_file = os.path.join(BeagleDirectories.results_dir,
                 str(ID) + '_' + BeagleDirectories.suffix + '.fits.gz')
 
@@ -156,12 +126,13 @@ class PDF(object):
                 if key == par_name:
                     names.append(key)
                     labels.append(par['label'])
+
+                    samps[:,j] = param_values[key]
+                    ranges.update({key:par['range']})
                     if 'log' in par:
-                        samps[:,j] = np.log10(param_values[key])
-                        ranges.update({key:np.log10(par['range'])})
-                    else:
-                        samps[:,j] = param_values[key]
-                        ranges.update({key:par['range']})
+                        if par["log"]:
+                            samps[:,j] = np.log10(param_values[key])
+                            ranges.update({key:np.log10(par['range'])})
                     j += 1
                     break
 
@@ -210,9 +181,15 @@ class PDF(object):
                     )
 
             # Indicate the value of the "true" parameter
-            if mock_param_values is not None:
+            if mock_catalogue is not None:
+                name = names[i]
+                value = mock_catalogue.get_param_values(ID, (name,))
+                if "log" in self.adjust_params[name]:
+                    if self.adjust_params[name]["log"]:
+                        value = np.log10(value)
+
                 ax.plot(
-                        mock_param_values[i],
+                        value,
                         y0+(y1-y0)*0.05,
                         marker="D",
                         ms=8,

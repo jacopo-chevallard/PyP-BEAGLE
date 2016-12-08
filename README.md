@@ -17,6 +17,8 @@
  source <path to the cloned PyP-BEAGLE repository>/scripts/BEAGLE_env_variable.bash
  ```
 
+* set the ``PYP_BEAGLE`` environment variable to point to the location of the cloned ``PyP-BEAGLE`` repository
+
 ## Using PyP-BEAGLE
 
 To start using PyP-BEAGLE, take a look at the example files in the tests folder. 

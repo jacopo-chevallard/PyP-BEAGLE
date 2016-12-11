@@ -8,7 +8,7 @@ from scipy.interpolate import interp1d
 from datetime import datetime
 
 import sys
-sys.path.append("../dependencies")
+sys.path.append(os.path.join(os.environ['PYP_BEAGLE'], "dependencies"))
 import WeightedKDE
 
 import matplotlib.ticker as plticker

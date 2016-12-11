@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import cPickle
 
 import sys
-sys.path.append("../dependencies")
+sys.path.append(os.path.join(os.environ['PYP_BEAGLE'], "dependencies"))
 import WeightedKDE
 
 from beagle_utils import weighted_avg_and_std, BeagleDirectories, match_ID, prepare_plot_saving

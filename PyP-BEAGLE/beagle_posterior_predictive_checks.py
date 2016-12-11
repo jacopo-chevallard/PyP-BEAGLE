@@ -6,7 +6,7 @@ from astropy.io import fits
 from astropy.table import Table, Column
 
 import sys
-sys.path.append("../dependencies")
+sys.path.append(os.path.join(os.environ['PYP_BEAGLE'], "dependencies"))
 import WeightedKDE
 from walker_random_sampling import WalkerRandomSampling
 

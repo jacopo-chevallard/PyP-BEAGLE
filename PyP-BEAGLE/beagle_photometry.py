@@ -12,7 +12,7 @@ from astropy.io import ascii
 from astropy.io import fits
 
 import sys
-sys.path.append("../dependencies")
+sys.path.append(os.path.join(os.environ['PYP_BEAGLE'], "dependencies"))
 import WeightedKDE
 
 from beagle_utils import BeagleDirectories, prepare_plot_saving, set_plot_ticks, \

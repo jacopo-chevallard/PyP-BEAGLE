@@ -13,7 +13,7 @@ from astropy.io import ascii
 from astropy.io import fits
 
 import sys
-sys.path.append("../dependencies")
+sys.path.append(os.path.join(os.environ['PYP_BEAGLE'], "dependencies"))
 import WeightedKDE
 #import FillBetweenStep
 

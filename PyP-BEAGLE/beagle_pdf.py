@@ -90,7 +90,11 @@ class PDF(object):
             if "extName" in value:
                 extName = value["extName"]
 
-            param_values[key] = hdulist[extName].data[key]
+            colName = key
+            if "colName" in value:
+                colName = value["colName"]
+
+            param_values[key] = hdulist[extName].data[colName]
 
         probability = hdulist['posterior pdf'].data['probability']
 

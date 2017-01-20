@@ -3,6 +3,7 @@ from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
 import cPickle
 
+import os
 import sys
 sys.path.append(os.path.join(os.environ['PYP_BEAGLE'], "dependencies"))
 import WeightedKDE

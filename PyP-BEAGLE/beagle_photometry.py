@@ -97,7 +97,7 @@ class ObservedCatalogue(object):
                 # if defined, add the minimum error in quadrature
                 flux_err[j] = (np.sqrt((flux_err[j]/flux[j])**2 +
                     np.float32(filters.data['min_rel_err'][j])**2) *
-                    flux[j])
+                    abs(flux[j]))
 
         return flux, flux_err
 
@@ -280,7 +280,7 @@ class Photometry:
 
         # Determine min and max values of y-axis
         yMax = np.max(max_flux)
-        yMin = np.min(np.concatenate((obs_flux[ok]-obs_flux_err[ok], min_flux)))
+        yMin = np.min(np.concatenate((obs_flux[ok], min_flux)))
 
         dY = yMax-yMin
 
@@ -310,9 +310,9 @@ class Photometry:
 
         kwargs = {'alpha':0.8}
 
-        plt.errorbar(wl_eff, 
-                obs_flux, 
-                yerr = obs_flux_err,
+        plt.errorbar(wl_eff[ok], 
+                obs_flux[ok], 
+                yerr = obs_flux_err[ok],
                 color = "dodgerblue",
                 ls = " ",
                 marker = "D",

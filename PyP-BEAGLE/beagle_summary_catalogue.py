@@ -97,9 +97,12 @@ class BeagleSummaryCatalogue(object):
 
         self.hdulist = fits.open(name)
 
-    def compute(self, file_list, config_file, file_name=None, overwrite=False, levels=[68.,95.]):
+    def compute(self, file_list, config_file=None, file_name=None, overwrite=False, levels=[68.,95.]):
         """ 
         """ 
+
+        if config_file is None:
+            config_file = os.path.join(BeagleDirectories.results_dir, "summary_config.json")
 
         if file_name is None:
             file_name = "BEAGLE_summary_catalogue.fits"

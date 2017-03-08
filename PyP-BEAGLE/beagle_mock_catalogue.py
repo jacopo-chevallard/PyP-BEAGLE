@@ -292,8 +292,20 @@ class BeagleMockCatalogue(object):
             # (this array contains the "true") values of the parameters
 
             true_param = self.data[param]
-            _col = param + '_' + summary_type
-            retrieved_param = summary_catalogue.hdulist['POSTERIOR PDF'].data[_col]
+
+            if "extName" in self.adjust_params[param]:
+                extName = self.adjust_params[name]["extName"]
+            else:
+                extName = "POSTERIOR PDF"
+
+            if "colName" in self.adjust_params[param]:
+                colName = self.adjust_params[name]["colName"]
+            else:
+                colName = param
+
+            _col = colName + '_' + summary_type
+
+            retrieved_param = summary_catalogue.hdulist[extName].data[_col]
 
             ax = axs[i]
 
@@ -390,9 +402,10 @@ class BeagleMockCatalogue(object):
             interactive=False):
 
         # Check whether the IDs of the two catalogues match
-        for i, ID in enumerate(self.data['ID']):
-            if not ID == summary_catalogue.hdulist['POSTERIOR PDF'].data['ID'][i]:
-                raise Exception("The object IDs of the `mock` and `summary` catalogues do not match!")
+        if 'ID' in self.hdulist[1].data:
+            for i, ID in enumerate(self.hdulist[1].data['ID']):
+                if not ID == summary_catalogue.hdulist['POSTERIOR PDF'].data['ID'][i]:
+                    raise Exception("The object IDs of the `mock` and `summary` catalogues do not match!")
 
         # The summary statistics can be only 'mean' or 'median'
         if summary_type not in ('mean', 'median'):
@@ -414,7 +427,7 @@ class BeagleMockCatalogue(object):
 
         # Do you consider only some rows in the catalogue?
         if rows is None:
-            rows = np.arange(len(self.data.field(0)))
+            rows = np.arange(len(self.hdulist[1].data.field(0)))
 
         _n = int(np.ceil(np.sqrt(len(params_to_plot))))
 
@@ -438,7 +451,7 @@ class BeagleMockCatalogue(object):
             # dictionary with all the data that will then be used in the Bokeh
             # plot
             data = dict()
-            data['ID'] = self.data['ID'][rows]
+            data['ID'] = self.hdulist[1].data['ID'][rows]
             for param in params_to_plot:
 
                 # Store the "true" parameter
@@ -562,12 +575,24 @@ class BeagleMockCatalogue(object):
             # Extract the row corresponding to `param` from the mock catalogue
             # (this array contains the "true") values of the parameters
 
-            true_param = self.data[param][rows]
-            _col = param + '_' + summary_type
-            retrieved_param = summary_catalogue.hdulist['POSTERIOR PDF'].data[_col][rows]
+            if "extName" in self.adjust_params[param]:
+                extName = self.adjust_params[param]["extName"]
+            else:
+                extName = "POSTERIOR PDF"
 
-            _col = param + '_' + '{:.2f}'.format(level)
-            error = summary_catalogue.hdulist['POSTERIOR PDF'].data[_col][rows]
+            if "colName" in self.adjust_params[param]:
+                colName = self.adjust_params[param]["colName"]
+            else:
+                colName = param
+
+            true_param = self.hdulist[extName].data[colName][rows]
+
+            _col = colName + '_' + summary_type
+
+            retrieved_param = summary_catalogue.hdulist[extName].data[_col]
+
+            _col = colName + '_' + '{:.2f}'.format(level)
+            error = summary_catalogue.hdulist[extName].data[_col][rows]
 
             ax = axs[i]
 

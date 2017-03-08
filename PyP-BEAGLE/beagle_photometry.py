@@ -11,6 +11,8 @@ import matplotlib.ticker as plticker
 from astropy.io import ascii
 from astropy.io import fits
 
+from walker_random_sampling import WalkerRandomSampling
+
 import sys
 sys.path.append(os.path.join(os.environ['PYP_BEAGLE'], "dependencies"))
 import WeightedKDE
@@ -27,6 +29,7 @@ from beagle_posterior_predictive_checks import PosteriorPredictiveChecks
 Jy = np.float32(1.E-23)
 microJy = np.float32(1.E-23 * 1.E-06)
 nanoJy = np.float32(1.E-23 * 1.E-09)
+c_light = 2.99792e+18 # Ang/s
 
 p_value_lim = 0.05
 
@@ -119,7 +122,7 @@ class Photometry:
 
     def plot_marginal(self, ID, key='ID', max_interval=99.7, 
             print_text=False, print_title=False, replot=False, show=False, units='nanoJy',
-            x_log=False):
+            x_log=False, plot_full_SED=False, SED_prob_log_scale=False, n_SED_to_plot=10):
         """ 
         Plot the fluxes predicted by BEAGLE.
 
@@ -276,6 +279,58 @@ class Photometry:
                     markersize = 5,
                     alpha = 0.7
                     )
+
+
+        # Plot the full SED
+        if 'full sed wl' in hdulist and plot_full_SED:
+            wl = hdulist['full sed wl'].data['wl'][0,:]
+            redshifts = hdulist['galaxy properties'].data['redshift']
+
+            if SED_prob_log_scale:
+                max_prob = np.log10(np.amax(probability))
+                min_prob = np.log10(np.amin(probability))
+            else:
+                max_prob = np.amax(probability)
+                min_prob = np.amin(probability)
+
+            indices = np.arange(len(probability))
+
+            wrand = WalkerRandomSampling(probability, keys=indices)
+            rand_indices = wrand.random(n_SED_to_plot)
+            max_alpha = 0.4
+
+            for j in range(n_SED_to_plot):
+
+                i = rand_indices[j]
+                SED = hdulist['full sed'].data[i,:]
+
+                z = 0.
+                if redshifts[i] > 0.:
+                    z = redshifts[i]
+
+                # Redshift the SED and wl
+                flux_obs = SED / (1.+z)
+                wl_obs = wl * (1.+z)
+
+                # Convert F_lambda [erg s^-1 cm^-2 A^-1] ----> F_nu [erg s^-1 cm^-2 Hz^-1]
+                flux_obs = (wl_obs)**2/c_light*flux_obs
+
+                # Scale to nanoJy
+                flux_obs = flux_obs * 1.e+23 * 1.e+09
+
+                prob = probability[i]
+                if SED_prob_log_scale:
+                    alpha = (np.log10(prob)-min_prob)/(max_prob-min_prob)
+                else:
+                    alpha = (prob-min_prob)/(max_prob-min_prob)
+
+                alpha=1.
+                ax.plot(wl_obs, 
+                        flux_obs,
+                        color="black",
+                        ls="-",
+                        lw=0.5,
+                        alpha=alpha*max_alpha)
 
 
         # Determine min and max values of y-axis

@@ -164,6 +164,9 @@ class PDF(object):
 
         g.fig.subplots_adjust(wspace=0.1, hspace=0.1)
 
+        for i, ax in enumerate([g.subplots[i,i] for i in range(nParamsToPlot)]):
+            ax.set_autoscalex_on(True)
+
         # Add tick labels at top of diagonal panels
         for i, ax in enumerate([g.subplots[i,i] for i in range(nParamsToPlot)]):
             par_name = keys[i]

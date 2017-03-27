@@ -15,7 +15,7 @@ from beagle_utils import BeagleDirectories, prepare_plot_saving, plot_exists
 
 class PDF(object):
 
-    def __init__(self, params_file):
+    def __init__(self, params_file, mock_catalogue=None):
 
         # Names of parameters, used to label the axes, and whether they are log
         # or not
@@ -24,8 +24,9 @@ class PDF(object):
             # entries in the dictionary reflects the order in the file
             self.adjust_params = json.load(f, object_pairs_hook=OrderedDict)
 
+        self.mock_catalogue = mock_catalogue
+
     def plot_triangle(self, ID, 
-            mock_catalogue=None,
             params_to_plot=None, 
             suffix=None, 
             replot=False, 
@@ -188,9 +189,9 @@ class PDF(object):
                     )
 
             # Indicate the value of the "true" parameter
-            if mock_catalogue is not None:
+            if self.mock_catalogue is not None:
                 name = names[i]
-                value = mock_catalogue.get_param_values(ID, (name,))
+                value = self.mock_catalogue.get_param_values(ID, (name,))
                 if "log" in self.adjust_params[name]:
                     if self.adjust_params[name]["log"]:
                         value = np.log10(value)

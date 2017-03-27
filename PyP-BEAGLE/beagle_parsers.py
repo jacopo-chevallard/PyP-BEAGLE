@@ -41,12 +41,34 @@ def standard_parser():
     )
 
     parser.add_argument(
-        '--mock-catalogue',
-        help="Mock catalogue containing the 'true' parameter values.",
+        '--json-triangle',
+        help="JSON file used for the triangle plots.",
         action="store", 
         type=str, 
-        dest="mock_file_name"
+        dest="json_file_triangle",
+        default="params_names.json"
     )
+
+    parser.add_argument(
+        '--plot-marginal',
+        help="Plot the marginal SED.",
+        action="store_true", 
+        dest="plot_marginal" 
+        )
+
+    parser.add_argument(
+        '--plot-triangle',
+        help="Plot the triangle plot.",
+        action="store_true", 
+        dest="plot_triangle" 
+        )
+
+    parser.add_argument(
+        '--compute-summary',
+        help="Compute the summary catalogue.",
+        action="store_true", 
+        dest="compute_summary" 
+        )
 
     parser.add_argument(
         '-s', '--summary-config',
@@ -55,6 +77,23 @@ def standard_parser():
         type=str, 
         dest="summary_config",
         default="summary_config.json"
+    )
+
+    parser.add_argument(
+        '--mock-catalogue',
+        help="Mock catalogue containing the 'true' parameter values.",
+        action="store", 
+        type=str, 
+        dest="mock_file_name"
+    )
+
+    parser.add_argument(
+        '--json-mock',
+        help="JSON file used for the mock true vs retrieved parameters plots.",
+        action="store", 
+        type=str, 
+        dest="json_file_mock",
+        default="params_names.json"
     )
 
     parser.add_argument(

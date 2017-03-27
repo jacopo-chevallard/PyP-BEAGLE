@@ -6,7 +6,7 @@ import numpy as np
 from scipy.interpolate import interp1d
 from astropy.io import fits
 
-from beagle_utils import prepare_data_saving, BeagleDirectories
+from beagle_utils import prepare_data_saving, BeagleDirectories, getPathForData, data_exists
 from significant_digits import to_precision, float_nsf
 
 def get1DInterval(param_values, probability, levels):
@@ -73,8 +73,28 @@ def get1DInterval(param_values, probability, levels):
 
 class BeagleSummaryCatalogue(object):
 
+    def __init__(self, file_name=None, config_file=None):
 
-    def load(self, file_name=None):
+        if file_name is not None:
+            self.file_name  = file_name
+        else:
+            self.file_name = "BEAGLE_summary_catalogue.fits" 
+
+        if config_file is not None:
+            if os.path.dirname(config_file) is None:
+                self.config_file  = os.path.join(BeagleDirectories.results_dir, 
+                        config_file)
+            else:
+                self.config_file = config_file
+        else:
+            self.config_file = os.path.join(BeagleDirectories.results_dir, 
+                    "summary_config.json")
+
+    def exists(self):
+
+        return data_exists(self.file_name)
+
+    def load(self):
         """ 
         Load a 'BEAGLE summary catalogue'
 
@@ -84,32 +104,17 @@ class BeagleSummaryCatalogue(object):
             Name of the file containing the catalogue.
         """
 
-        if file_name is None:
-            file_name = "BEAGLE_summary_catalogue.fits"
+        logging.info("Loading the `BeagleSummaryCatalogue` file: " + self.file_name)
 
-        logging.info("Loading the `BeagleSummaryCatalogue` file: " + file_name)
-
-        name = file_name
-        if not os.path.dirname(file_name):
-            name = os.path.join(BeagleDirectories.results_dir, 
-                    BeagleDirectories.pypbeagle_data, 
-                    file_name)
-
+        name = getPathForData(self.file_name)
         self.hdulist = fits.open(name)
 
-    def compute(self, file_list, config_file=None, file_name=None, overwrite=False, levels=[68.,95.]):
+    def compute(self, file_list, overwrite=False, levels=[68.,95.]):
         """ 
         """ 
 
-        if config_file is None:
-            config_file = os.path.join(BeagleDirectories.results_dir, "summary_config.json")
-
-        if file_name is None:
-            file_name = "BEAGLE_summary_catalogue.fits"
-
-        with open(config_file) as f:    
+        with open(self.config_file) as f:    
             hdu_col = json.load(f, object_pairs_hook=OrderedDict)
-
 
         # You consider the first file in the list and use as a "mold" to create
         # the structure (binary tables and their columns) of the output FITS file
@@ -210,7 +215,7 @@ class BeagleSummaryCatalogue(object):
 
             hdulist.close()
 
-        name = prepare_data_saving(file_name)
+        name = prepare_data_saving(self.file_name)
         self.hdulist.writeto(name, clobber=overwrite)
 
 

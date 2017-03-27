@@ -1,9 +1,11 @@
 import os
 import logging
 import ConfigParser
+from collections import OrderedDict
 from scipy.interpolate import interp1d
 from bisect import bisect_left
 import numpy as np
+import json
 import matplotlib.pyplot as plt
 import matplotlib.ticker as plticker
 #import pandas as pd
@@ -15,6 +17,7 @@ from astropy.io import fits
 import sys
 sys.path.append(os.path.join(os.environ['PYP_BEAGLE'], "dependencies"))
 import WeightedKDE
+import autoscale
 #import FillBetweenStep
 
 from beagle_utils import BeagleDirectories, prepare_plot_saving, set_plot_ticks, plot_exists
@@ -135,7 +138,11 @@ class ObservedSpectrum(object):
 
 class Spectrum(object):
 
-    def __init__(self, params_file):
+    def __init__(self, params_file,
+            line_labels_json=None,
+            plot_line_labels=False,
+            resolution=None,
+            mock_catalogue=None):
 
         self.observed_spectrum = ObservedSpectrum()
 
@@ -143,16 +150,31 @@ class Spectrum(object):
 
         self.multinest_catalogue = MultiNestCatalogue()
 
-        self.mock_catalogue = BeagleMockCatalogue(params_file)
+        self.mock_catalogue = mock_catalogue
 
         #self.residual = ResidualPhotometry()
 
         self.PPC = PosteriorPredictiveChecks()
 
+        if line_labels_json == None:
+            self.line_labels_json = os.path.join(os.environ["PYP_BEAGLE"], 
+                    "PyP-BEAGLE",
+                    "emission_lines.json") 
+        else:
+            self.line_labels_json = line_labels_json
+
+        self.plot_line_labels = plot_line_labels
+
+        self.resolution = resolution
+
+
     def plot_marginal(self, ID, 
             observation_name=None,
             max_interval=95.0,
-            print_text=False, print_title=False, draw_steps=False, replot=False):    
+            print_text=False, 
+            print_title=False, 
+            draw_steps=False, 
+            replot=False):    
         """ 
         Plot the fluxes predicted by BEAGLE.
 
@@ -180,7 +202,6 @@ class Spectrum(object):
 
         # If needed load the observed spectrum
         if observation_name is not None:
-            print "\nobservation_name: ", observation_name, '\n'
             self.observed_spectrum.load(observation_name)
     
         # Name of the output plot
@@ -267,7 +288,7 @@ class Spectrum(object):
         wl_low = model_wl[0] - dwl*0.02
         wl_up = model_wl[model_wl.size-1] + dwl*0.02
             
-        ax.set_xlim([1.,5.])
+        ax.set_xlim([0.5,5.])
         ax.set_ylim([0., 1.2*np.amax(median_flux[np.isfinite(median_flux)])])
 
         # Define plotting styles
@@ -356,6 +377,7 @@ class Spectrum(object):
 
         kwargs = { 'alpha': 0.8 }
 
+        autoscale.autoscale_y(ax)
 
         # Title of the plot is the object ID
         if print_title: plt.title(str(ID))
@@ -364,7 +386,45 @@ class Spectrum(object):
         x0, x1 = ax.get_xlim()
         x = x0 + (x1-x0)*0.03
         y0, y1 = ax.get_ylim()
+        ax.set_ylim([0.,y1])
         y = y1 - (y1-y0)*0.10
+
+
+        # Label emission lines
+        if self.plot_line_labels:
+            x0, x1 = ax.get_xlim()
+            n = 3
+            with open(self.line_labels_json) as f:    
+                 line_labels = json.load(f, object_pairs_hook=OrderedDict)
+
+            i = 0
+            prev_x = 0.
+            for key, label in line_labels.iteritems():
+                x = label["wl"]/1.E+04 * (1.+self.observed_spectrum.data['redshift'])
+                if x < x0 or x > x1:
+                    continue
+                if self.resolution is not None:
+                    if abs(x-prev_x) < (x/self.resolution):
+                        continue
+                if i >= n:
+                    i=0
+                prev_x = x
+                y0, y1 = ax.get_ylim() ; dy = y1-y0
+                y = y1 - dy*0.05 - dy*0.025*i
+                ax.text(x, y, 
+                        label["label"], 
+                        fontsize=7, 
+                        rotation=45,
+                        ha='center')
+
+                y -= dy*0.025
+                ax.plot([x,x], [y,0.], 
+                        ls="--",
+                        lw=0.2,
+                        color="black",
+                        zorder=0)
+                i+=1
+
 
         if print_text:
 

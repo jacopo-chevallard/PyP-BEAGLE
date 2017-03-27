@@ -1,0 +1,129 @@
+{
+
+  "HLyA":{
+    "wl": 1216.0, 
+    "label": "$\\textnormal{Ly}\\alpha$" 
+  },
+
+"C3":{
+ "wl": 1907.0,
+ "label": "$\\textnormal{C}\\,\\textsc{iii}]$"
+},
+
+"Mg2":{
+ "wl": 2796.0,
+ "label": "$\\textnormal{Mg}\\,\\textsc{ii}$"
+},
+
+"O2":{
+ "wl": 3727.0,
+ "label": "$[\\textnormal{O}\\,\\textsc{ii}$"
+},
+
+"Ne3":{
+ "wl": 3869.0,
+ "label": "$[\\textnormal{Ne}\\,\\textsc{iii}]$"
+},
+
+"He1":{
+ "wl": 3889.0,
+ "label": "$\\textnormal{He}\\,\\textsc{i}$"
+},
+
+"HBaD":{
+ "wl": 4102.0,
+ "label": "$\\textnormal{H}\\delta$"
+},
+
+"Fe2":{
+ "wl": 4300.0,
+ "label": "$\\textnormal{Fe}\\,\\textsc{ii}$"
+},
+
+"HBaG":{
+ "wl": 4340.0,
+ "label": "$\\textnormal{H}\\gamma$"
+},
+
+"O3":{
+ "wl": 4363.0,
+ "label": "$[\\textnormal{O}\\,\\textsc{iii}]$"
+},
+
+"HBaB":{
+ "wl": 4861.0,
+ "label": "$\\textnormal{H}\\beta$"
+},
+
+"O3":{
+ "wl": 4959.0,
+ "label": "$[\\textnormal{O}\\,\\textsc{iii}]$"
+},
+
+"O3":{
+ "wl": 5007.0,
+ "label": "$[\\textnormal{O}\\,\\textsc{iii}]$"
+},
+
+"He1":{
+ "wl": 5876.0,
+ "label": "$\\textnormal{He}\\,\\textsc{i}$"
+},
+
+"O1":{
+ "wl": 6300.0,
+ "label": "$[\\textnormal{O}\\,\\textsc{i}]$"
+},
+
+"S3":{
+ "wl": 6312.0,
+ "label": "$[\\textnormal{S}\\,\\textsc{iii}]$"
+},
+
+"O1":{
+ "wl": 6363.0,
+ "label": "$[\\textnormal{O}\\,\\textsc{i}]$"
+},
+
+"HBaA":{
+ "wl": 6563.0,
+ "label": "$\\textnormal{H}\\alpha$"
+},
+
+"N2":{
+ "wl": 6584.0,
+ "label": "$[\\textnormal{N}\\,\\textsc{ii}]$"
+},
+
+"S2":{
+ "wl": 6716.0,
+ "label": "$[\\textnormal{S}\\,\\textsc{ii}]$"
+},
+
+"S2":{
+ "wl": 6731.0,
+ "label": "$[\\textnormal{S}\\,\\textsc{ii}]$"
+},
+
+"Ar3":{
+ "wl": 7135.0,
+ "label": "$[\\textnormal{Ar}\\,\\textsc{iii}]$"
+},
+
+"Ar3":{
+ "wl": 7325.0,
+ "label": "$[\\textnormal{Ar}\\,\\textsc{iii}]$"
+},
+
+"S3":{
+ "wl": 9069.0,
+ "label": "$[\\textnormal{S}\\,\\textsc{iii}]$"
+},
+
+"S3":{
+ "wl": 9532.0,
+ "label": "$[\\textnormal{S}\\,\\textsc{iii}]$"
+}
+
+
+}

@@ -1,4 +1,5 @@
 import fnmatch
+import re
 import os
 import logging
 import numpy as np
@@ -197,6 +198,16 @@ def prepare_data_saving(file_name, results_dir=None, overwrite=False):
 
     return name
 
+def getPathForPlot(file_name, results_dir=None):
+    """ 
+    """ 
+
+    if results_dir is None:
+        results_dir = BeagleDirectories.results_dir
+
+    directory = os.path.join(results_dir, BeagleDirectories.pypbeagle_plot)
+    return os.path.join(directory, os.path.basename(file_name))
+
 def plot_exists(file_name, results_dir=None):
     """ 
     Check if a plot already exists in the PyP-BEAGLE tree.
@@ -216,16 +227,17 @@ def plot_exists(file_name, results_dir=None):
         Whether the plot aready exists or not.
     """ 
 
+    return os.path.isfile(getPathForPlot(file_name, results_dir))
+
+def getPathForData(file_name, results_dir=None):
+    """ 
+    """ 
+
     if results_dir is None:
         results_dir = BeagleDirectories.results_dir
 
-    directory = os.path.join(results_dir, BeagleDirectories.pypbeagle_plot)
-    name = os.path.join(directory, os.path.basename(file_name))
-
-    if os.path.isfile(name):
-        return True
-    else:
-        return False
+    directory = os.path.join(results_dir, BeagleDirectories.pypbeagle_data)
+    return os.path.join(directory, os.path.basename(file_name))
 
 def data_exists(file_name, results_dir=None):
     """ 
@@ -246,16 +258,7 @@ def data_exists(file_name, results_dir=None):
         Whether the plot aready exists or not.
     """ 
 
-    if results_dir is None:
-        results_dir = BeagleDirectories.results_dir
-
-    directory = os.path.join(results_dir, BeagleDirectories.pypbeagle_data)
-    name = os.path.join(directory, os.path.basename(file_name))
-
-    if os.path.isfile(name):
-        return True
-    else:
-        return False
+    return os.path.isfile(getPathForData(file_name, results_dir))
 
 def prepare_plot_saving(file_name, results_dir=None, overwrite=False):
     """ 
@@ -339,7 +342,7 @@ def set_plot_ticks(ax, n_x=4, n_y=4, prune_x=None, prune_y=None):
     ax.yaxis.minor_locations = plticker.AutoMinorLocator(2)
     ax.yaxis.set_minor_locator(ax.yaxis.minor_locations)
 
-def match_ID(ID_list_1, ID_list_2, sorted=False):
+def match_ID(ID_list_1, ID_list_2, sorted=False, ignore_string=None):
     """ 
     Match the ID in two catalogues.
 
@@ -366,53 +369,63 @@ def match_ID(ID_list_1, ID_list_2, sorted=False):
     """
 
     # Firstly, check weather ID_list_1 is longer than ID_list_2 or viceversa
-
-    for ID in ID_list_1: 
-        try: 
-            if not ID.isdigit():    
-                raise ValueError("The input list must be convertable to type int!")
-        except:
-            pass
-
-    for ID in ID_list_2: 
-        try: 
-            if not ID.isdigit():    
-                raise ValueError("The input list must be convertable to type int!")
-        except:
-            pass
-
     n1 = len(ID_list_1)
     n2 = len(ID_list_2)
 
     if n1 >= n2:
-        ID_long = np.array(ID_list_1, dtype=np.int)
+        ID_long = np.array(ID_list_1)
         n_long = n1
-        ID_short = np.array(ID_list_2, dtype=np.int)
+        ID_short = np.array(ID_list_2)
         n_short = n2
     else:
-        ID_long = np.array(ID_list_2, dtype=np.int)
+        ID_long = np.array(ID_list_2)
         n_long = n2
-        ID_short = np.array(ID_list_1, dtype=np.int)
+        ID_short = np.array(ID_list_1)
         n_short = n1
 
-    if not sorted:
-        # Sort the two arrays and get the indices
-        sort_long = np.argsort(ID_long)
-        sort_short = np.argsort(ID_short)
-    else:
-        sort_long = range(n_long)
-        sort_short = range(n_short)
+    is_int = False
+    sort_long = range(n_long)
+    sort_short = range(n_short)
+    if issubclass(ID_long.dtype.type, np.integer) and issubclass(ID_short.dtype.type, np.integer):
+        is_int = True
+        if not sorted:
+            # Sort the two arrays and get the indices
+            sort_long = np.argsort(ID_long)
+            sort_short = np.argsort(ID_short)
 
     match_indx_long = np.full(n_long, -1, dtype=np.int)
     match_indx_short = np.full(n_short, -1, dtype=np.int)
+    mask_long = np.zeros(n_long, dtype=bool)
 
     for i in range(n_short):
-        i1 = bisect_left(ID_long[sort_long], ID_short[sort_short[i]])
 
-        if i1 < n_long:
-            if ID_long[sort_long[i1]] == ID_short[sort_short[i]]:
-                match_indx_long[i1] = sort_long[i1]
-                match_indx_short[i] = sort_short[i]
+        if is_int:
+            i1 = bisect_left(ID_long[sort_long], ID_short[sort_short[i]])
+
+            if i1 < n_long:
+                if ID_long[sort_long[i1]] == ID_short[sort_short[i]]:
+                    match_indx_long[i1] = sort_long[i1]
+                    match_indx_short[i] = sort_short[i]
+        else:
+            for j in range(n_long):
+                if mask_long[j]:
+                    continue
+
+                if ignore_string is not None:
+                    if isinstance(ignore_string, re.compile('').__class__):
+                        ID_l = ignore_string.sub('', ID_long[j])
+                        ID_s = ignore_string.sub('', ID_short[i])
+                    else:
+                        ID_l = ID_long[j].replace(ignore_string, '')
+                        ID_s = ID_short[i].replace(ignore_string, '')
+                else:
+                    ID_l = ID_long[j]
+                    ID_s = ID_short[i]
+
+                if ID_l == ID_s:
+                    match_indx_long[i] = j
+                    match_indx_short[i] = i
+                    mask_long[j] = True
 
     if n1 >= n2:
         indices_1 = match_indx_long[match_indx_long >= 0]

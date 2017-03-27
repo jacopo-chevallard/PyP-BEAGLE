@@ -13,7 +13,7 @@ import bokeh.models as bk_mdl
 
 from beagle_utils import prepare_data_saving, prepare_plot_saving, \
         BeagleDirectories, is_FITS_file, data_exists, plot_exists, set_plot_ticks, \
-        is_integer
+        is_integer, match_ID
 
 def grouper(n, iterable, fillvalue=None):
     "grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx"
@@ -83,7 +83,10 @@ def errorbar(fig, x, y, xerr=None, yerr=None, kwargs={}):
 
 class BeagleMockCatalogue(object):
 
-    def __init__(self, params_file, ID_key="ID", file_name=None):
+    def __init__(self, params_file, 
+            ID_key="ID", 
+            file_name=None,
+            ignore_string=None):
 
         # Names of parameters, used to label the axes, whether they are log or
         # not, and possibly the extension name and column name containing the
@@ -94,6 +97,8 @@ class BeagleMockCatalogue(object):
             self.adjust_params = json.load(f, object_pairs_hook=OrderedDict)
 
         self.ID_key = ID_key
+
+        self.ignore_string = ignore_string
 
         if file_name is not None:
             self.load(file_name)
@@ -154,7 +159,10 @@ class BeagleMockCatalogue(object):
                 data = self.data
 
             if self.ID_key in data.dtype.names:
-                values[i] = data[colName][data[self.ID_key] == ID]
+                if self.ignore_string is not None:
+                    values[i] = data[colName][data[self.ID_key] == ID.replace(self.ignore_string, '')]
+                else:
+                    values[i] = data[colName][data[self.ID_key] == ID]
             else:
                 if is_integer(ID):
                     row = int(ID)
@@ -245,11 +253,13 @@ class BeagleMockCatalogue(object):
             pow=False,
             overwrite=False,
             kwargs=None):
+            
 
-        # Check whether the IDs of the two catalogues match
-        for i, ID in enumerate(self.data['ID']):
-            if not ID == summary_catalogue.hdulist['POSTERIOR PDF'].data['ID'][i]:
-                raise Exception("The object IDs of the `mock` and `summary` catalogues do not match!")
+        # Match IDs in the two catalogs
+        indx1, indx2  = match_ID(self.hdulist[1].data['ID'], summary_catalogue.hdulist[1].data['ID'], ignore_string=self.ignore_string)
+
+        #print "indx1: ", indx1, len(self.hdulist[1].data['ID']), max(indx1), len(indx1)
+        #print "indx2: ", indx2, len(summary_catalogue.hdulist[1].data['ID']), max(indx2), len(indx2)
 
         # The summary statistics can be only 'mean' or 'median'
         if summary_type not in ('mean', 'median'):
@@ -291,21 +301,21 @@ class BeagleMockCatalogue(object):
             # Extract the row corresponding to `param` from the mock catalogue
             # (this array contains the "true") values of the parameters
 
-            true_param = self.data[param]
-
             if "extName" in self.adjust_params[param]:
-                extName = self.adjust_params[name]["extName"]
+                extName = self.adjust_params[param]["extName"]
             else:
                 extName = "POSTERIOR PDF"
 
             if "colName" in self.adjust_params[param]:
-                colName = self.adjust_params[name]["colName"]
+                colName = self.adjust_params[param]["colName"]
             else:
                 colName = param
 
+            true_param = self.hdulist[extName].data[colName][indx1]
+
             _col = colName + '_' + summary_type
 
-            retrieved_param = summary_catalogue.hdulist[extName].data[_col]
+            retrieved_param = summary_catalogue.hdulist[extName].data[_col][indx2]
 
             ax = axs[i]
 
@@ -338,31 +348,36 @@ class BeagleMockCatalogue(object):
             diff_disp = list()
 
             for i, indices in enumerate(class_indices):
-                range = np.percentile(diff[indices], (0.5*(100.-percentile), 100.-0.5*(100.-percentile)))
+                ind_set = set(indices)
+                #print "indices: ", indices, len(diff)
+                idx = [j for j, item in enumerate(indx1) if item in ind_set]
+                indx = idx
+                #print "indx: ", indx
+                range = np.percentile(diff[idx], (0.5*(100.-percentile), 100.-0.5*(100.-percentile)))
                 if class_colors is None:
                     color = None
                 else:
                     color = class_colors[i]
 
-                med, d0, d1 = np.percentile(diff[indices], [50., 0.5*(100.-68.), 100.-0.5*(100.-68.)])
+                med, d0, d1 = np.percentile(diff[idx], [50., 0.5*(100.-68.), 100.-0.5*(100.-68.)])
                 dispersion = 0.5*(d1-d0)
 
                 diff_med.append(med)
                 diff_disp.append(dispersion)
 
-                ax.hist(diff[indices],
+                ax.hist(diff[idx],
                     bins=bins,
                     range=range,
                     color=color,
                     lw='',
                     **kwargs)
 
-                ax.text(0.5, 1.05, "$\sigma=" + "{:.3f}".format(dispersion) + "$", 
+                ax.text(0.1+i*0.25, 1.05, "$\sigma=" + "{:.3f}".format(dispersion) + "$", 
                     fontsize=8, 
                     horizontalalignment='center', 
                     transform=ax.transAxes)
 
-                ax.text(0.5, 1.14, "$\\textnormal{med}=" + "{:.3f}".format(med) + "$", 
+                ax.text(0.1+i*0.25, 1.14, "$\\textnormal{med}=" + "{:.3f}".format(med) + "$", 
                     fontsize=8, 
                     horizontalalignment='center', 
                     transform=ax.transAxes)
@@ -400,12 +415,16 @@ class BeagleMockCatalogue(object):
             overwrite=False,
             rows=None, 
             interactive=False):
+            
+
+        # Match IDs in the two catalogs
+        indx1, indx2  = match_ID(self.hdulist[1].data['ID'], summary_catalogue.hdulist[1].data['ID'], ignore_string=self.ignore_string)
 
         # Check whether the IDs of the two catalogues match
-        if 'ID' in self.hdulist[1].data:
-            for i, ID in enumerate(self.hdulist[1].data['ID']):
-                if not ID == summary_catalogue.hdulist['POSTERIOR PDF'].data['ID'][i]:
-                    raise Exception("The object IDs of the `mock` and `summary` catalogues do not match!")
+        #if 'ID' in self.hdulist[1].data:
+        #    for i, ID in enumerate(self.hdulist[1].data['ID']):
+        #        if not ID == summary_catalogue.hdulist['POSTERIOR PDF'].data['ID'][i]:
+        #            raise Exception("The object IDs of the `mock` and `summary` catalogues do not match!")
 
         # The summary statistics can be only 'mean' or 'median'
         if summary_type not in ('mean', 'median'):
@@ -426,8 +445,8 @@ class BeagleMockCatalogue(object):
                 params_to_plot.append(key)
 
         # Do you consider only some rows in the catalogue?
-        if rows is None:
-            rows = np.arange(len(self.hdulist[1].data.field(0)))
+        #if rows is None:
+        #    rows = np.arange(len(self.hdulist[1].data.field(0)))
 
         _n = int(np.ceil(np.sqrt(len(params_to_plot))))
 
@@ -451,21 +470,21 @@ class BeagleMockCatalogue(object):
             # dictionary with all the data that will then be used in the Bokeh
             # plot
             data = dict()
-            data['ID'] = self.hdulist[1].data['ID'][rows]
+            data['ID'] = self.hdulist[1].data['ID'][indx1]
             for param in params_to_plot:
 
                 # Store the "true" parameter
                 key = param + '_true'
-                data[key] = self.data[param][rows]
+                data[key] = self.data[param][indx1]
 
                 # and the retrieved one
                 key = param + '_retrieved'
                 _col = param + '_' + summary_type
-                data[key] = summary_catalogue.hdulist['POSTERIOR PDF'].data[_col][rows]
+                data[key] = summary_catalogue.hdulist['POSTERIOR PDF'].data[_col][indx2]
 
                 # Get the errors
                 _col = param + '_' + '{:.2f}'.format(level)
-                tmp = summary_catalogue.hdulist['POSTERIOR PDF'].data[_col][rows]
+                tmp = summary_catalogue.hdulist['POSTERIOR PDF'].data[_col][indx2]
 
                 # Store the errors in a way that is easily usable by the Bokeh
                 # `multi_line` glyph
@@ -585,14 +604,14 @@ class BeagleMockCatalogue(object):
             else:
                 colName = param
 
-            true_param = self.hdulist[extName].data[colName][rows]
+            true_param = self.hdulist[extName].data[colName][indx1]
 
             _col = colName + '_' + summary_type
 
-            retrieved_param = summary_catalogue.hdulist[extName].data[_col]
+            retrieved_param = summary_catalogue.hdulist[extName].data[_col][indx2]
 
             _col = colName + '_' + '{:.2f}'.format(level)
-            error = summary_catalogue.hdulist[extName].data[_col][rows]
+            error = summary_catalogue.hdulist[extName].data[_col][indx2]
 
             ax = axs[i]
 
@@ -610,12 +629,14 @@ class BeagleMockCatalogue(object):
             yerr_u = error[:,1]-y
             yerr_d = y-error[:,0]
 
+            is_log = False
             if 'log' in self.adjust_params[param]:
                 if self.adjust_params[param]['log']:
-                    x = np.log10(x)
-                    y = np.log10(y)
-                    yerr_d = np.log10(yerr_d)
-                    yerr_u = np.log10(yerr_u)
+                    is_log = True
+                    #x = np.log10(x)
+                    #y = np.log10(y)
+                    #yerr_d = np.log10(yerr_d)
+                    #yerr_u = np.log10(yerr_u)
 
             ax.errorbar(x, 
                     y, 
@@ -624,15 +645,43 @@ class BeagleMockCatalogue(object):
                     marker='o',
                     ms=3, 
                     mew=0,
-                    elinewidth=0.8,
-                    capsize=3
+                    elinewidth=0.6,
+                    capsize=3,
+                    alpha=0.5
                     )
 
             for item in ([ax.title, ax.xaxis.label, ax.yaxis.label] +
                          ax.get_xticklabels() + ax.get_yticklabels()):
                 item.set_fontsize(fontsize)
 
-            set_plot_ticks(ax, n_x=4, n_y=4)
+            # Make the axes in log-scale
+            if is_log:
+                ax.set_xscale('log')
+                ax.set_yscale('log')
+            else:
+                set_plot_ticks(ax, n_x=4, n_y=4)
+
+            # Make axes of same aspect ratio
+            plt.axis('equal')
+
+            # Set same axis range for x- and y-axis, and use the (optional)
+            # user-provided value  
+            xx = ax.get_xlim()
+            yy = ax.get_ylim()
+            ll = [min([xx[0], yy[0]]), max(xx[1], yy[1])]
+            if 'axis_range' in self.adjust_params[param]:
+                rr = self.adjust_params[param]['axis_range']
+                ll = [max(ll[0],rr[0]), min(ll[1],rr[1])]
+                ax.set_autoscale_on(False)
+
+            ax.set_xlim(ll)
+            ax.set_ylim(ll)
+
+            # Plot the 1-to-1 relations
+            ax.plot(ax.get_xlim(), ax.get_ylim(), 
+                    ls="-",
+                    color="black",
+                    c=".3")
 
         # Make the unused axes invisibles
         for ax in axs[len(params_to_plot):]:

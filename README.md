@@ -33,7 +33,7 @@ The post-processing of Beagle results obtained by fitting spectroscopic data is 
 * [triangle plots](#plotting-the-posterior-probability-distributions-aka-triangle-plots)
 * [marginal plots](#plotting-the-comparison-of-data-and-model-observables-aka-marginal-plots)
 * [summary catalogue](#computing-a-summary-catalogue)
-* [true vs retieved parameters](#plotting-the-comparison-of-input-and-retrieved-parameters-when-fitting-mock-observations)
+* [true vs retrieved parameters](#plotting-the-comparison-of-input-and-retrieved-parameters-when-fitting-mock-observations)
 
 ### Plotting the posterior probability distributions (aka "triangle plots")
 

@@ -1,0 +1,34 @@
+{
+
+"sfr": {
+  "range": [1.0E-4, 1.0E+04],
+  "axis_range": [1.0E-1, 3.0E+03],
+  "label": "$\\log (\\psi / \\textnormal{M}_\\odot) \\, \\textnormal{yr}^{-1})$",
+  "extName" : "STAR FORMATION", 
+  "colName" : "SFR",
+  "log" : true 
+},
+
+"A_1500": {
+  "range": [0.0, 8.0],
+  "label": "$\\textnormal{A}_{1500}$",
+  "extName" : "DUST ATTENUATION", 
+  "colName" : "A1500"
+},
+
+"logOH": {
+  "range": [6.0, 9.0],
+  "label": "$\\log  (\\textnormal{O}/\\textnormal{H})$",
+  "extName" : "NEBULAR EMISSION", 
+  "colName" : "logOH"
+},
+
+"nebular_logU": {
+  "range": [-4.0, -1.0],
+  "label": "$\\log  \\hat{\\textnormal{U}}$",
+  "extName" : "NEBULAR EMISSION", 
+  "colName" : "logU"
+}
+
+}
+

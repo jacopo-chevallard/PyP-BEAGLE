@@ -71,7 +71,7 @@ def standard_parser():
         )
 
     parser.add_argument(
-        '-s', '--summary-config',
+        '--json-summary',
         help="JSON file containing the configuration for the computation of the summary catalogue",
         action="store", 
         type=str, 

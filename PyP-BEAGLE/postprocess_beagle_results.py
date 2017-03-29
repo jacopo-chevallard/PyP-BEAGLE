@@ -13,9 +13,11 @@ from astropy.io import fits
 
 from beagle_mock_catalogue import BeagleMockCatalogue
 from beagle_spectra import Spectrum
+from beagle_photometry import Photometry
 from beagle_pdf import PDF
 from beagle_utils import BeagleDirectories, get_files_list, find_file
 from beagle_parsers import standard_parser
+from beagle_summary_catalogue import BeagleSummaryCatalogue
 import beagle_multiprocess
 
 from pathos.multiprocessing import ProcessingPool 
@@ -65,9 +67,11 @@ if __name__ == '__main__':
             param_file)
     config.read(name)
 
-    # File containing list of input spectra
-    inputSpectraFileName = os.path.expandvars(config.get('main', 'LIST OF SPECTRA'))
-    inputSpectraFile = open(inputSpectraFileName, 'r')
+    # Check if the parameter file contains a LIST OF SPECTRA
+    has_spectra = config.has_option('main', 'LIST OF SPECTRA')
+
+    # Check if the parameter file contains a PHOTOMETRIC CATALOGUE
+    has_photometry = config.has_option('main', 'PHOTOMETRIC CATALOGUE')
 
     # Global font size
     font = {'size': 16}
@@ -76,10 +80,7 @@ if __name__ == '__main__':
     # Get list of results files and object IDs from the results directory
     file_list, IDs = get_files_list()
     regex = re.compile(r"_MC\w+", re.IGNORECASE)
-    #test = ('V_150_MC_0_snr_PS_CL', 'V_10_MC_0_snr_PS_CLE')
-    #for t in test:
-    #    tt = regex.sub('', t)
-    #    print "tt: ", tt
+
     # Load mock catalogue
     mock_catalogue = None
     if args.mock_file_name is not None:
@@ -92,56 +93,72 @@ if __name__ == '__main__':
     # JSON file containing the parameters to be plotted in the triangle plot
     params_file = os.path.join(BeagleDirectories.results_dir, args.json_file_triangle)
 
-    # Initialize an instance of the main "Spectrum" class
-    my_spectrum = Spectrum(params_file, 
-            resolution=100, 
-            plot_line_labels=True, 
-            mock_catalogue=mock_catalogue)
-
-    my_spectrum.observed_spectrum.configure(config=config)
-
     # Set parameter names and labels
     my_PDF = PDF(params_file, 
             mock_catalogue=mock_catalogue)
 
     # Compute the summary catalogue
     if args.compute_summary:
-        my_spectrum.summary_catalogue.compute(file_list)
+        summary_catalogue = BeagleSummaryCatalogue()
+        summary_catalogue.compute(file_list)
 
     # Comparison plots of true vs retrieved values 
     if args.mock_file_name is not None:
-        if not my_spectrum.summary_catalogue.exists():
-            my_spectrum.summary_catalogue.compute(file_list)
-        my_spectrum.summary_catalogue.load()
+        if not summary_catalogue.exists():
+            summary_catalogue.compute(file_list)
+        summary_catalogue.load()
 
-        
-        class_indices = list() ; class_color = list()
-        z_min = 4 ; z_max = 8 ; 
-        redshift = mock_catalogue.hdulist['GALAXY PROPERTIES'].data['redshift']
-        indx = np.where((redshift < 6.))[0]
-        class_indices.append(indx)
-        indx = np.where((redshift >= 6.))[0]
-        class_indices.append(indx)
+        mock_catalogue.compare_hist(summary_catalogue, overwrite=True)
+        mock_catalogue.compare(summary_catalogue, overwrite=True)
 
-        mock_catalogue.compare_hist(my_spectrum.summary_catalogue, overwrite=True, class_indices=class_indices)
-        mock_catalogue.compare(my_spectrum.summary_catalogue, overwrite=True)
+    # ---------------------------------------------------------
+    # --------- Post-processing of photometric data -----------
+    # ---------------------------------------------------------
+    if has_photometry:
 
-    observations_list = list()
-    file_names = list()
+        # Initialize an instance of the main "Photometry" class
+        my_photometry = Photometry(key=args.ID_key, x_log=args.plot_log_wl)
 
-    for ID in IDs:
+        # We can load a set of photometric filters
+        filters_file = os.path.expandvars(config.get('main', 'FILTERS FILE'))
+        my_photometry.filters.load(filters_file)
 
-        # Plot the "triangle plot"
-        #print "ID: ", ID
+        # Load observed photometric catalogue
+        file_name = os.path.expandvars(config.get('main', 'PHOTOMETRIC CATALOGUE'))
+        my_photometry.observed_catalogue.load(file_name)
 
-        for line in inputSpectraFile:
-            # Get rid of the "\n" char at the end of the line
-            line = line.strip()
-            line = os.path.join(os.path.dirname(inputSpectraFileName), line)
-            if ID in line:
-                observations_list.append((ID, line))
-                file_names.append(line)
-                break
+    # ---------------------------------------------------------
+    # -------- Post-processing of spectroscopic data ----------
+    # ---------------------------------------------------------
+    if has_spectra:
+
+        # Initialize an instance of the main "Spectrum" class
+        my_spectrum = Spectrum(params_file, 
+                resolution=args.resolution, 
+                plot_line_labels=args.plot_line_labels, 
+                mock_catalogue=mock_catalogue)
+
+        my_spectrum.observed_spectrum.configure(config=config)
+
+
+        # File containing list of input spectra
+        inputSpectraFileName = os.path.expandvars(config.get('main', 'LIST OF SPECTRA'))
+        inputSpectraFile = open(inputSpectraFileName, 'r')
+
+        file_names = list()
+
+        for ID in IDs:
+
+            # Plot the "triangle plot"
+            #print "ID: ", ID
+
+            for line in inputSpectraFile:
+                # Get rid of the "\n" char at the end of the line
+                line = line.strip()
+                line = os.path.join(os.path.dirname(inputSpectraFileName), line)
+                if ID in line:
+                    file_names.append(line)
+                    break
 
     # Create "pool" of processes
     if args.np > 1:
@@ -150,10 +167,18 @@ if __name__ == '__main__':
     # Plot the marginal SED
     if args.plot_marginal:
         if args.np > 1:
-            pool.map(my_spectrum.plot_marginal, IDs, file_names)
+            if has_spectra:
+                pool.map(my_spectrum.plot_marginal, IDs, file_names)
+
+            if has_photometry:
+                pool.map(my_photometry.plot_marginal, IDs)
         else:
-            for ID, file in zip(IDs, file_names):
-                my_spectrum.plot_marginal(ID, file)
+            for i, ID in enumerate(IDs):
+                if has_spectra:
+                    my_spectrum.plot_marginal(ID, file_names[i])
+
+                if has_photometry:
+                    my_photometry.plot_marginal(ID)
 
     # Plot the triangle plot
     if args.plot_triangle:

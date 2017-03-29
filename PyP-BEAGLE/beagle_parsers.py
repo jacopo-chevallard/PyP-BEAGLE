@@ -57,6 +57,29 @@ def standard_parser():
         )
 
     parser.add_argument(
+        '--log-wavelength',
+        help="Plot logarithmic axis for wavelength.",
+        action="store_true", 
+        dest="plot_log_wl" 
+        )
+
+    parser.add_argument(
+        '--plot-line-labels',
+        help="Label the strongest emission lines.",
+        action="store_true", 
+        dest="plot_line_labels" 
+        )
+
+    parser.add_argument(
+        '--spectral-resolution',
+        help="(Approximate) resolution of the spectra, used to determine which emission lines \
+                to label (lines which are blended are not labelled separately).",
+        action="store",
+        type=float,
+        dest="resolution" 
+        )
+
+    parser.add_argument(
         '--plot-triangle',
         help="Plot the triangle plot.",
         action="store_true", 

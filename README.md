@@ -23,11 +23,9 @@
 
 # Using PyP-BEAGLE
 
-## Spectroscopic data
-
-The post-processing of Beagle results obtained by fitting spectroscopic data is performed by means of the script ``PyP-BEAGLE/postprocess_beagle_spectra.py``. You can visualize the possible command-line options of the script with the command
+The post-processing of Beagle results obtained is performed by means of the script ``PyP-BEAGLE/postprocess_beagle_results.py``. You can visualize the possible command-line options of the script with the command
 ```csh
-./postprocess_beagle_spectra.py --help
+./postprocess_beagle_results.py --help
 ```
 
 * [triangle plots](#plotting-the-posterior-probability-distributions-aka-triangle-plots)
@@ -40,7 +38,7 @@ The post-processing of Beagle results obtained by fitting spectroscopic data is 
 #### Command
 
 ```csh
-./postprocess_beagle_spectra.py -r <your Beagle results folder> \
+./postprocess_beagle_result.py -r <your Beagle results folder> \
 --plot-triangle \
 [-np <number of processors>] \
 [--json-triangle <JSON triangle file>] \
@@ -65,14 +63,18 @@ The successful execution of the script will create a set of ``*_triangle.pdf`` f
 #### Command
 
 ```csh
-./postprocess_beagle_spectra.py -r <your Beagle results folder> \
+./postprocess_beagle_result.py -r <your Beagle results folder> \
 --plot-marginal \
-[-np <number of processors>] 
+[-np <number of processors>] \
+[--log-wavelength] \
+[--plot-line-labels] \
+[--spectral-resolution <resolution>] \
 ```
 
 where
 * ``<your Beagle results folder>`` must be replaced by the full path to the Beagle output directory;
-* ``<number of processors>`` is an integer indicating how many processors can be used for the parallel execution of the script. This is particularly important when producing plots for large (> 1000) samples, as the creation of each individual plot can take several tens of seconds.
+* ``<number of processors>`` is an integer indicating how many processors can be used for the parallel execution of the script. This is particularly important when producing plots for large (> 1000) samples, as the creation of each individual plot can take several tens of seconds;
+* ``<resolution>`` is a float indicating the resolution of the spectra, and it is used to determine which emission line labels are printed on the plot.
 
 #### Output
 
@@ -84,7 +86,7 @@ The successful execution of the script will create a set of ``*_marginal_SED_spe
 #### Command
 
 ```csh
-./postprocess_beagle_spectra.py -r <your Beagle results folder> 
+./postprocess_beagle_result.py -r <your Beagle results folder> 
 --compute-summary
 [--json-summary <JSON summary file>]
 ```
@@ -102,7 +104,7 @@ The successful execution of the script will create the file ``<your Beagle resul
 #### Command
 
 ```csh
-./postprocess_beagle_spectra.py -r <your Beagle results folder> 
+./postprocess_beagle_result.py -r <your Beagle results folder> 
 --mock-catalogue <input mock catalogue> \
 --json-mock <JSON mock file>
 ```

@@ -146,8 +146,6 @@ class Spectrum(object):
 
         self.observed_spectrum = ObservedSpectrum()
 
-        self.summary_catalogue = BeagleSummaryCatalogue()
-
         self.multinest_catalogue = MultiNestCatalogue()
 
         self.mock_catalogue = mock_catalogue

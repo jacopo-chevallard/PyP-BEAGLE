@@ -106,7 +106,7 @@ class ObservedCatalogue(object):
 
 class Photometry:
 
-    def __init__(self):
+    def __init__(self, key='ID', x_log=False):
 
         self.filters = PhotometricFilters()
 
@@ -120,9 +120,13 @@ class Photometry:
 
         self.PPC = PosteriorPredictiveChecks()
 
-    def plot_marginal(self, ID, key='ID', max_interval=99.7, 
+        self.key = key
+        
+        self.x_log = x_log
+
+    def plot_marginal(self, ID, max_interval=99.7, 
             print_text=False, print_title=False, replot=False, show=False, units='nanoJy',
-            x_log=False, plot_full_SED=False, SED_prob_log_scale=False, n_SED_to_plot=10):
+            plot_full_SED=False, SED_prob_log_scale=False, n_SED_to_plot=10):
         """ 
         Plot the fluxes predicted by BEAGLE.
 
@@ -161,7 +165,7 @@ class Photometry:
 
         # From the (previously loaded) observed catalogue select the row
         # corresponding to the input ID
-        observation = extract_row(self.observed_catalogue.data, ID, key=key)
+        observation = extract_row(self.observed_catalogue.data, ID, key=self.key)
 
         # Check if you need to apply an aperture correction to the catalogue fluxes
         if 'aper_corr' in self.observed_catalogue.data.dtype.names:
@@ -170,7 +174,7 @@ class Photometry:
             aper_corr = 1.
 
         # Put observed photometry and its error in arrays
-        obs_flux, obs_flux_err = self.observed_catalogue.extract_fluxes(self.filters, ID, key=key)
+        obs_flux, obs_flux_err = self.observed_catalogue.extract_fluxes(self.filters, ID, key=self.key)
         obs_flux *= 1.E+09
         obs_flux_err *= 1.E+09
 
@@ -202,7 +206,7 @@ class Photometry:
         kde_pdf = list(range(n_bands))
         nXgrid = 1000
 
-        if x_log:
+        if self.x_log:
             wl_eff = np.log10(self.filters.data['wl_eff'])
         else:
             wl_eff = np.array(self.filters.data['wl_eff'])
@@ -353,7 +357,7 @@ class Photometry:
         if yMin < 0.: plt.plot( [x0,x1], [0.,0.], color='gray', lw=0.8 )
 
         # Define plotting styles
-        if x_log:
+        if self.x_log:
             ax.set_xlabel("$\\log (\lambda_\\textnormal{eff} / \\textnormal{\AA}$ (observed-frame))")
         else:
             ax.set_xlabel("$\lambda_\\textnormal{eff} / \\textnormal{\AA}$ (observed-frame)")
@@ -397,7 +401,7 @@ class Photometry:
 
             # Print the average reduced chi-square
             try:
-                row = extract_row(self.PPC.data, ID, key=key)
+                row = extract_row(self.PPC.data, ID, key=self.key)
                 aver_chi_square = row['aver_chi_square']
                 y = y1 - (y1-y0)*0.15
                 ax.text(x, y, "$\langle\chi^2\\rangle=" + "{:.2f}".format(aver_chi_square) + "$", fontsize=10 )
@@ -406,7 +410,7 @@ class Photometry:
                 "<chi^2> for the object `" + str(ID) + "` is not available"
 
             try:
-                row = extract_row(self.PPC.data, ID, key=key)
+                row = extract_row(self.PPC.data, ID, key=self.key)
                 aver_red_chi_square = row['aver_red_chi_square']
                 n_data = row['n_used_bands']
                 y = y1 - (y1-y0)*0.20
@@ -435,7 +439,7 @@ class Photometry:
         hdulist.close()
 
     def plot_replicated_data(self, ID, max_interval=99.7, n_replic_to_plot=16,
-            print_text=False, replot=False, key='ID'):    
+            print_text=False, replot=False):    
         """ 
         Plot the replicated data.
 
@@ -480,7 +484,7 @@ class Photometry:
 
         # From the (previously loaded) observed catalogue select the row
         # corresponding to the input ID
-        observation = extract_row(self.observed_catalogue.data, ID, key=key)
+        observation = extract_row(self.observed_catalogue.data, ID, key=self.key)
 
         # Check if you need to apply an aperture correction to the catalogue fluxes
         if 'aper_corr' in self.observed_catalogue.data.dtype.names:
@@ -489,7 +493,7 @@ class Photometry:
             aper_corr = 1.
 
         # Put observed photometry and its error in arrays
-        obs_flux, obs_flux_err = self.observed_catalogue.extract_fluxes(self.filters, ID, key=key)
+        obs_flux, obs_flux_err = self.observed_catalogue.extract_fluxes(self.filters, ID, key=self.key)
 
         # Sort wl_eff array
         wl_eff = np.array(self.filters.data['wl_eff'])
@@ -783,7 +787,7 @@ class Photometry:
 
             # Print the average reduced chi-square
             try:
-                row = extract_row(self.PPC.data, ID, key=key)
+                row = extract_row(self.PPC.data, ID, key=self.key)
                 aver_chi_square = row['aver_chi_square']
                 y = y1 - (y1-y0)*0.15
                 ax.text(x, y, "$\langle\chi^2\\rangle=" + "{:.2f}".format(aver_chi_square) + "$", fontsize=10 )
@@ -792,7 +796,7 @@ class Photometry:
                 "<chi^2> for the object `" + str(ID) + "` is not available"
 
             try:
-                row = extract_row(self.PPC.data, ID, key=key)
+                row = extract_row(self.PPC.data, ID, key=self.key)
                 aver_red_chi_square = row['aver_red_chi_square']
                 n_data = row['n_used_bands']
                 y = y1 - (y1-y0)*0.20

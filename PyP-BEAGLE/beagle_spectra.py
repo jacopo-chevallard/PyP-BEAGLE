@@ -15,9 +15,8 @@ from astropy.io import ascii
 from astropy.io import fits
 
 import sys
-sys.path.append(os.path.join(os.environ['PYP_BEAGLE'], "dependencies"))
-import WeightedKDE
-import autoscale
+import dependencies.WeightedKDE as WeightedKDE
+import dependencies.autoscale as autoscale
 #import FillBetweenStep
 
 from beagle_utils import BeagleDirectories, prepare_plot_saving, set_plot_ticks, plot_exists
@@ -27,6 +26,11 @@ from beagle_summary_catalogue import BeagleSummaryCatalogue
 from beagle_multinest_catalogue import MultiNestCatalogue
 from beagle_posterior_predictive_checks import PosteriorPredictiveChecks
 from beagle_mock_catalogue import BeagleMockCatalogue
+
+# See here
+# http://peak.telecommunity.com/DevCenter/PythonEggs#accessing-package-resources
+# for an explanation on this approach to include data files
+from pkg_resources import resource_stream
 
 TOKEN_SEP = ":"
 microJy = np.float32(1.E-23 * 1.E-06)
@@ -155,11 +159,11 @@ class Spectrum(object):
         self.PPC = PosteriorPredictiveChecks()
 
         if line_labels_json == None:
-            self.line_labels_json = os.path.join(os.environ["PYP_BEAGLE"], 
-                    "PyP-BEAGLE",
-                    "emission_lines.json") 
+            self.line_labels = json.load(resource_stream(__name__, 'files/emission_lines.json'), 
+                    object_pairs_hook=OrderedDict)
         else:
-            self.line_labels_json = line_labels_json
+            with open(line_labels_json) as f:    
+                 self.line_labels = json.load(f, object_pairs_hook=OrderedDict)
 
         self.plot_line_labels = plot_line_labels
 
@@ -392,12 +396,9 @@ class Spectrum(object):
         if self.plot_line_labels:
             x0, x1 = ax.get_xlim()
             n = 3
-            with open(self.line_labels_json) as f:    
-                 line_labels = json.load(f, object_pairs_hook=OrderedDict)
-
             i = 0
             prev_x = 0.
-            for key, label in line_labels.iteritems():
+            for key, label in self.line_labels.iteritems():
                 x = label["wl"]/1.E+04 * (1.+self.observed_spectrum.data['redshift'])
                 if x < x0 or x > x1:
                     continue

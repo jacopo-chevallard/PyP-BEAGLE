@@ -16,7 +16,7 @@ def standard_parser():
     )
 
     parser.add_argument(
-        '-v', '--verbose',
+        '--verbose',
         help="Be verbose",
         action="store_const", 
         dest="loglevel", 

@@ -11,6 +11,7 @@ from astropy.io import ascii
 from astropy.io import fits
 
 from pyp_beagle import *
+from pyp_beagle import __version__
 from pathos.multiprocessing import ProcessingPool 
 
 
@@ -18,6 +19,12 @@ def main():
 
     # Load the default command line argument parser
     parser = standard_parser()
+
+    # Add package version
+    parser.add_argument('-v', '--version', 
+            action='version', 
+            version='%(prog)s ' + __version__
+            )
 
     # Get parsed arguments
     args = parser.parse_args()    

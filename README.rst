@@ -1,31 +1,31 @@
-# Before using PyP-BEAGLE
+# Installing PyP-BEAGLE
 
-* clone this repository!
+* Make sure that you have a (science-ready!) installation of Python 2.7, for instance [Anaconda](https://www.continuum.io/downloads) (the Python 2.7 version)
 
-* intall [Python Anaconda](https://www.continuum.io/downloads) (the Python 2.7 version)
+* To install PyP-BEAGLE simply run
+  ```
+  pip install pyp_beagle
+  ```
 
-* install the packages below, which are not included in the Anaconda Python distribution. You can install them with the command ``pip install <package name>``, where ``<package name>`` will be:
+# Known issues
 
-  * atpy
+* On a Mac OS, multiprocessing only works with the ``Agg`` backend. Make sure that your ``~/.matplotlib/matplotlibrc`` file contains the line
+  ```
+  backend      : Agg
+  ```
 
-  * getdist
+* If you encounter errors related to LaTeX, or if the visual appearance of the plots is not satisfying, you can copy the matplotlib configuration file ``script/matplotlibrc`` into your ``$HOME/.matplotlib/`` folder (if the folder does not exist, create it). If you already have a customized  ``matplotlibrc`` file, then you can use the GNU ``diff`` command to update it.
 
-  * pathos
-
-* copy the file ``script/matplotlibrc`` into your ``$HOME/.matplotlib`` folder (if the folder does not exist, create it). If you already have a customized  ``matplotlibrc`` file, then try to run the PyP-BEAGLE example files located in the ``tests`` folder, and use GNU ``diff`` command to find out which additions to your ``matplotlibrc`` are required to run PyP-BEAGLE.
-
-* set the Beagle environment variables using the ``BEAGLE_env_variable.bash`` or ``BEAGLE_env_variable.csh`` located in the ``scripts`` folder. For this, you can simply add at the end of your ``.bashrc`` file the line
+* PyP-BEAGLE assumes that the Beagle environment variables are correctly set on your machine. Note that while these are the same environment variables used by Docker-Beagle (see [here](https://github.com/jacopo-chevallard/BEAGLE-general/wiki#running-beagle)), they have to point to the actual folders on your machine, not to the "virtual" folder that Docker-Beagle uses. To correctly set the environment variables, you can use the ``scripts/BEAGLE_env_variable.bash`` or ``scripts/BEAGLE_env_variable.csh`` files. In practice, after modifying the file to reflect your Beagle folder tree, you can simply add at the end of your ``.bashrc`` (or ``.tcshrc``, or equivalent) the line
  ```bash
- source <path to the cloned PyP-BEAGLE repository>/scripts/BEAGLE_env_variable.bash
+ source <full path to the file>/BEAGLE_env_variable.bash
  ```
-
-* set the ``PYP_BEAGLE`` environment variable to point to the location of the cloned ``PyP-BEAGLE`` repository
 
 # Using PyP-BEAGLE
 
-The post-processing of Beagle results obtained is performed by means of the script ``PyP-BEAGLE/postprocess_beagle_results.py``. You can visualize the possible command-line options of the script with the command
+The post-processing of Beagle results obtained is performed by means of the command ``pyp_beagle``. You can visualize the possible command-line options of the script with the command
 ```csh
-./postprocess_beagle_results.py --help
+pyp_beagle --help
 ```
 
 * [triangle plots](#plotting-the-posterior-probability-distributions-aka-triangle-plots)
@@ -38,7 +38,7 @@ The post-processing of Beagle results obtained is performed by means of the scri
 #### Command
 
 ```csh
-./postprocess_beagle_result.py -r <your Beagle results folder> \
+pyp_beagle -r <your Beagle results folder> \
 --plot-triangle \
 [-np <number of processors>] \
 [--json-triangle <JSON triangle file>] \
@@ -63,7 +63,7 @@ The successful execution of the script will create a set of ``*_triangle.pdf`` f
 #### Command
 
 ```csh
-./postprocess_beagle_result.py -r <your Beagle results folder> \
+pyp_beagle -r <your Beagle results folder> \
 --plot-marginal \
 [-np <number of processors>] \
 [--log-wavelength] \
@@ -86,7 +86,7 @@ The successful execution of the script will create a set of ``*_marginal_SED_spe
 #### Command
 
 ```csh
-./postprocess_beagle_result.py -r <your Beagle results folder> 
+pyp_beagle -r <your Beagle results folder> 
 --compute-summary
 [--json-summary <JSON summary file>]
 ```
@@ -104,7 +104,7 @@ The successful execution of the script will create the file ``<your Beagle resul
 #### Command
 
 ```csh
-./postprocess_beagle_result.py -r <your Beagle results folder> 
+pyp_beagle -r <your Beagle results folder> 
 --mock-catalogue <input mock catalogue> \
 --json-mock <JSON mock file>
 ```

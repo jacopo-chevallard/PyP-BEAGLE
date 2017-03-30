@@ -10,6 +10,7 @@ from setuptools import setup, find_packages
 # To use a consistent encoding
 from codecs import open
 from os import path
+import re
 
 here = path.abspath(path.dirname(__file__))
 
@@ -17,9 +18,21 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
+# Read the file version (see http://stackoverflow.com/a/7071358)
+PACKAGE_NAME = "pyp_beagle"
+PACKAGE_DIR = "PyP-BEAGLE"
+VERSION_FILE = PACKAGE_DIR + "/_version.py"
+verstrline = open(VERSION_FILE, "rt").read()
+VSRE = r"^__version__ = ['\"]([^'\"]*)['\"]"
+mo = re.search(VSRE, verstrline, re.M)
+if mo:
+    verstr = mo.group(1)
+else:
+    raise RuntimeError("Unable to find version string in %s." % (VERSION_FILE,))
+
 setup(
-    name='pyp_beagle',
-    version='0.3.1',
+    name=PACKAGE_NAME,
+    version=verstr,
     description='Package for post-processing of results obtained with the Beagle SED fitting tool',
     long_description=long_description,
     url='https://github.com/jacopo-chevallard/PyP-BEAGLE',
@@ -52,9 +65,9 @@ setup(
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
-    packages=['pyp_beagle'],
+    packages=[PACKAGE_NAME],
 
-    package_dir={'pyp_beagle': 'PyP-BEAGLE'},
+    package_dir={PACKAGE_NAME: PACKAGE_DIR},
 
     # Alternatively, if you want to distribute just a my_module.py, uncomment
     # this:
@@ -79,7 +92,7 @@ setup(
     # pip to create the appropriate form of executable for the target platform.
     entry_points={
         'console_scripts': [
-            'pyp_beagle=pyp_beagle.command_line:main',
+            PACKAGE_NAME+'='+PACKAGE_NAME+'.command_line:main',
         ],
     },
 )

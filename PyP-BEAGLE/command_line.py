@@ -10,9 +10,9 @@ from matplotlib import rc
 from astropy.io import ascii
 from astropy.io import fits
 
-from pyp_beagle import *
-from pyp_beagle import __version__
 from pathos.multiprocessing import ProcessingPool 
+from pyp_beagle import *
+from _version import __version__
 
 
 def main():

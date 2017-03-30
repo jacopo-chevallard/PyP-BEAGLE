@@ -1,16 +1,12 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
+from beagle_utils import *
+from beagle_parsers import standard_parser
+from beagle_filters import PhotometricFilters
+from beagle_photometry import Photometry
+from beagle_pdf import PDF
+from beagle_spectra import Spectrum
+from beagle_summary_catalogue import BeagleSummaryCatalogue
+from beagle_mock_catalogue import BeagleMockCatalogue
+from beagle_residual_photometry import ResidualPhotometry
+from beagle_multinest_catalogue import MultiNestCatalogue
+from beagle_posterior_predictive_checks import PosteriorPredictiveChecks
 
-"""
-This is an Astropy affiliated package.
-"""
-
-# Affiliated packages may add whatever they like to this file, but
-# should keep this content at the top.
-# ----------------------------------------------------------------------------
-from ._astropy_init import *
-# ----------------------------------------------------------------------------
-
-# For egg_info test builds to pass, put package imports here.
-if not _ASTROPY_SETUP_:
-    #from example_mod import *
-    pass

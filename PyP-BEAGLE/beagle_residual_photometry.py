@@ -5,8 +5,7 @@ import cPickle
 
 import os
 import sys
-sys.path.append(os.path.join(os.environ['PYP_BEAGLE'], "dependencies"))
-import WeightedKDE
+import dependencies.WeightedKDE as WeightedKDE
 
 from beagle_utils import weighted_avg_and_std, BeagleDirectories, match_ID, prepare_plot_saving
 

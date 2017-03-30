@@ -11,11 +11,9 @@ import matplotlib.ticker as plticker
 from astropy.io import ascii
 from astropy.io import fits
 
-from walker_random_sampling import WalkerRandomSampling
-
 import sys
-sys.path.append(os.path.join(os.environ['PYP_BEAGLE'], "dependencies"))
-import WeightedKDE
+import dependencies.WeightedKDE as WeightedKDE
+from dependencies.walker_random_sampling import WalkerRandomSampling
 
 from beagle_utils import BeagleDirectories, prepare_plot_saving, set_plot_ticks, \
         prepare_violin_plot, plot_exists, pause, extract_row, is_FITS_file

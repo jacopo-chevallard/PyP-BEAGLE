@@ -6,9 +6,8 @@ from astropy.io import fits
 from astropy.table import Table, Column
 
 import sys
-sys.path.append(os.path.join(os.environ['PYP_BEAGLE'], "dependencies"))
-import WeightedKDE
-from walker_random_sampling import WalkerRandomSampling
+import dependencies.WeightedKDE as WeightedKDE
+from dependencies.walker_random_sampling import WalkerRandomSampling
 
 from beagle_utils import prepare_data_saving, prepare_plot_saving, \
     BeagleDirectories, set_plot_ticks

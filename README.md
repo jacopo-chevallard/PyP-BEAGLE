@@ -49,8 +49,8 @@ pyp_beagle -r <your Beagle results folder> \
 where
 * ``<your Beagle results folder>`` must be replaced by the full path to the Beagle output directory;
 * ``<number of processors>`` is an integer indicating how many processors can be used for the parallel execution of the script. This is particularly important when producing plots for large (> 1000) samples, as the creation of each individual plot can take several tens of seconds.
-* ``<JSON triangle file>`` is a JSON file used for the configuration of the triangle plot (which parameters should be plotted, log scale, plot limits, ...), an example can be found [here](https://github.com/jacopo-chevallard/PyP-BEAGLE/blob/master/files/params_names.json);
-* ``<input mock catalogue>`` indicates a Beagle FITS file containing the input (i.e. "true") physical parameters used to construct the noiseless SEDs which have then been fitted with Beagle (after the noise addition, which must be performed **outside** Beagle). Note that in this case, a ``<JSON mock file>`` must be passed, since we must instruct PyP-BEAGLE where (in which FITS extension and column) to find the "true" parameters. An example of the ``<JSON mock file>`` to be used in this case can be found [here](https://github.com/jacopo-chevallard/PyP-BEAGLE/blob/master/files/params_names_mock.json).
+* ``<JSON triangle file>`` is a JSON file used for the configuration of the triangle plot (which parameters should be plotted, log scale, plot limits, ...), an example can be found [here](https://github.com/jacopo-chevallard/PyP-BEAGLE/blob/0996fd3c6b271e15452b7edee6627bc7fbc68675/PyP-BEAGLE/files/params_names.json);
+* ``<input mock catalogue>`` indicates a Beagle FITS file containing the input (i.e. "true") physical parameters used to construct the noiseless SEDs which have then been fitted with Beagle (after the noise addition, which must be performed **outside** Beagle). Note that in this case, a ``<JSON mock file>`` must be passed, since we must instruct PyP-BEAGLE where (in which FITS extension and column) to find the "true" parameters. An example of the ``<JSON mock file>`` to be used in this case can be found [here](https://github.com/jacopo-chevallard/PyP-BEAGLE/blob/0996fd3c6b271e15452b7edee6627bc7fbc68675/PyP-BEAGLE/files/params_names_mock.json).
 
 
 #### Output
@@ -93,7 +93,7 @@ pyp_beagle -r <your Beagle results folder>
 
 where
 * ``<your Beagle results folder>`` must be replaced by the full path to the Beagle output directory;
-* ``<JSON summary file>`` is a JSON file used for the configuration of the summary catalogue, specifying for which parameters the summary statistics (posterior mean and median, 68 and 95 % credible regions) should be computed. An example can be found [here](https://github.com/jacopo-chevallard/PyP-BEAGLE/blob/master/files/summary_config.json).
+* ``<JSON summary file>`` is a JSON file used for the configuration of the summary catalogue, specifying for which parameters the summary statistics (posterior mean and median, 68 and 95 % credible regions) should be computed. An example can be found [here](https://github.com/jacopo-chevallard/PyP-BEAGLE/blob/0996fd3c6b271e15452b7edee6627bc7fbc68675/PyP-BEAGLE/files/summary_config.json).
 
 #### Output
 
@@ -111,7 +111,7 @@ pyp_beagle -r <your Beagle results folder>
 
 where
 * ``<your Beagle results folder>`` must be replaced by the full path to the Beagle output directory;
-* ``<input mock catalogue>`` indicates a Beagle FITS file containing the input (i.e. "true") physical parameters used to construct the noiseless SEDs which have then been fitted with Beagle (after the noise addition, which must be performed **outside** Beagle). Note that in this case, a ``<JSON mock file>`` must be passed, since we must instruct PyP-BEAGLE where (in which FITS extension and column) to find the "true" parameters. An example of the ``<JSON mock file>`` to be used in this case can be found [here](https://github.com/jacopo-chevallard/PyP-BEAGLE/blob/master/files/params_names_mock.json).
+* ``<input mock catalogue>`` indicates a Beagle FITS file containing the input (i.e. "true") physical parameters used to construct the noiseless SEDs which have then been fitted with Beagle (after the noise addition, which must be performed **outside** Beagle). Note that in this case, a ``<JSON mock file>`` must be passed, since we must instruct PyP-BEAGLE where (in which FITS extension and column) to find the "true" parameters. An example of the ``<JSON mock file>`` to be used in this case can be found [here](https://github.com/jacopo-chevallard/PyP-BEAGLE/blob/0996fd3c6b271e15452b7edee6627bc7fbc68675/PyP-BEAGLE/files/params_names_mock.json).
 
 #### Output
 

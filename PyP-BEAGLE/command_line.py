@@ -141,23 +141,25 @@ def main():
 
         # File containing list of input spectra
         inputSpectraFileName = os.path.expandvars(config.get('main', 'LIST OF SPECTRA'))
-        inputSpectraFile = open(inputSpectraFileName, 'r')
+
+        lines = list()
+        with open(inputSpectraFileName, 'r') as f:
+            for line in f:
+                # Get rid of the "\n" char at the end of the line
+                line = line.strip()
+                line = os.path.join(os.path.dirname(inputSpectraFileName), line)
+                lines.append(line)
 
         file_names = list()
 
         for ID in IDs:
-
-            # Plot the "triangle plot"
-            #print "ID: ", ID
-
-            for line in inputSpectraFile:
-                # Get rid of the "\n" char at the end of the line
-                line = line.strip()
-                line = os.path.join(os.path.dirname(inputSpectraFileName), line)
+            for line in lines:
                 if ID in line:
                     file_names.append(line)
                     break
 
+    print "ID: ", IDs
+    print "file_names: ", file_names
     # Create "pool" of processes
     if args.np > 1:
         pool = ProcessingPool(nodes=args.np)

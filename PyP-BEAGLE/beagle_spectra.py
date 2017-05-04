@@ -17,6 +17,7 @@ from astropy.io import fits
 import sys
 import dependencies.WeightedKDE as WeightedKDE
 import dependencies.autoscale as autoscale
+from dependencies.walker_random_sampling import WalkerRandomSampling
 #import FillBetweenStep
 
 from beagle_utils import BeagleDirectories, prepare_plot_saving, set_plot_ticks, plot_exists
@@ -98,7 +99,7 @@ class ObservedSpectrum(object):
             raise AttributeError(msg)
 
 
-        hdu = fits.open(file_name)
+        hdu = fits.open(os.path.expandvars(file_name))
         data = hdu[1].data
 
         self.data = dict()
@@ -146,7 +147,10 @@ class Spectrum(object):
             line_labels_json=None,
             plot_line_labels=False,
             resolution=None,
-            mock_catalogue=None):
+            mock_catalogue=None,
+            wl_range=None,
+            plot_full_SED=False,
+            n_SED_to_plot=100):
 
         self.observed_spectrum = ObservedSpectrum()
 
@@ -168,7 +172,12 @@ class Spectrum(object):
         self.plot_line_labels = plot_line_labels
 
         self.resolution = resolution
+    
+        self.wl_range = wl_range
 
+        self.plot_full_SED = plot_full_SED
+
+        self.n_SED_to_plot = n_SED_to_plot
 
     def plot_marginal(self, ID, 
             observation_name=None,
@@ -286,11 +295,14 @@ class Spectrum(object):
             upper_flux[i] = f_interp(lev)
     
         # Set the plot limits from the minimum and maximum wl_eff
-        dwl = model_wl[model_wl.size-1] - model_wl[0]
-        wl_low = model_wl[0] - dwl*0.02
-        wl_up = model_wl[model_wl.size-1] + dwl*0.02
-            
-        ax.set_xlim([0.5,5.])
+        if self.wl_range is None:
+            dwl = observation.data['wl'][-1]-observation.data['wl'][0]
+            wl_low = observation.data['wl'][0] - dwl*0.025
+            wl_up = observation.data['wl'][-1] + dwl*0.025
+            ax.set_xlim([wl_low/1.E+04, wl_up/1.E+04])
+        else:
+            ax.set_xlim(self.wl_range)
+
         ax.set_ylim([0., 1.2*np.amax(median_flux[np.isfinite(median_flux)])])
 
         # Define plotting styles
@@ -375,6 +387,25 @@ class Spectrum(object):
                     linewidth=0,
                     interpolate=True,
                     **kwargs)
+
+        # Extract and plot full SED
+        if 'full sed wl' in hdulist and self.plot_full_SED:
+            indices = np.arange(len(probability))
+            wrand = WalkerRandomSampling(probability, keys=indices)
+            rand_indices = wrand.random(self.n_SED_to_plot)
+
+            z1 = (1.+self.observed_spectrum.data['redshift'])
+            wl_obs = hdulist['full sed wl'].data['wl'][0,:] * z1
+
+            for i in rand_indices:
+                SED = hdulist['full sed'].data[i,:] / z1
+
+                ax.plot(wl_obs, 
+                        flux_obs,
+                        color="black",
+                        ls="-",
+                        lw=0.5,
+                        alpha=0.5)
 
 
         kwargs = { 'alpha': 0.8 }

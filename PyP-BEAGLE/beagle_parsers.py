@@ -71,6 +71,22 @@ def standard_parser():
         )
 
     parser.add_argument(
+        '--plot-full-SED',
+        help="Overplot the full resolution model SED.",
+        action="store_true", 
+        dest="plot_full_SED" 
+        )
+
+    parser.add_argument(
+        '--wl-range',
+        help="Wavelength range (in micron) to plot.",
+        action="store",
+        type=float,
+        nargs=2,
+        dest="wl_range" 
+        )
+
+    parser.add_argument(
         '--spectral-resolution',
         help="(Approximate) resolution of the spectra, used to determine which emission lines \
                 to label (lines which are blended are not labelled separately).",

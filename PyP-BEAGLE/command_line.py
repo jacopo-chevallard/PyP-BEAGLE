@@ -91,10 +91,6 @@ def main():
     # JSON file containing the parameters to be plotted in the triangle plot
     params_file = os.path.join(BeagleDirectories.results_dir, args.json_file_triangle)
 
-    # Set parameter names and labels
-    my_PDF = PDF(params_file, 
-            mock_catalogue=mock_catalogue)
-
     # Compute the summary catalogue
     if args.compute_summary:
         summary_catalogue = BeagleSummaryCatalogue()
@@ -133,6 +129,8 @@ def main():
         # Initialize an instance of the main "Spectrum" class
         my_spectrum = Spectrum(params_file, 
                 resolution=args.resolution, 
+                plot_full_SED=args.plot_full_SED,
+                wl_range=args.wl_range,
                 plot_line_labels=args.plot_line_labels, 
                 mock_catalogue=mock_catalogue)
 
@@ -158,8 +156,6 @@ def main():
                     file_names.append(line)
                     break
 
-    print "ID: ", IDs
-    print "file_names: ", file_names
     # Create "pool" of processes
     if args.np > 1:
         pool = ProcessingPool(nodes=args.np)
@@ -182,6 +178,11 @@ def main():
 
     # Plot the triangle plot
     if args.plot_triangle:
+
+        # Set parameter names and labels
+        my_PDF = PDF(params_file, 
+                mock_catalogue=mock_catalogue)
+
         if args.np > 1:
             pool.map(my_PDF.plot_triangle, IDs)
         else:

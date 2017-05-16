@@ -4,6 +4,7 @@ from collections import OrderedDict
 import json
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import rcParams
 from scipy.interpolate import interp1d
 from astropy.io import fits
 from  itertools import izip_longest
@@ -86,7 +87,9 @@ class BeagleMockCatalogue(object):
     def __init__(self, params_file, 
             ID_key="ID", 
             file_name=None,
-            ignore_string=None):
+            ignore_string=None, 
+            overwrite_plots=True,
+            plot_title=False):
 
         # Names of parameters, used to label the axes, whether they are log or
         # not, and possibly the extension name and column name containing the
@@ -99,6 +102,13 @@ class BeagleMockCatalogue(object):
         self.ID_key = ID_key
 
         self.ignore_string = ignore_string
+
+        self.overwrite_plots = overwrite_plots
+
+        if plot_title is not None:
+            self.plot_title = plot_title
+            if rcParams['text.usetex']:
+                self.plot_title = self.plot_title.replace('_', '\_')
 
         if file_name is not None:
             self.load(file_name)
@@ -115,6 +125,8 @@ class BeagleMockCatalogue(object):
 
         if file_name is None:
             file_name = "BEAGLE_mock_catalogue.fits"
+
+        self.file_name = os.path.basename(file_name)
 
         logging.info("Loading the `BeagleMockCatalogue` file: " + file_name)
 
@@ -690,6 +702,126 @@ class BeagleMockCatalogue(object):
         name = prepare_plot_saving(plot_name, overwrite=overwrite)
 
         plt.tight_layout()
+
+        fig.savefig(name, dpi=None, facecolor='w', edgecolor='w',
+                orientation='portrait', papertype='a4', format="pdf",
+                transparent=False, bbox_inches="tight", pad_inches=0.1)
+
+        plt.close(fig)
+
+
+    def plot_input_param_distribution(self):
+
+        n_par = len(self.adjust_params)
+        fig, axs = plt.subplots(n_par, n_par)
+        fig.subplots_adjust(left=0.08, bottom=0.08, hspace=0.4)
+        fontsize = 8
+        axes_linewidth = 0.7
+        color = "grey"
+
+        bins = 20
+
+        for i, (keyX, valueX) in enumerate(self.adjust_params.iteritems()):
+
+            if "extName" in self.adjust_params[keyX]:
+                extNameX = self.adjust_params[keyX]["extName"]
+            else:
+                extNameX = "POSTERIOR PDF"
+
+            if "colName" in self.adjust_params[keyX]:
+                colNameX = self.adjust_params[keyX]["colName"]
+            else:
+                colNameX = keyX
+
+            valuesX = self.hdulist[extNameX].data[colNameX]
+            if 'log' in self.adjust_params[keyX]:
+                if self.adjust_params[keyX]['log']:
+                    valuesX = np.log10(valuesX)
+
+            xlabel = self.adjust_params[keyX]['label']
+
+            for j, (keyY, valueY) in enumerate(self.adjust_params.iteritems()):
+
+                if "extName" in self.adjust_params[keyY]:
+                    extNameY = self.adjust_params[keyY]["extName"]
+                else:
+                    extNameY = "POSTERIOR PDF"
+
+                if "colName" in self.adjust_params[keyY]:
+                    colNameY = self.adjust_params[keyY]["colName"]
+                else:
+                    colNameY = keyY
+
+                valuesY = self.hdulist[extNameY].data[colNameY]
+                if 'log' in self.adjust_params[keyY]:
+                    if self.adjust_params[keyY]['log']:
+                        valuesY = np.log10(valuesY)
+
+                ylabel = self.adjust_params[keyY]['label']
+
+                ax = axs[i][j]
+
+                if j > i:
+                    ax.axis('off')
+                    continue
+
+                elif i == j:
+
+                    ax.hist(valuesX,
+                        bins=bins,
+                        lw=0,
+                        color=color)
+
+                elif j < i:
+
+                    ax.plot(valuesY,
+                            valuesX,
+                            marker='o',
+                            ms=2, 
+                            color=color,
+                            ls="")
+
+
+                    #ax.set_xlim(rangeY)
+                    #ax.set_ylim(rangeX)
+
+                if j == 0:
+                    ax.set_ylabel(xlabel)
+
+                if i == (n_par-1):
+                    ax.set_xlabel(ylabel)
+
+                for item in ([ax.title, ax.xaxis.label, ax.yaxis.label] +
+                             ax.get_xticklabels() + ax.get_yticklabels()):
+                    item.set_fontsize(fontsize)
+
+                set_plot_ticks(ax, n_x=3, n_y=3)
+
+                ax.tick_params(which='minor', axis='both',
+                                length=1.5, width=axes_linewidth)
+
+                ax.tick_params(which='major', axis='both',
+                                length=3, width=axes_linewidth)
+
+                for axis in ['top','bottom','left','right']:
+                  ax.spines[axis].set_linewidth(axes_linewidth)
+
+
+        # Make the unused axes invisibles
+        #for ax in axs[n_par:]:
+        #    ax.axis('off')
+
+        # Fine-tune figure; hide x ticks for top plots and y ticks for right plots
+        plt.setp([a.get_xticklabels() for a in axs[0, :]], visible=False)
+        plt.setp([a.get_yticklabels() for a in axs[:, 1]], visible=False)
+    
+        if self.plot_title is not None:
+            fig.suptitle(self.plot_title)
+
+        plot_name = "BEAGLE_mock_input_params_distribution.pdf"
+        name = prepare_plot_saving(plot_name, overwrite=self.overwrite_plots)
+
+        #plt.tight_layout()
 
         fig.savefig(name, dpi=None, facecolor='w', edgecolor='w',
                 orientation='portrait', papertype='a4', format="pdf",

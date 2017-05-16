@@ -79,9 +79,12 @@ class PhotometricFilters(object):
                     self.units = jy_to_erg(line.split('units:')[1])
                 elif 'index:' in line:
                     index[i] = line.split('index:')[1].split()[0]
-                    colName[i] = line.split('flux:colName:')[1].split()[0]
-                    errcolName[i] = line.split('fluxerr:colName:')[1].split()[0]
-                    label[i] = line.split('label:')[1].split()[0]
+                    if 'flux:colName:' in line:
+                        colName[i] = line.split('flux:colName:')[1].split()[0]
+                    if 'fluxerr:colName:' in line:
+                        errcolName[i] = line.split('fluxerr:colName:')[1].split()[0]
+                    if 'label:' in line:
+                        label[i] = line.split('label:')[1].split()[0]
                     min_rel_err[i] = 0.
                     if 'min_rel_err:' in line:
                         min_rel_err[i] = line.split('min_rel_err:')[1].split()[0]

@@ -85,16 +85,17 @@ def main():
 
         # JSON file containing the configuration for the mock catalogue plots
         params_file = os.path.join(BeagleDirectories.results_dir, args.json_file_mock)
-        mock_catalogue = BeagleMockCatalogue(params_file, ignore_string=regex)
+        mock_catalogue = BeagleMockCatalogue(params_file, ignore_string=regex, plot_title=args.plot_title)
         mock_catalogue.load(args.mock_file_name)
 
     # JSON file containing the parameters to be plotted in the triangle plot
     params_file = os.path.join(BeagleDirectories.results_dir, args.json_file_triangle)
 
     # Compute the summary catalogue
+    summary_catalogue = BeagleSummaryCatalogue()
     if args.compute_summary:
-        summary_catalogue = BeagleSummaryCatalogue()
-        summary_catalogue.compute(file_list)
+        if not summary_catalogue.exists():
+            summary_catalogue.compute(file_list)
 
     # Comparison plots of true vs retrieved values 
     if args.mock_file_name is not None:
@@ -102,6 +103,7 @@ def main():
             summary_catalogue.compute(file_list)
         summary_catalogue.load()
 
+        mock_catalogue.plot_input_param_distribution()
         mock_catalogue.compare_hist(summary_catalogue, overwrite=True)
         mock_catalogue.compare(summary_catalogue, overwrite=True)
 
@@ -111,7 +113,9 @@ def main():
     if has_photometry:
 
         # Initialize an instance of the main "Photometry" class
-        my_photometry = Photometry(key=args.ID_key, x_log=args.plot_log_wl)
+        my_photometry = Photometry(key=args.ID_key, 
+                x_log=args.plot_log_wl, 
+                plot_single_solution=args.plot_single_solution)
 
         # We can load a set of photometric filters
         filters_file = os.path.expandvars(config.get('main', 'FILTERS FILE'))
@@ -181,7 +185,8 @@ def main():
 
         # Set parameter names and labels
         my_PDF = PDF(params_file, 
-                mock_catalogue=mock_catalogue)
+                mock_catalogue=mock_catalogue,
+                plot_single_solution=args.plot_single_solution)
 
         if args.np > 1:
             pool.map(my_PDF.plot_triangle, IDs)

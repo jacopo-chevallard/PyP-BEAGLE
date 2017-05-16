@@ -1,6 +1,7 @@
 import logging
 import os
 from scipy.interpolate import interp1d
+from collections import OrderedDict
 from bisect import bisect_left
 import numpy as np
 import matplotlib.pyplot as plt
@@ -104,7 +105,7 @@ class ObservedCatalogue(object):
 
 class Photometry:
 
-    def __init__(self, key='ID', x_log=False):
+    def __init__(self, key='ID', x_log=False, plot_single_solution=None):
 
         self.filters = PhotometricFilters()
 
@@ -121,6 +122,13 @@ class Photometry:
         self.key = key
         
         self.x_log = x_log
+
+        self.single_solutions = None
+        if plot_single_solution is not None:
+            self.single_solutions = OrderedDict()
+            with fits.open(plot_single_solution) as f:
+                self.single_solutions['ID'] = f[1].data['ID']
+                self.single_solutions['row'] = f[1].data['row_index']
 
     def plot_marginal(self, ID, max_interval=99.7, 
             print_text=False, print_title=False, replot=False, show=False, units='nanoJy',
@@ -378,6 +386,22 @@ class Photometry:
                 elinewidth=1.0,
                 capsize=3,
                 **kwargs)
+
+        if self.single_solutions is not None:
+            row =  self.single_solutions['row'][self.single_solutions['ID']==ID]
+            solution = np.zeros(n_bands, dtype=np.float32)
+            for i, band_name in enumerate((self.filters.data['label'][sor])):
+                solution[i] = model_sed.data['_'+band_name+'_'][row] / nanoJy
+
+            ax.plot(wl_eff,
+                    solution,
+                    color = 'green',
+                    marker = "*",
+                    ls="",
+                    markersize = 10,
+                    alpha = 0.7
+                    )
+
 
 
         # Title of the plot is the object ID

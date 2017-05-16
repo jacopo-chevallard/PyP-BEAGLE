@@ -57,6 +57,15 @@ def standard_parser():
         )
 
     parser.add_argument(
+        '--plot-single-solution',
+        help="FITS table containing the columns 'ID' and 'row_index' identifying the solution, "\
+                "among those available in the posterior PDF, to overplot on the triangle and marginal plots.",
+        action="store", 
+        type=str, 
+        dest="plot_single_solution" 
+        )
+
+    parser.add_argument(
         '--log-wavelength',
         help="Plot logarithmic axis for wavelength.",
         action="store_true", 
@@ -68,6 +77,14 @@ def standard_parser():
         help="Label the strongest emission lines.",
         action="store_true", 
         dest="plot_line_labels" 
+        )
+
+    parser.add_argument(
+        '--plot-title',
+        help="Add title to plot.",
+        action="store", 
+        type=str, 
+        dest="plot_title" 
         )
 
     parser.add_argument(

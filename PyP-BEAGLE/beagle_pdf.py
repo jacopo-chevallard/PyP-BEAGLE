@@ -15,7 +15,7 @@ from beagle_utils import BeagleDirectories, prepare_plot_saving, plot_exists
 
 class PDF(object):
 
-    def __init__(self, params_file, mock_catalogue=None):
+    def __init__(self, params_file, mock_catalogue=None, plot_single_solution=None):
 
         # Names of parameters, used to label the axes, and whether they are log
         # or not
@@ -25,6 +25,13 @@ class PDF(object):
             self.adjust_params = json.load(f, object_pairs_hook=OrderedDict)
 
         self.mock_catalogue = mock_catalogue
+
+        self.single_solutions = None
+        if plot_single_solution is not None:
+            self.single_solutions = OrderedDict()
+            with fits.open(plot_single_solution) as f:
+                self.single_solutions['ID'] = f[1].data['ID']
+                self.single_solutions['row'] = f[1].data['row_index']
 
     def plot_triangle(self, ID, 
             params_to_plot=None, 
@@ -196,12 +203,49 @@ class PDF(object):
                     if self.adjust_params[name]["log"]:
                         value = np.log10(value)
 
-                ax.plot(
-                        value,
+                ax.plot(value,
                         y0+(y1-y0)*0.05,
                         marker="D",
                         ms=8,
                         color="green") 
+
+        if self.single_solutions is not None:
+            row =  self.single_solutions['row'][self.single_solutions['ID']==ID]
+
+            for i in range(nParamsToPlot):
+                parX = keys[i]
+                valueX = param_values[parX][row]
+
+                if "log" in self.adjust_params[parX]:
+                    if self.adjust_params[parX]["log"]:
+                        valueX = np.log10(valueX)
+
+                for j in range(nParamsToPlot):
+                    ax = g.subplots[i,j]
+                    if ax is None:
+                        continue
+
+                    if i == j:
+
+                        ax.plot(valueX,
+                                y0+(y1-y0)*0.05,
+                                marker="*",
+                                ms=12,
+                                color="darkorange") 
+                    else:
+
+                        parY = keys[j]
+                        valueY = param_values[parY][row]
+
+                        if "log" in self.adjust_params[parY]:
+                            if self.adjust_params[parY]["log"]:
+                                valueY = np.log10(valueY)
+
+                        ax.plot(valueY,
+                                valueX,
+                                marker="*",
+                                ms=12,
+                                color="darkorange") 
 
         if show:
             plt.show()

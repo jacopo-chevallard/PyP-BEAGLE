@@ -77,6 +77,8 @@ def main():
 
     # Get list of results files and object IDs from the results directory
     file_list, IDs = get_files_list()
+    if len(file_list) == 0:
+        raise ValueError("No Beagle results files are present in the directory " + BeagleDirectories.results_dir)
     regex = re.compile(r"_MC\w+", re.IGNORECASE)
 
     # Load mock catalogue
@@ -96,6 +98,9 @@ def main():
     if args.compute_summary:
         if not summary_catalogue.exists():
             summary_catalogue.compute(file_list)
+
+    if args.extract_MAP:
+        summary_catalogue.extract_MAP_solution(file_list)
 
     # Comparison plots of true vs retrieved values 
     if args.mock_file_name is not None:

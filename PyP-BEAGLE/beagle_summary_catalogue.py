@@ -185,7 +185,7 @@ class BeagleSummaryCatalogue(object):
 
         for i, file in enumerate(file_list):
             hdulist = fits.open(os.path.join(BeagleDirectories.results_dir, file))
-            end = file.find('_BEAGLE')
+            end = file.find('_' + BeagleDirectories.suffix)
 
             # Extract the object ID from the file_name
             #ID = np.int(np.float(os.path.basename(file[0:end])))
@@ -218,7 +218,55 @@ class BeagleSummaryCatalogue(object):
         name = prepare_data_saving(self.file_name)
         self.hdulist.writeto(name, clobber=overwrite)
 
+    def extract_MAP_solution(self, file_list, overwrite=False):
+        """ 
+        """ 
 
+        # Now you can go through each file, and extract the MAP solution
+        for i, file in enumerate(file_list):
+
+            # Open the original BEAGLE FITS file
+            hdulist = fits.open(os.path.join(BeagleDirectories.results_dir, file))
+
+            # Get the posterior probability
+            post = hdulist['posterior pdf'].data['probability']
+
+            # Maximum of the posterior PDF, i.e. you select the template
+            # corresponding to the mode of the posterior distributions
+            MAP_indx = np.argmax(post)
+
+            # Now write in a separate FITS file the pararmeters corresponding to the MAP row
+            new_hdulist = fits.HDUList(fits.PrimaryHDU())
+
+            for hdu in hdulist:
+
+                if hdu.data is None:
+                    continue
+
+                if hdu.is_image:
+                    new_hdu = fits.PrimaryHDU()
+                    new_hdu.name = hdu.name
+                    new_hdu.data = hdu.data[MAP_indx,:]
+                else:
+                    new_hdu = fits.BinTableHDU.from_columns(hdu.columns, nrows=1)
+                    new_hdu.name = hdu.name
+                    if 'sed wl' in hdu.name.lower() or 'sed mask' in hdu.name.lower():
+                        new_hdu.data = hdu.data
+                    else:
+                        new_hdu.data[0] = hdu.data[MAP_indx]
+
+                new_hdulist.append(new_hdu)
+
+            # Extract the object ID from the file_name
+            end = file.find('_' + BeagleDirectories.suffix)
+            ID = os.path.basename(file[0:end])
+
+            file_name = ID + '_BEAGLE_MAP.fits.gz'
+            name = prepare_data_saving(file_name)
+            new_hdulist.writeto(name, clobber=overwrite)
+
+            new_hdulist.close()
+            hdulist.close()
 
     def make_latex_table(self, param_names, 
             IDs=None,

@@ -96,10 +96,10 @@ def standard_parser():
 
     parser.add_argument(
         '--wl-range',
-        help="Wavelength range (in micron) to plot.",
+        help="Wavelength range(s) (in micron) to plot.",
         action="store",
         type=float,
-        nargs=2,
+        nargs='+',
         dest="wl_range" 
         )
 
@@ -124,6 +124,13 @@ def standard_parser():
         help="Compute the summary catalogue.",
         action="store_true", 
         dest="compute_summary" 
+        )
+
+    parser.add_argument(
+        '--extract-MAP',
+        help="Extract the Maximum-a-Posteriori solution.",
+        action="store_true", 
+        dest="extract_MAP" 
         )
 
     parser.add_argument(

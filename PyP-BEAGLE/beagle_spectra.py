@@ -5,9 +5,12 @@ from collections import OrderedDict
 from scipy.interpolate import interp1d
 from bisect import bisect_left
 import numpy as np
+from itertools import tee, izip
+
 import json
 import matplotlib.pyplot as plt
 import matplotlib.ticker as plticker
+from matplotlib import rcParams
 #import pandas as pd
 # SEABORN creates by default plots with a filled background!!
 #import seaborn as sns
@@ -38,6 +41,13 @@ microJy = np.float32(1.E-23 * 1.E-06)
 nanoJy = np.float32(1.E-23 * 1.E-09)
 
 p_value_lim = 0.05
+
+
+def pairwise(iterable):
+    "s -> (s0,s1), (s1,s2), (s2, s3), ..."
+    a, b = tee(iterable)
+    next(b, None)
+    return izip(a, b)
 
 class ObservedSpectrum(object):
 
@@ -240,9 +250,6 @@ class Spectrum(object):
 
         #ok = np.where(obs_flux_err > 0.)[0]
 
-        fig = plt.figure()
-        ax = fig.add_subplot(1, 1, 1)
-
         # Open the file containing BEAGLE results
         fits_file = os.path.join(BeagleDirectories.results_dir,
                 str(ID) + '_' + BeagleDirectories.suffix + '.fits.gz')
@@ -295,198 +302,251 @@ class Spectrum(object):
             upper_flux[i] = f_interp(lev)
     
         # Set the plot limits from the minimum and maximum wl_eff
+        axs = list()
         if self.wl_range is None:
+            fig = plt.figure()
+            ax = fig.add_subplot(1, 1, 1)
             dwl = observation.data['wl'][-1]-observation.data['wl'][0]
             wl_low = observation.data['wl'][0] - dwl*0.025
             wl_up = observation.data['wl'][-1] + dwl*0.025
             ax.set_xlim([wl_low/1.E+04, wl_up/1.E+04])
+            axs.append(ax)
         else:
-            ax.set_xlim(self.wl_range)
+            if len(self.wl_range) == 2:
+                fig = plt.figure()
+                ax = fig.add_subplot(1, 1, 1)
+                ax.set_xlim(self.wl_range)
+                axs.append(ax)
+            else:
+                n_ranges = int(1.*len(self.wl_range)/2.)
+                fig, axs = plt.subplots(1, n_ranges, sharey=True)
+                fig.subplots_adjust(wspace=.1)
 
-        ax.set_ylim([0., 1.2*np.amax(median_flux[np.isfinite(median_flux)])])
+                # how big to make the diagonal lines in axes coordinates
+                # converting "points" to axes coordinates: 
+                # https://stackoverflow.com/a/33638091
+                t = axs[0].transAxes.transform([(0,0), (1,1)])
+                t = axs[0].get_figure().get_dpi() / (t[1,1] - t[0,1]) / 72
+                d = 0.5*(rcParams['xtick.major.size']*t)
+
+                wl_ranges = [(self.wl_range[2*i], self.wl_range[2*i+1]) for i in range(n_ranges)]
+
+                wl_l = wl_ranges[0]
+                for i, (ax_l, ax_r) in enumerate(pairwise(axs)):
+                    kwargs = dict(transform=ax_l.transAxes, color='k', clip_on=False)
+                    ax_l.spines['right'].set_visible(False)
+                    if not ax_l.spines['left'].get_visible():
+                        ax_l.yaxis.set_ticks_position('none')
+                    else:
+                        ax_l.yaxis.tick_left()
+                    ax_l.set_xlim(wl_l)
+                    ax_l.plot((1-d, 1+d), (-d, +d), **kwargs)        
+                    ax_l.plot((1-d, 1+d), (1-d, 1+d), **kwargs)        
+
+                    kwargs = dict(transform=ax_r.transAxes, color='k', clip_on=False)
+                    ax_r.spines['left'].set_visible(False)
+                    ax_r.yaxis.tick_right()
+                    ax_r.tick_params(labelright='off') 
+                    wl_r = wl_ranges[1+i]
+                    ax_r.set_xlim(wl_r)
+                    ax_r.plot((-d, +d), (-d, +d), **kwargs)        
+                    ax_r.plot((-d, +d), (1-d, 1+d), **kwargs)        
+
+                    wl_l = wl_r
+
+        for ax in axs:
+            ax.set_ylim([0., 1.2*np.amax(median_flux[np.isfinite(median_flux)])])
+
+            # Set better location of tick marks
+            if len(axs) > 1:
+                set_plot_ticks(ax, prune_x='both')
+            else:
+                set_plot_ticks(ax)
 
         # Define plotting styles
-        ax.set_xlabel("$\lambda / \mu\\textnormal{m}$ (observed-frame)")
-        ax.set_ylabel("$F_{\\lambda} / (\\textnormal{erg} \, \
+        fig.text(0.5, 0.02, "$\lambda / \mu\\textnormal{m}$ (observed-frame)", ha='center')
+        fig.text(0.04, 0.5, "$F_{\\lambda} / (\\textnormal{erg} \, \
                 \\textnormal{s}^{-1} \, \\textnormal{cm}^{-2} \, \
-                \\textnormal{\AA}^{-1})$")
-
-        # Set better location of tick marks
-        #set_plot_ticks(ax, n_x=5)
-
-        kwargs = {'alpha':0.9}
-        if ( draw_steps ):
-            ax.step(observation.data['wl']/1.E+04,
-                    observation.data['flux'],
-                    where="mid",
-                    color = "red",
-                    linewidth = 1.50,
-                    **kwargs
-                    )
-        else:
-            ax.plot(observation.data['wl']/1.E+04,
-                    observation.data['flux'],
-                    color = "red",
-                    linewidth = 2.50,
-                    **kwargs
-                    )
-
-##        kwargs = { 'alpha': 0.4 }
-##        if ( draw_steps ):
-##            FillBetweenStep.fill_between_steps(ax,
-##                    observation.data['wl'],
-##                    observation.data['flux']-observation.data['flux_err'],
-##                    observation.data['flux']+observation.data['flux_err'],
-##                    step_where="mid",
-##                    color = "red", 
-##                    linewidth=0,
-##                    interpolate=True,
-##                    **kwargs)
-##        else:
-##            ax.fill_between(observation.data['wl'],
-##                    observation.data['flux']-observation.data['flux_err'],
-##                    observation.data['flux']+observation.data['flux_err'],
-##                    facecolor = "red", 
-##                    linewidth=0,
-##                    interpolate=True,
-##                    **kwargs)
+                \\textnormal{\AA}^{-1})$", va='center', rotation='vertical')
 
 
-        kwargs = { 'alpha': 0.7 }
-        if ( draw_steps ):
-            ax.step(model_wl/1.E+04,
-                    median_flux,
-                    where="mid",
-                    color = "blue",
-                    linewidth = 0.7,
-                    **kwargs
-                    )
-        else:
-            ax.plot(model_wl/1.E+04,
-                    median_flux,
-                    color = "blue",
-                    linewidth = 2.00,
-                    **kwargs
-                    )
+        for ax in axs:
 
-        kwargs = { 'alpha': 0.2 }
-        if ( draw_steps ):
-            FillBetweenStep.fill_between_steps(ax,
-                    model_wl/1.E+04,
-                    lower_flux[:], 
-                    upper_flux[:],
-                    step_where="mid",
-                    color = "blue", 
-                    linewidth=0,
-                    **kwargs)
-        else:
-            ax.fill_between(model_wl/1.E+04,
-                    lower_flux[:],
-                    upper_flux[:],
-                    facecolor = "blue", 
-                    linewidth=0,
-                    interpolate=True,
-                    **kwargs)
+            kwargs = {'alpha':0.7}
+            if (draw_steps):
+                ax.step(observation.data['wl']/1.E+04,
+                        observation.data['flux'],
+                        where="mid",
+                        color = "red",
+                        linewidth = 2.50,
+                        **kwargs
+                        )
+            else:
+                ax.plot(observation.data['wl']/1.E+04,
+                        observation.data['flux'],
+                        color = "red",
+                        linewidth = 2.50,
+                        **kwargs
+                        )
 
-        # Extract and plot full SED
-        if 'full sed wl' in hdulist and self.plot_full_SED:
-            indices = np.arange(len(probability))
-            wrand = WalkerRandomSampling(probability, keys=indices)
-            rand_indices = wrand.random(self.n_SED_to_plot)
-
-            z1 = (1.+self.observed_spectrum.data['redshift'])
-            wl_obs = hdulist['full sed wl'].data['wl'][0,:] * z1
-
-            for i in rand_indices:
-                SED = hdulist['full sed'].data[i,:] / z1
-
-                ax.plot(wl_obs, 
-                        flux_obs,
-                        color="black",
-                        ls="-",
-                        lw=0.5,
-                        alpha=0.5)
+            kwargs = { 'alpha': 0.3 }
+            if (draw_steps):
+                FillBetweenStep.fill_between_steps(ax,
+                        observation.data['wl']/1.E+04,
+                        observation.data['flux']-observation.data['fluxerr'],
+                        observation.data['flux']+observation.data['fluxerr'],
+                        step_where="mid",
+                        color = "red", 
+                        linewidth=0,
+                        interpolate=True,
+                        **kwargs)
+            else:
+                ax.fill_between(observation.data['wl']/1.E+04,
+                        observation.data['flux']-observation.data['fluxerr'],
+                        observation.data['flux']+observation.data['fluxerr'],
+                        facecolor = "red", 
+                        linewidth=0,
+                        interpolate=True,
+                        **kwargs)
 
 
-        kwargs = { 'alpha': 0.8 }
+            kwargs = { 'alpha': 0.7 }
+            if (draw_steps):
+                ax.step(model_wl/1.E+04,
+                        median_flux,
+                        where="mid",
+                        color = "blue",
+                        linewidth = 1.5,
+                        **kwargs
+                        )
+            else:
+                ax.plot(model_wl/1.E+04,
+                        median_flux,
+                        color = "blue",
+                        linewidth = 1.5,
+                        **kwargs
+                        )
 
-        autoscale.autoscale_y(ax)
+            kwargs = { 'alpha': 0.3 }
+            if (draw_steps):
+                FillBetweenStep.fill_between_steps(ax,
+                        model_wl/1.E+04,
+                        lower_flux[:], 
+                        upper_flux[:],
+                        step_where="mid",
+                        color = "blue", 
+                        linewidth=0,
+                        **kwargs)
+            else:
+                ax.fill_between(model_wl/1.E+04,
+                        lower_flux[:],
+                        upper_flux[:],
+                        facecolor = "blue", 
+                        linewidth=0,
+                        interpolate=True,
+                        **kwargs)
+
+            # Extract and plot full SED
+            if 'full sed wl' in hdulist and self.plot_full_SED:
+                indices = np.arange(len(probability))
+                wrand = WalkerRandomSampling(probability, keys=indices)
+                rand_indices = wrand.random(self.n_SED_to_plot)
+
+                z1 = (1.+self.observed_spectrum.data['redshift'])
+                wl_obs = hdulist['full sed wl'].data['wl'][0,:] * z1
+
+                for i in rand_indices:
+                    SED = hdulist['full sed'].data[i,:] / z1
+
+                    ax.plot(wl_obs, 
+                            flux_obs,
+                            color="black",
+                            ls="-",
+                            lw=0.5,
+                            alpha=0.5)
+
+
+            kwargs = { 'alpha': 0.8 }
+
+            #autoscale.autoscale_y(ax)
 
         # Title of the plot is the object ID
         if print_title: plt.title(str(ID))
 
-        # Location of printed text
-        x0, x1 = ax.get_xlim()
-        x = x0 + (x1-x0)*0.03
-        y0, y1 = ax.get_ylim()
-        ax.set_ylim([0.,y1])
-        y = y1 - (y1-y0)*0.10
+        for ax in axs:
 
-
-        # Label emission lines
-        if self.plot_line_labels:
+            # Location of printed text
             x0, x1 = ax.get_xlim()
-            n = 3
-            i = 0
-            prev_x = 0.
-            for key, label in self.line_labels.iteritems():
-                x = label["wl"]/1.E+04 * (1.+self.observed_spectrum.data['redshift'])
-                if x < x0 or x > x1:
-                    continue
-                if self.resolution is not None:
-                    if abs(x-prev_x) < (x/self.resolution):
+            x = x0 + (x1-x0)*0.03
+            y0, y1 = ax.get_ylim()
+            ax.set_ylim([0.,y1])
+            y = y1 - (y1-y0)*0.10
+
+
+            # Label emission lines
+            if self.plot_line_labels:
+                x0, x1 = ax.get_xlim()
+                n = 3
+                i = 0
+                prev_x = 0.
+                for key, label in self.line_labels.iteritems():
+                    x = label["wl"]/1.E+04 * (1.+self.observed_spectrum.data['redshift'])
+                    if x < x0 or x > x1:
                         continue
-                if i >= n:
-                    i=0
-                prev_x = x
-                y0, y1 = ax.get_ylim() ; dy = y1-y0
-                y = y1 - dy*0.05 - dy*0.025*i
-                ax.text(x, y, 
-                        label["label"], 
-                        fontsize=7, 
-                        rotation=45,
-                        ha='center')
+                    if self.resolution is not None:
+                        if abs(x-prev_x) < (x/self.resolution):
+                            continue
+                    if i >= n:
+                        i=0
+                    prev_x = x
+                    y0, y1 = ax.get_ylim() ; dy = y1-y0
+                    y = y1 - dy*0.05 - dy*0.025*i
+                    ax.text(x, y, 
+                            label["label"], 
+                            fontsize=7, 
+                            rotation=45,
+                            ha='center')
 
-                y -= dy*0.025
-                ax.plot([x,x], [y,0.], 
-                        ls="--",
-                        lw=0.2,
-                        color="black",
-                        zorder=0)
-                i+=1
+                    y -= dy*0.025
+                    ax.plot([x,x], [y,0.], 
+                            ls="--",
+                            lw=0.2,
+                            color="black",
+                            zorder=0)
+                    i+=1
 
 
-        if print_text:
+            if print_text:
 
-            # Print the evidence
-            try:
-                ax.text(x, y, "$\log(Z)=" + "{:.2f}".format(self.logEvidence) + "$", fontsize=10 )
-            except AttributeError:
-                print "ciao"
+                # Print the evidence
+                try:
+                    ax.text(x, y, "$\log(Z)=" + "{:.2f}".format(self.logEvidence) + "$", fontsize=10 )
+                except AttributeError:
+                    print "ciao"
 
-            # Print the average reduced chi-square
-            try:
-                aver_chi_square = self.PPC.data['aver_chi_square'][self.PPC.data['ID'] == ID]
-                y = y1 - (y1-y0)*0.15
-                ax.text(x, y, "$\langle\chi^2\\rangle=" + "{:.2f}".format(aver_chi_square) + "$", fontsize=10 )
-            except AttributeError:
-                print "`PosteriorPredictiveChecks` not computed/loaded, hence " \
-                "<chi^2> for the object `" + str(ID) + "` is not available"
+                # Print the average reduced chi-square
+                try:
+                    aver_chi_square = self.PPC.data['aver_chi_square'][self.PPC.data['ID'] == ID]
+                    y = y1 - (y1-y0)*0.15
+                    ax.text(x, y, "$\langle\chi^2\\rangle=" + "{:.2f}".format(aver_chi_square) + "$", fontsize=10 )
+                except AttributeError:
+                    print "`PosteriorPredictiveChecks` not computed/loaded, hence " \
+                    "<chi^2> for the object `" + str(ID) + "` is not available"
 
-            try:
-                aver_red_chi_square = self.PPC.data['aver_red_chi_square'][self.PPC.data['ID'] == ID]
-                n_data = self.PPC.data['n_used_bands'][self.PPC.data['ID'] == ID]
-                y = y1 - (y1-y0)*0.20
-                ax.text(x, y,
-                        "$\langle\chi^2/(\\textnormal{N}_\\textnormal{data}-1)\\rangle=" \
-                        + "{:.2f}".format(aver_red_chi_square) + "\; \
-                        (\\textnormal{N}_\\textnormal{data}=" + \
-                        "{:d}".format(n_data) + ")" + "$", fontsize=10 )
-            except AttributeError:
-                print "`PosteriorPredictiveChecks` not computed/loaded, hence " \
-                "<chi^2_red> for the object `" + str(ID) + "` is not available"
+                try:
+                    aver_red_chi_square = self.PPC.data['aver_red_chi_square'][self.PPC.data['ID'] == ID]
+                    n_data = self.PPC.data['n_used_bands'][self.PPC.data['ID'] == ID]
+                    y = y1 - (y1-y0)*0.20
+                    ax.text(x, y,
+                            "$\langle\chi^2/(\\textnormal{N}_\\textnormal{data}-1)\\rangle=" \
+                            + "{:.2f}".format(aver_red_chi_square) + "\; \
+                            (\\textnormal{N}_\\textnormal{data}=" + \
+                            "{:d}".format(n_data) + ")" + "$", fontsize=10 )
+                except AttributeError:
+                    print "`PosteriorPredictiveChecks` not computed/loaded, hence " \
+                    "<chi^2_red> for the object `" + str(ID) + "` is not available"
 
-        if y0 < 0.: plt.plot( [x0,x1], [0.,0.], color='gray', lw=1.0 )
+            if y0 < 0.: plt.plot( [x0,x1], [0.,0.], color='gray', lw=1.0 )
 
         name = prepare_plot_saving(plot_name)
 

@@ -105,7 +105,10 @@ class ObservedCatalogue(object):
 
 class Photometry:
 
-    def __init__(self, key='ID', x_log=False, plot_single_solution=None):
+    def __init__(self, key='ID', 
+            x_log=False, 
+            plot_single_solution=None,
+            plot_full_SED=False):
 
         self.filters = PhotometricFilters()
 
@@ -123,6 +126,8 @@ class Photometry:
         
         self.x_log = x_log
 
+        self.plot_full_SED = plot_full_SED
+
         self.single_solutions = None
         if plot_single_solution is not None:
             self.single_solutions = OrderedDict()
@@ -132,7 +137,7 @@ class Photometry:
 
     def plot_marginal(self, ID, max_interval=99.7, 
             print_text=False, print_title=False, replot=False, show=False, units='nanoJy',
-            plot_full_SED=False, SED_prob_log_scale=False, n_SED_to_plot=10):
+            SED_prob_log_scale=False, n_SED_to_plot=10):
         """ 
         Plot the fluxes predicted by BEAGLE.
 
@@ -292,7 +297,7 @@ class Photometry:
 
 
         # Plot the full SED
-        if 'full sed wl' in hdulist and plot_full_SED:
+        if 'full sed wl' in hdulist and self.plot_full_SED:
             wl = hdulist['full sed wl'].data['wl'][0,:]
             redshifts = hdulist['galaxy properties'].data['redshift']
 

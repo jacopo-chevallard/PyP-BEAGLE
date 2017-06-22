@@ -88,6 +88,13 @@ def standard_parser():
         )
 
     parser.add_argument(
+        '--print-ID',
+        help="Print object ID on top of plots",
+        action="store_true", 
+        dest="print_ID" 
+        )
+
+    parser.add_argument(
         '--plot-full-SED',
         help="Overplot the full resolution model SED.",
         action="store_true", 
@@ -102,6 +109,17 @@ def standard_parser():
         nargs='+',
         dest="wl_range" 
         )
+
+    parser.add_argument(
+        '--wl-units',
+        help="Wavelength units.",
+        action="store",
+        type=str,
+        dest="wl_units",
+        choices=['ang', 'nm', 'micron'],
+        default='micron'
+        )
+
 
     parser.add_argument(
         '--spectral-resolution',

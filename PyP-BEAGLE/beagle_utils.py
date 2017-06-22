@@ -391,6 +391,9 @@ def match_ID(ID_list_1, ID_list_2, sorted=False, ignore_string=None):
             # Sort the two arrays and get the indices
             sort_long = np.argsort(ID_long)
             sort_short = np.argsort(ID_short)
+    else:
+        ID_long = np.array(ID_long, dtype=str)
+        ID_short = np.array(ID_short, dtype=str)
 
     match_indx_long = np.full(n_long, -1, dtype=np.int)
     match_indx_short = np.full(n_short, -1, dtype=np.int)

@@ -108,7 +108,7 @@ def main():
             summary_catalogue.compute(file_list)
         summary_catalogue.load()
 
-        mock_catalogue.plot_input_param_distribution()
+        #mock_catalogue.plot_input_param_distribution()
         mock_catalogue.compare_hist(summary_catalogue, overwrite=True)
         mock_catalogue.compare(summary_catalogue, overwrite=True)
 
@@ -120,7 +120,8 @@ def main():
         # Initialize an instance of the main "Photometry" class
         my_photometry = Photometry(key=args.ID_key, 
                 x_log=args.plot_log_wl, 
-                plot_single_solution=args.plot_single_solution)
+                plot_single_solution=args.plot_single_solution,
+                plot_full_SED=args.plot_full_SED)
 
         # We can load a set of photometric filters
         filters_file = os.path.expandvars(config.get('main', 'FILTERS FILE'))
@@ -141,7 +142,9 @@ def main():
                 plot_full_SED=args.plot_full_SED,
                 wl_range=args.wl_range,
                 plot_line_labels=args.plot_line_labels, 
-                mock_catalogue=mock_catalogue)
+                mock_catalogue=mock_catalogue,
+                print_ID=args.print_ID,
+                wl_units=args.wl_units)
 
         my_spectrum.observed_spectrum.configure(config=config)
 

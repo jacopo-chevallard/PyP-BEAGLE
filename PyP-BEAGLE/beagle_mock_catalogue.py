@@ -89,7 +89,8 @@ class BeagleMockCatalogue(object):
             file_name=None,
             ignore_string=None, 
             overwrite_plots=True,
-            plot_title=False):
+            plot_title=None,
+            n_bins=10):
 
         # Names of parameters, used to label the axes, whether they are log or
         # not, and possibly the extension name and column name containing the
@@ -105,6 +106,9 @@ class BeagleMockCatalogue(object):
 
         self.overwrite_plots = overwrite_plots
 
+        self.n_bins = n_bins
+
+        self.plot_title = None
         if plot_title is not None:
             self.plot_title = plot_title
             if rcParams['text.usetex']:
@@ -255,7 +259,6 @@ class BeagleMockCatalogue(object):
         self.data = new_hdu.data
 
     def compare_hist(self, summary_catalogue,
-            bins=20,
             class_indices=None,
             class_colors=None,
             plot_name=None,
@@ -365,7 +368,12 @@ class BeagleMockCatalogue(object):
                 idx = [j for j, item in enumerate(indx1) if item in ind_set]
                 indx = idx
                 #print "indx: ", indx
-                range = np.percentile(diff[idx], (0.5*(100.-percentile), 100.-0.5*(100.-percentile)))
+
+                if 'diff_range' in self.adjust_params[param]:
+                    range = self.adjust_params[param]['diff_range']
+                else:
+                    range = np.percentile(diff[idx], (0.5*(100.-percentile), 100.-0.5*(100.-percentile)))
+
                 if class_colors is None:
                     color = None
                 else:
@@ -378,10 +386,10 @@ class BeagleMockCatalogue(object):
                 diff_disp.append(dispersion)
 
                 ax.hist(diff[idx],
-                    bins=bins,
+                    bins=self.n_bins,
                     range=range,
                     color=color,
-                    lw='',
+                    lw=0,
                     **kwargs)
 
                 ax.text(0.1+i*0.25, 1.05, "$\sigma=" + "{:.3f}".format(dispersion) + "$", 
@@ -710,16 +718,16 @@ class BeagleMockCatalogue(object):
         plt.close(fig)
 
 
-    def plot_input_param_distribution(self):
+    def plot_input_param_distribution(self, savefig=True):
 
         n_par = len(self.adjust_params)
         fig, axs = plt.subplots(n_par, n_par)
-        fig.subplots_adjust(left=0.08, bottom=0.08, hspace=0.4)
+        fig.subplots_adjust(left=0.08, bottom=0.08, hspace=0.2)
         fontsize = 8
         axes_linewidth = 0.7
         color = "grey"
 
-        bins = 20
+        last = n_par-1
 
         for i, (keyX, valueX) in enumerate(self.adjust_params.iteritems()):
 
@@ -768,7 +776,7 @@ class BeagleMockCatalogue(object):
                 elif i == j:
 
                     ax.hist(valuesX,
-                        bins=bins,
+                        bins=self.n_bins,
                         lw=0,
                         color=color)
 
@@ -785,11 +793,50 @@ class BeagleMockCatalogue(object):
                     #ax.set_xlim(rangeY)
                     #ax.set_ylim(rangeX)
 
-                if j == 0:
+                if i == j:
+                    ax.yaxis.tick_right()
+                    if i == 0:
+                        ax.set_xticklabels(('',))
+                        ax.set_ylabel(xlabel)
+                    elif i == last:
+                        ax.set_xlabel(ylabel)
+                    else:
+                        ax.set_xticklabels(('',))
+                elif j == 0:
                     ax.set_ylabel(xlabel)
-
-                if i == (n_par-1):
+                    if i != last:
+                        ax.set_xticklabels(('',))
+                elif i == last:
                     ax.set_xlabel(ylabel)
+                    ax.set_yticklabels(('',))
+                else:
+                    ax.set_xticklabels(('',))
+                    ax.set_yticklabels(('',))
+
+
+                #if i == last:
+                #    ax.set_xlabel(ylabel)
+                #    if j != 0 and j != last:
+                #        ax.set_yticklabels(('',))
+                #    elif j == last:
+                #        ax.yaxis.tick_right()
+
+                #ax.set_ylabel('j ' + str(j) + 'i ' + str(i) )
+                #if i == 0:
+
+                #if j != 0 and i != (n_par-1) and i != j:
+                #    ax.set_xticklabels(('',))
+                #    ax.set_yticklabels(('',))
+
+                #if i == j and i != 0 and i != (n_par-1):
+                #    if j != 0:
+                #        ax.set_xticklabels(('',))
+
+                #if j == 0:
+                #    ax.set_ylabel(xlabel)
+                #    if i != 0:
+                #            ax.set_xticklabels(('',))
+
 
                 for item in ([ax.title, ax.xaxis.label, ax.yaxis.label] +
                              ax.get_xticklabels() + ax.get_yticklabels()):
@@ -818,13 +865,17 @@ class BeagleMockCatalogue(object):
         if self.plot_title is not None:
             fig.suptitle(self.plot_title)
 
-        plot_name = "BEAGLE_mock_input_params_distribution.pdf"
-        name = prepare_plot_saving(plot_name, overwrite=self.overwrite_plots)
+        if savefig:
 
-        #plt.tight_layout()
+            plot_name = "BEAGLE_mock_input_params_distribution.pdf"
+            name = prepare_plot_saving(plot_name, overwrite=self.overwrite_plots)
 
-        fig.savefig(name, dpi=None, facecolor='w', edgecolor='w',
-                orientation='portrait', papertype='a4', format="pdf",
-                transparent=False, bbox_inches="tight", pad_inches=0.1)
+            #plt.tight_layout()
+
+            fig.savefig(name, dpi=None, facecolor='w', edgecolor='w',
+                    orientation='portrait', papertype='a4', format="pdf",
+                    transparent=False, bbox_inches="tight", pad_inches=0.1)
 
         plt.close(fig)
+
+        return fig, axs

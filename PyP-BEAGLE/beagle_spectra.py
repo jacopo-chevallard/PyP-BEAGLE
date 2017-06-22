@@ -159,7 +159,9 @@ class Spectrum(object):
             resolution=None,
             mock_catalogue=None,
             wl_range=None,
+            wl_units='micron',
             plot_full_SED=False,
+            print_ID=False,
             n_SED_to_plot=100):
 
         self.observed_spectrum = ObservedSpectrum()
@@ -185,7 +187,11 @@ class Spectrum(object):
     
         self.wl_range = wl_range
 
+        self.wl_units = wl_units
+
         self.plot_full_SED = plot_full_SED
+
+        self.print_ID = print_ID
 
         self.n_SED_to_plot = n_SED_to_plot
 
@@ -193,7 +199,6 @@ class Spectrum(object):
             observation_name=None,
             max_interval=95.0,
             print_text=False, 
-            print_title=False, 
             draw_steps=False, 
             replot=False):    
         """ 
@@ -220,6 +225,19 @@ class Spectrum(object):
         print_text : bool, optional
             Whether to print the object ID on the top of the plot.
         """
+
+        # Factor to convert angstrom to input units
+        if self.wl_units == 'micron':
+            wl_factor = 1.E+04
+            xlabel = "\mu\\textnormal{m}"
+        elif self.wl_units == 'nm':
+            wl_factor = 1.E+01
+            xlabel = "\\textnormal{nm}"
+        elif self.wl_units == 'ang':
+            wl_factor = 1.
+            xlabel = "\\textnormal{\\AA}"
+        else:
+            raise ValueError("Wavelength units `" + self.wl_units + "` not recognised!")
 
         # If needed load the observed spectrum
         if observation_name is not None:
@@ -309,7 +327,7 @@ class Spectrum(object):
             dwl = observation.data['wl'][-1]-observation.data['wl'][0]
             wl_low = observation.data['wl'][0] - dwl*0.025
             wl_up = observation.data['wl'][-1] + dwl*0.025
-            ax.set_xlim([wl_low/1.E+04, wl_up/1.E+04])
+            ax.set_xlim([wl_low/wl_factor, wl_up/wl_factor])
             axs.append(ax)
         else:
             if len(self.wl_range) == 2:
@@ -364,17 +382,21 @@ class Spectrum(object):
                 set_plot_ticks(ax)
 
         # Define plotting styles
-        fig.text(0.5, 0.02, "$\lambda / \mu\\textnormal{m}$ (observed-frame)", ha='center')
+        fig.text(0.5, 0.02, "$\lambda / " + xlabel + "$ (observed-frame)", ha='center')
         fig.text(0.04, 0.5, "$F_{\\lambda} / (\\textnormal{erg} \, \
                 \\textnormal{s}^{-1} \, \\textnormal{cm}^{-2} \, \
                 \\textnormal{\AA}^{-1})$", va='center', rotation='vertical')
 
+        # Title of the plot is the object ID
+        if self.print_ID: 
+            #fig.text(0.5, 0.95, str(ID).split('_')[0].strip(), ha='center', va='top')
+            plt.suptitle(str(ID).split('_')[0].strip())
 
         for ax in axs:
 
             kwargs = {'alpha':0.7}
             if (draw_steps):
-                ax.step(observation.data['wl']/1.E+04,
+                ax.step(observation.data['wl']/wl_factor,
                         observation.data['flux'],
                         where="mid",
                         color = "red",
@@ -382,7 +404,7 @@ class Spectrum(object):
                         **kwargs
                         )
             else:
-                ax.plot(observation.data['wl']/1.E+04,
+                ax.plot(observation.data['wl']/wl_factor,
                         observation.data['flux'],
                         color = "red",
                         linewidth = 2.50,
@@ -392,7 +414,7 @@ class Spectrum(object):
             kwargs = { 'alpha': 0.3 }
             if (draw_steps):
                 FillBetweenStep.fill_between_steps(ax,
-                        observation.data['wl']/1.E+04,
+                        observation.data['wl']/wl_factor,
                         observation.data['flux']-observation.data['fluxerr'],
                         observation.data['flux']+observation.data['fluxerr'],
                         step_where="mid",
@@ -401,7 +423,7 @@ class Spectrum(object):
                         interpolate=True,
                         **kwargs)
             else:
-                ax.fill_between(observation.data['wl']/1.E+04,
+                ax.fill_between(observation.data['wl']/wl_factor,
                         observation.data['flux']-observation.data['fluxerr'],
                         observation.data['flux']+observation.data['fluxerr'],
                         facecolor = "red", 
@@ -412,7 +434,7 @@ class Spectrum(object):
 
             kwargs = { 'alpha': 0.7 }
             if (draw_steps):
-                ax.step(model_wl/1.E+04,
+                ax.step(model_wl/wl_factor,
                         median_flux,
                         where="mid",
                         color = "blue",
@@ -420,7 +442,7 @@ class Spectrum(object):
                         **kwargs
                         )
             else:
-                ax.plot(model_wl/1.E+04,
+                ax.plot(model_wl/wl_factor,
                         median_flux,
                         color = "blue",
                         linewidth = 1.5,
@@ -430,7 +452,7 @@ class Spectrum(object):
             kwargs = { 'alpha': 0.3 }
             if (draw_steps):
                 FillBetweenStep.fill_between_steps(ax,
-                        model_wl/1.E+04,
+                        model_wl/wl_factor,
                         lower_flux[:], 
                         upper_flux[:],
                         step_where="mid",
@@ -438,7 +460,7 @@ class Spectrum(object):
                         linewidth=0,
                         **kwargs)
             else:
-                ax.fill_between(model_wl/1.E+04,
+                ax.fill_between(model_wl/wl_factor,
                         lower_flux[:],
                         upper_flux[:],
                         facecolor = "blue", 
@@ -470,9 +492,6 @@ class Spectrum(object):
 
             #autoscale.autoscale_y(ax)
 
-        # Title of the plot is the object ID
-        if print_title: plt.title(str(ID))
-
         for ax in axs:
 
             # Location of printed text
@@ -490,7 +509,7 @@ class Spectrum(object):
                 i = 0
                 prev_x = 0.
                 for key, label in self.line_labels.iteritems():
-                    x = label["wl"]/1.E+04 * (1.+self.observed_spectrum.data['redshift'])
+                    x = label["wl"]/wl_factor * (1.+self.observed_spectrum.data['redshift'])
                     if x < x0 or x > x1:
                         continue
                     if self.resolution is not None:

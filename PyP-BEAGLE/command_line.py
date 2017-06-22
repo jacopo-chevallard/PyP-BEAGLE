@@ -79,6 +79,15 @@ def main():
     file_list, IDs = get_files_list()
     if len(file_list) == 0:
         raise ValueError("No Beagle results files are present in the directory " + BeagleDirectories.results_dir)
+
+    if args.ID_list is not None:
+        IDs_ = IDs
+        file_list_ = file_list
+        for ID, file in zip(IDs_, file_list_):
+            if not ID in args.ID_list:
+                IDs.remove(ID)
+                file_list.remove(file)
+
     regex = re.compile(r"_MC\w+", re.IGNORECASE)
 
     # Load mock catalogue

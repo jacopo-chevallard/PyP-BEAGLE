@@ -41,6 +41,15 @@ def standard_parser():
     )
 
     parser.add_argument(
+        '--ID-list',
+        help="List of object IDs to post-process",
+        action="store", 
+        type=str, 
+        nargs='+',
+        dest="ID_list"
+    )
+
+    parser.add_argument(
         '--json-triangle',
         help="JSON file used for the triangle plots.",
         action="store", 

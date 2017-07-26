@@ -200,10 +200,16 @@ class Photometry:
         hdulist = fits.open(fits_file)
 
         # Consider only the extension containing the predicted model fluxes
-        model_sed = hdulist['marginal photometry']
+        old_API = False
+        try:
+            model_sed = hdulist['marginal photometry']
+            old_API = True
+        except:
+            model_sed = hdulist['apparent magnitudes']
+
         probability = hdulist['posterior pdf'].data['probability']
 
-        n_bands = len(model_sed.columns.names)
+        n_bands = len(obs_flux)
         median_flux = np.zeros(n_bands)
         pdf_norm = np.zeros(n_bands)
         _max_y = np.zeros(n_bands)
@@ -233,8 +239,14 @@ class Photometry:
 
         kwargs = {'color':'tomato', 'alpha':0.7, 'edgecolor':'black', 'linewidth':0.2}
 
-        for i, band_name in enumerate((self.filters.data['label'][sor])):
-            xdata = model_sed.data['_'+band_name+'_'] / nanoJy
+        for i in range(n_bands):
+
+            if old_API:
+                band_name = self.filters.data['label'][sor[i]]
+                xdata = model_sed.data['_'+band_name+'_'] / nanoJy
+            else:
+                band_name = self.filters.data['name'][sor[i]] + "_APP"
+                xdata = 10.**(0.4*(8.9-model_sed.data[band_name])) / 1.E-09
 
             min_x = np.min(xdata)
             max_x = np.max(xdata)

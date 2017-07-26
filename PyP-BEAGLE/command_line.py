@@ -80,15 +80,22 @@ def main():
     if len(file_list) == 0:
         raise ValueError("No Beagle results files are present in the directory " + BeagleDirectories.results_dir)
 
+    regex = None
+    if args.regex_ignore is not None:
+        #regex = re.compile(r"_MC\w+", re.IGNORECASE)
+        regex = re.compile(args.regex_ignore, re.IGNORECASE)
+
     if args.ID_list is not None:
         IDs_ = IDs
         file_list_ = file_list
         for ID, file in zip(IDs_, file_list_):
-            if not ID in args.ID_list:
+            if regex is not None:
+                ID_ = regex.sub('', ID)
+            else:
+                ID_ = ID
+            if not ID_ in args.ID_list:
                 IDs.remove(ID)
                 file_list.remove(file)
-
-    regex = re.compile(r"_MC\w+", re.IGNORECASE)
 
     # Load mock catalogue
     mock_catalogue = None
@@ -133,8 +140,16 @@ def main():
                 plot_full_SED=args.plot_full_SED)
 
         # We can load a set of photometric filters
-        filters_file = os.path.expandvars(config.get('main', 'FILTERS FILE'))
-        my_photometry.filters.load(filters_file)
+        try:
+            filters_file = os.path.expandvars(config.get('main', 'FILTERS FILE'))
+            filters_throughputs = None
+        except:
+            filters_file = os.path.expandvars(config.get('main', 'FILTERS CONFIGURATION'))
+            filters_throughputs = os.path.expandvars(config.get('main', 'FILTERS THROUGHPUTS'))
+
+        my_photometry.filters.load(filters_file, 
+                filters_folder=args.filters_folder, 
+                filters_throughputs=filters_throughputs)
 
         # Load observed photometric catalogue
         file_name = os.path.expandvars(config.get('main', 'PHOTOMETRIC CATALOGUE'))
@@ -150,6 +165,7 @@ def main():
                 resolution=args.resolution, 
                 plot_full_SED=args.plot_full_SED,
                 wl_range=args.wl_range,
+                line_labels_json=args.line_labels_json,
                 plot_line_labels=args.plot_line_labels, 
                 mock_catalogue=mock_catalogue,
                 print_ID=args.print_ID,
@@ -172,8 +188,14 @@ def main():
         file_names = list()
 
         for ID in IDs:
+            ID_ = ID
+            if regex is not None:
+                ID_ = regex.sub('', ID_)
             for line in lines:
-                if ID in line:
+                line_ = os.path.basename(line).split('.')[0]
+                if regex is not None:
+                    line_ = regex.sub('', line_)
+                if ID_ == line_:
                     file_names.append(line)
                     break
 

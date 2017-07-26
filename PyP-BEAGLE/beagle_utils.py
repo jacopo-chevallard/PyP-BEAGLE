@@ -23,7 +23,7 @@ def is_integer(s):
 
 def is_FITS_file(file_name):
 
-    fits_ext = ('fits', 'fits')
+    fits_ext = ('.fits', '.fits')
     arch_ext = ('', '.gz', '.z', '.zip')
     name = file_name.lower()
     for fExt in fits_ext:
@@ -31,6 +31,19 @@ def is_FITS_file(file_name):
             suffix = fExt + aExt
             if name.endswith(suffix):
                 return True
+
+    return False
+
+def trimFitsSuffix(file_name):
+
+    fits_ext = ['.fits', '.fits']
+    arch_ext = ['', '.gz', '.z', '.zip']
+    name = file_name
+    for fExt in fits_ext:
+        for aExt in arch_ext:
+            suffix = fExt + aExt
+            if name.endswith(suffix):
+                return name.split(suffix)[0]
 
     return False
             
@@ -305,7 +318,7 @@ def set_font_size(ax, fontsize):
         item.set_fontsize(fontsize)
 
 
-def set_plot_ticks(ax, n_x=4, n_y=4, prune_x=None, prune_y=None):
+def set_plot_ticks(ax, which='both', n_x=4, n_y=4, prune_x=None, prune_y=None):
     """ 
     Set the major and minor ticks of plots.
 
@@ -329,17 +342,19 @@ def set_plot_ticks(ax, n_x=4, n_y=4, prune_x=None, prune_y=None):
         edge ticks on the y-axis.
     """ 
 
-    ax.xaxis.major_locations = plticker.MaxNLocator(nbins=n_x, prune=prune_x) 
-    ax.xaxis.set_major_locator(ax.xaxis.major_locations)
+    if which.lower() == 'both' or which.lower() == 'x':
+        ax.xaxis.major_locations = plticker.MaxNLocator(nbins=n_x, prune=prune_x) 
+        ax.xaxis.set_major_locator(ax.xaxis.major_locations)
 
-    ax.xaxis.minor_locations = plticker.AutoMinorLocator(2)
-    ax.xaxis.set_minor_locator(ax.xaxis.minor_locations)
+        ax.xaxis.minor_locations = plticker.AutoMinorLocator(2)
+        ax.xaxis.set_minor_locator(ax.xaxis.minor_locations)
 
-    ax.yaxis.major_locations = plticker.MaxNLocator(nbins=n_y, prune=prune_y) 
-    ax.yaxis.set_major_locator(ax.yaxis.major_locations)
+    if which.lower() == 'both' or which.lower() == 'y':
+        ax.yaxis.major_locations = plticker.MaxNLocator(nbins=n_y, prune=prune_y) 
+        ax.yaxis.set_major_locator(ax.yaxis.major_locations)
 
-    ax.yaxis.minor_locations = plticker.AutoMinorLocator(2)
-    ax.yaxis.set_minor_locator(ax.yaxis.minor_locations)
+        ax.yaxis.minor_locations = plticker.AutoMinorLocator(2)
+        ax.yaxis.set_minor_locator(ax.yaxis.minor_locations)
 
 def match_ID(ID_list_1, ID_list_2, sorted=False, ignore_string=None):
     """ 

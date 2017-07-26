@@ -17,6 +17,7 @@ from matplotlib import rcParams
 from astropy.io import ascii
 from astropy.io import fits
 
+import set_shared_labels as shLab
 import sys
 import dependencies.WeightedKDE as WeightedKDE
 import dependencies.autoscale as autoscale
@@ -72,7 +73,7 @@ class ObservedSpectrum(object):
                 "fluxerr"   : {"colName" : None},  
                 "sky"       : {"colName" : None},  
                 "mask"      : {"colName" : None},  
-                "redshift"  : {"keyword" : None},  
+                "redshift"  : {"keyword" : "redshift"},  
                 "min_rel_err" : None,  
                 }
 
@@ -162,6 +163,9 @@ class Spectrum(object):
             wl_units='micron',
             plot_full_SED=False,
             print_ID=False,
+            wl_rest=False,
+            log_flux=False,
+            show_residual=False,
             n_SED_to_plot=100):
 
         self.observed_spectrum = ObservedSpectrum()
@@ -189,7 +193,13 @@ class Spectrum(object):
 
         self.wl_units = wl_units
 
+        self.wl_rest = wl_rest
+
+        self.log_flux = log_flux
+
         self.plot_full_SED = plot_full_SED
+
+        self.show_residual = show_residual
 
         self.print_ID = print_ID
 
@@ -244,7 +254,10 @@ class Spectrum(object):
             self.observed_spectrum.load(observation_name)
     
         # Name of the output plot
-        plot_name = str(ID) + '_BEAGLE_marginal_SED_spec.pdf'
+        if self.wl_rest:
+            plot_name = str(ID) + '_BEAGLE_marginal_SED_spec_rest_wl.pdf'
+        else:
+            plot_name = str(ID) + '_BEAGLE_marginal_SED_spec.pdf'
 
         # Check if the plot already exists
         if plot_exists(plot_name) and not replot:
@@ -321,12 +334,27 @@ class Spectrum(object):
     
         # Set the plot limits from the minimum and maximum wl_eff
         axs = list()
+        z1 = (1.+observation.data['redshift'])
+        if self.wl_rest:
+            data_wl = observation.data['wl'] / z1
+            data_flux = observation.data['flux'] * z1
+            data_flux_err = observation.data['fluxerr'] * z1
+
+            model_wl /= z1
+            median_flux *= z1
+            lower_flux *= z1
+            upper_flux *= z1
+        else:
+            data_wl = observation.data['wl']
+            data_flux = observation.data['flux']
+            data_flux_err = observation.data['fluxerr']
+
         if self.wl_range is None:
             fig = plt.figure()
             ax = fig.add_subplot(1, 1, 1)
-            dwl = observation.data['wl'][-1]-observation.data['wl'][0]
-            wl_low = observation.data['wl'][0] - dwl*0.025
-            wl_up = observation.data['wl'][-1] + dwl*0.025
+            dwl = data_wl[-1]-data_wl[0]
+            wl_low = data_wl[0] - dwl*0.025
+            wl_up = data_wl[-1] + dwl*0.025
             ax.set_xlim([wl_low/wl_factor, wl_up/wl_factor])
             axs.append(ax)
         else:
@@ -372,20 +400,39 @@ class Spectrum(object):
 
                     wl_l = wl_r
 
+        which = 'both'
         for ax in axs:
             ax.set_ylim([0., 1.2*np.amax(median_flux[np.isfinite(median_flux)])])
+            if self.log_flux:
+                ax.set_yscale('log')
+                which = 'x'
 
             # Set better location of tick marks
-            if len(axs) > 1:
-                set_plot_ticks(ax, prune_x='both')
+            if self.wl_range is not None:
+                set_plot_ticks(ax, which=which, prune_x='both', n_x=3)
+                for ax in axs:
+                    #ax.set_xticklabels(ax.xaxis.get_majorticklabels(), rotation=-45, rotation_mode="anchor", ha='left')
+                    for tick in ax.get_xticklabels():
+                        tick.set_rotation(45)
             else:
-                set_plot_ticks(ax)
+                set_plot_ticks(ax, which=which)
 
         # Define plotting styles
-        fig.text(0.5, 0.02, "$\lambda / " + xlabel + "$ (observed-frame)", ha='center')
-        fig.text(0.04, 0.5, "$F_{\\lambda} / (\\textnormal{erg} \, \
+        xlabel = "$\lambda / " + xlabel + "$ (observed-frame)"
+
+        ylabel = "$F_{\\lambda} / (\\textnormal{erg} \, \
                 \\textnormal{s}^{-1} \, \\textnormal{cm}^{-2} \, \
-                \\textnormal{\AA}^{-1})$", va='center', rotation='vertical')
+                \\textnormal{\AA}^{-1})$"
+
+        if self.wl_range is not None:
+            fig.text(0.5, -0.02, xlabel, ha='center')
+        else:
+            fig.text(0.5, 0.02, xlabel, ha='center')
+
+        if self.log_flux:
+            fig.text(0.01, 0.5, ylabel, va='center', rotation='vertical')
+        else:
+            fig.text(0.04, 0.5, ylabel, va='center', rotation='vertical')
 
         # Title of the plot is the object ID
         if self.print_ID: 
@@ -396,16 +443,16 @@ class Spectrum(object):
 
             kwargs = {'alpha':0.7}
             if (draw_steps):
-                ax.step(observation.data['wl']/wl_factor,
-                        observation.data['flux'],
+                ax.step(data_wl/wl_factor,
+                        data_flux,
                         where="mid",
                         color = "red",
                         linewidth = 2.50,
                         **kwargs
                         )
             else:
-                ax.plot(observation.data['wl']/wl_factor,
-                        observation.data['flux'],
+                ax.plot(data_wl/wl_factor,
+                        data_flux,
                         color = "red",
                         linewidth = 2.50,
                         **kwargs
@@ -414,18 +461,18 @@ class Spectrum(object):
             kwargs = { 'alpha': 0.3 }
             if (draw_steps):
                 FillBetweenStep.fill_between_steps(ax,
-                        observation.data['wl']/wl_factor,
-                        observation.data['flux']-observation.data['fluxerr'],
-                        observation.data['flux']+observation.data['fluxerr'],
+                        data_wl/wl_factor,
+                        data_flux-data_flux_err,
+                        data_flux+data_flux_err,
                         step_where="mid",
                         color = "red", 
                         linewidth=0,
                         interpolate=True,
                         **kwargs)
             else:
-                ax.fill_between(observation.data['wl']/wl_factor,
-                        observation.data['flux']-observation.data['fluxerr'],
-                        observation.data['flux']+observation.data['fluxerr'],
+                ax.fill_between(data_wl/wl_factor,
+                        data_flux-data_flux_err,
+                        data_flux+data_flux_err,
                         facecolor = "red", 
                         linewidth=0,
                         interpolate=True,
@@ -474,11 +521,18 @@ class Spectrum(object):
                 wrand = WalkerRandomSampling(probability, keys=indices)
                 rand_indices = wrand.random(self.n_SED_to_plot)
 
-                z1 = (1.+self.observed_spectrum.data['redshift'])
-                wl_obs = hdulist['full sed wl'].data['wl'][0,:] * z1
+                if args.wl_rest:
+                    wl_obs = hdulist['full sed wl'].data['wl'][0,:]
 
-                for i in rand_indices:
-                    SED = hdulist['full sed'].data[i,:] / z1
+                    for i in rand_indices:
+                        SED = hdulist['full sed'].data[i,:]
+                else:
+                    z1 = (1.+self.observed_spectrum.data['redshift'])
+                    wl_obs = hdulist['full sed wl'].data['wl'][0,:] * z1
+
+                    for i in rand_indices:
+                        SED = hdulist['full sed'].data[i,:] / z1
+
 
                     ax.plot(wl_obs, 
                             flux_obs,
@@ -509,7 +563,10 @@ class Spectrum(object):
                 i = 0
                 prev_x = 0.
                 for key, label in self.line_labels.iteritems():
-                    x = label["wl"]/wl_factor * (1.+self.observed_spectrum.data['redshift'])
+                    if args.wl_rest:
+                        x = label["wl"]/wl_factor
+                    else:
+                        x = label["wl"]/wl_factor * (1.+self.observed_spectrum.data['redshift'])
                     if x < x0 or x > x1:
                         continue
                     if self.resolution is not None:
@@ -566,6 +623,20 @@ class Spectrum(object):
                     "<chi^2_red> for the object `" + str(ID) + "` is not available"
 
             if y0 < 0.: plt.plot( [x0,x1], [0.,0.], color='gray', lw=1.0 )
+
+        #plt.tick_params(labelcolor='none', top='off', bottom='off', left='off', right='off')
+        #plt.xlabel(
+        #plt.ylabel("$F_{\\lambda} / (\\textnormal{erg} \, \
+        #        \\textnormal{s}^{-1} \, \\textnormal{cm}^{-2} \, \
+        #        \\textnormal{\AA}^{-1})$", va='center', rotation='vertical')
+
+        #fig.text(0.5, 0.02, , ha='center')
+        #fig.text(0.04, 0.5, 
+        #        \\textnormal{s}^{-1} \, \\textnormal{cm}^{-2} \, \
+        #        \\textnormal{\AA}^{-1})$", va='center', rotation='vertical')
+
+
+        #plt.tight_layout()
 
         name = prepare_plot_saving(plot_name)
 

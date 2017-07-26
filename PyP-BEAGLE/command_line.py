@@ -168,7 +168,9 @@ def main():
                 line_labels_json=args.line_labels_json,
                 plot_line_labels=args.plot_line_labels, 
                 mock_catalogue=mock_catalogue,
+                log_flux=args.plot_log_flux,
                 print_ID=args.print_ID,
+                wl_rest=args.wl_rest,
                 wl_units=args.wl_units)
 
         my_spectrum.observed_spectrum.configure(config=config)
@@ -192,7 +194,7 @@ def main():
             if regex is not None:
                 ID_ = regex.sub('', ID_)
             for line in lines:
-                line_ = os.path.basename(line).split('.')[0]
+                line_ = trimFitsSuffix(os.path.basename(line))
                 if regex is not None:
                     line_ = regex.sub('', line_)
                 if ID_ == line_:

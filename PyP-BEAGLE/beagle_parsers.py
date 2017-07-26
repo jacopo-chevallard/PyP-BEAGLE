@@ -84,6 +84,13 @@ def standard_parser():
         )
 
     parser.add_argument(
+        '--log-flux',
+        help="Plot logarithmic axis for flux.",
+        action="store_true", 
+        dest="plot_log_flux" 
+        )
+
+    parser.add_argument(
         '--log-wavelength',
         help="Plot logarithmic axis for wavelength.",
         action="store_true", 
@@ -129,11 +136,18 @@ def standard_parser():
 
     parser.add_argument(
         '--wl-range',
-        help="Wavelength range(s) (in micron) to plot.",
+        help="Wavelength range(s) to plot.",
         action="store",
         type=float,
         nargs='+',
         dest="wl_range" 
+        )
+
+    parser.add_argument(
+        '--wl-rest',
+        help="Plot spectra in the rest-frame (default is observed frame)",
+        action="store_true", 
+        dest="wl_rest" 
         )
 
     parser.add_argument(
@@ -145,7 +159,6 @@ def standard_parser():
         choices=['ang', 'nm', 'micron'],
         default='micron'
         )
-
 
     parser.add_argument(
         '--spectral-resolution',

@@ -75,6 +75,15 @@ def standard_parser():
         )
 
     parser.add_argument(
+        '--filters-folder',
+        help="Folder containing the filters curves.",
+        action="store", 
+        type=str,
+        dest="filters_folder",
+        default="$BEAGLE_FILTERS"
+        )
+
+    parser.add_argument(
         '--log-wavelength',
         help="Plot logarithmic axis for wavelength.",
         action="store_true", 
@@ -87,6 +96,14 @@ def standard_parser():
         action="store_true", 
         dest="plot_line_labels" 
         )
+
+    parser.add_argument(
+        '--json-line-labels',
+        help="JSON file containing the configuration for labelling emission lines.",
+        action="store", 
+        type=str, 
+        dest="line_labels_json"
+    )
 
     parser.add_argument(
         '--plot-title',
@@ -193,6 +210,14 @@ def standard_parser():
         type=str, 
         dest="ID_key",
         default="ID"
+    )
+
+    parser.add_argument(
+        '--ID-ignore-regex',
+        help="Regular expression to be used whan matching IDs",
+        action="store", 
+        type=str, 
+        dest="regex_ignore"
     )
 
     # Number of processors to use in the multi-processor parts of the analysis

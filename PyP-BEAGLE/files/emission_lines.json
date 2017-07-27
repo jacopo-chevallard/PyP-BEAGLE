@@ -5,27 +5,27 @@
     "label": "$\\textnormal{Ly}\\alpha$" 
   },
 
-"C3":{
+"C3_1907":{
  "wl": 1907.0,
  "label": "$\\textnormal{C}\\,\\textsc{iii}]$"
 },
 
-"Mg2":{
+"Mg2_2796":{
  "wl": 2796.0,
  "label": "$\\textnormal{Mg}\\,\\textsc{ii}$"
 },
 
-"O2":{
+"O2_3727":{
  "wl": 3727.0,
  "label": "$[\\textnormal{O}\\,\\textsc{ii}$"
 },
 
-"Ne3":{
+"Ne3_3869":{
  "wl": 3869.0,
  "label": "$[\\textnormal{Ne}\\,\\textsc{iii}]$"
 },
 
-"He1":{
+"He1_3889":{
  "wl": 3889.0,
  "label": "$\\textnormal{He}\\,\\textsc{i}$"
 },
@@ -35,7 +35,7 @@
  "label": "$\\textnormal{H}\\delta$"
 },
 
-"Fe2":{
+"Fe2_4300":{
  "wl": 4300.0,
  "label": "$\\textnormal{Fe}\\,\\textsc{ii}$"
 },
@@ -45,7 +45,7 @@
  "label": "$\\textnormal{H}\\gamma$"
 },
 
-"O3":{
+"O3_4363":{
  "wl": 4363.0,
  "label": "$[\\textnormal{O}\\,\\textsc{iii}]$"
 },
@@ -55,32 +55,32 @@
  "label": "$\\textnormal{H}\\beta$"
 },
 
-"O3":{
+"O3_4959":{
  "wl": 4959.0,
  "label": "$[\\textnormal{O}\\,\\textsc{iii}]$"
 },
 
-"O3":{
+"O3_5007":{
  "wl": 5007.0,
  "label": "$[\\textnormal{O}\\,\\textsc{iii}]$"
 },
 
-"He1":{
+"He1_5876":{
  "wl": 5876.0,
  "label": "$\\textnormal{He}\\,\\textsc{i}$"
 },
 
-"O1":{
+"O1_6300":{
  "wl": 6300.0,
  "label": "$[\\textnormal{O}\\,\\textsc{i}]$"
 },
 
-"S3":{
+"S3_6312":{
  "wl": 6312.0,
  "label": "$[\\textnormal{S}\\,\\textsc{iii}]$"
 },
 
-"O1":{
+"O1_6363":{
  "wl": 6363.0,
  "label": "$[\\textnormal{O}\\,\\textsc{i}]$"
 },
@@ -90,37 +90,37 @@
  "label": "$\\textnormal{H}\\alpha$"
 },
 
-"N2":{
+"N2_6584":{
  "wl": 6584.0,
  "label": "$[\\textnormal{N}\\,\\textsc{ii}]$"
 },
 
-"S2":{
+"S2_6716":{
  "wl": 6716.0,
  "label": "$[\\textnormal{S}\\,\\textsc{ii}]$"
 },
 
-"S2":{
+"S2_6731":{
  "wl": 6731.0,
  "label": "$[\\textnormal{S}\\,\\textsc{ii}]$"
 },
 
-"Ar3":{
+"Ar3_7135":{
  "wl": 7135.0,
  "label": "$[\\textnormal{Ar}\\,\\textsc{iii}]$"
 },
 
-"Ar3":{
+"Ar3_7325":{
  "wl": 7325.0,
  "label": "$[\\textnormal{Ar}\\,\\textsc{iii}]$"
 },
 
-"S3":{
+"S3_9069":{
  "wl": 9069.0,
  "label": "$[\\textnormal{S}\\,\\textsc{iii}]$"
 },
 
-"S3":{
+"S3_9532":{
  "wl": 9532.0,
  "label": "$[\\textnormal{S}\\,\\textsc{iii}]$"
 }

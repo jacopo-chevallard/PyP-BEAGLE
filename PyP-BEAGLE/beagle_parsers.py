@@ -66,6 +66,13 @@ def standard_parser():
         )
 
     parser.add_argument(
+        '--show-residual',
+        help="Overplot on the marginal plot the residual between model and data.",
+        action="store_true", 
+        dest="show_residual" 
+        )
+
+    parser.add_argument(
         '--plot-single-solution',
         help="FITS table containing the columns 'ID' and 'row_index' identifying the solution, "\
                 "among those available in the posterior PDF, to overplot on the triangle and marginal plots.",

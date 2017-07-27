@@ -169,6 +169,7 @@ def main():
                 plot_line_labels=args.plot_line_labels, 
                 mock_catalogue=mock_catalogue,
                 log_flux=args.plot_log_flux,
+                show_residual=args.show_residual,
                 print_ID=args.print_ID,
                 wl_rest=args.wl_rest,
                 wl_units=args.wl_units)

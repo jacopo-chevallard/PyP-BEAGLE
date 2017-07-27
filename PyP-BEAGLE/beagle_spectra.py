@@ -10,6 +10,7 @@ from itertools import tee, izip
 import json
 import matplotlib.pyplot as plt
 import matplotlib.ticker as plticker
+import matplotlib.gridspec as gridspec
 from matplotlib import rcParams
 #import pandas as pd
 # SEABORN creates by default plots with a filled background!!
@@ -334,6 +335,7 @@ class Spectrum(object):
     
         # Set the plot limits from the minimum and maximum wl_eff
         axs = list()
+        residual_axs = list()
         z1 = (1.+observation.data['redshift'])
         if self.wl_rest:
             data_wl = observation.data['wl'] / z1
@@ -349,25 +351,39 @@ class Spectrum(object):
             data_flux = observation.data['flux']
             data_flux_err = observation.data['fluxerr']
 
+        if self.show_residual:
+            n_outer = 2
+        else:
+            n_outer = 1
+
         if self.wl_range is None:
-            fig = plt.figure()
-            ax = fig.add_subplot(1, 1, 1)
+            n_ranges = 1
+        else:
+            if len(self.wl_range) == 2:
+                n_ranges = 1
+            else:
+                n_ranges = int(1.*len(self.wl_range)/2.)
+
+        fig = plt.figure(figsize=(12,8))
+        fig, axs_ = plt.subplots(n_outer, n_ranges, gridspec_kw = {'height_ratios':[3, 1]})
+        fig.subplots_adjust(wspace=0.1, hspace=0.0)
+        axs = axs_[0,:] 
+        if self.show_residual:
+            residual_axs = axs_[1,:]
+
+        if self.wl_range is None:
             dwl = data_wl[-1]-data_wl[0]
             wl_low = data_wl[0] - dwl*0.025
             wl_up = data_wl[-1] + dwl*0.025
-            ax.set_xlim([wl_low/wl_factor, wl_up/wl_factor])
-            axs.append(ax)
+            axs[0].set_xlim([wl_low/wl_factor, wl_up/wl_factor])
+            if self.show_residual:
+                residual_axs[0].set_xlim([wl_low/wl_factor, wl_up/wl_factor])
         else:
             if len(self.wl_range) == 2:
-                fig = plt.figure()
-                ax = fig.add_subplot(1, 1, 1)
-                ax.set_xlim(self.wl_range)
-                axs.append(ax)
+                axs[0].set_xlim(self.wl_range)
+                if self.show_residual:
+                    residual_axs[0].set_xlim(self.wl_range)
             else:
-                n_ranges = int(1.*len(self.wl_range)/2.)
-                fig, axs = plt.subplots(1, n_ranges, sharey=True)
-                fig.subplots_adjust(wspace=.1)
-
                 # how big to make the diagonal lines in axes coordinates
                 # converting "points" to axes coordinates: 
                 # https://stackoverflow.com/a/33638091
@@ -400,9 +416,58 @@ class Spectrum(object):
 
                     wl_l = wl_r
 
+                if self.show_residual:
+                    t = residual_axs[0].transAxes.transform([(0,0), (1,1)])
+                    t = residual_axs[0].get_figure().get_dpi() / (t[1,1] - t[0,1]) / 72
+                    d = 0.5*(rcParams['xtick.major.size']*t)
+
+                    wl_l = wl_ranges[0]
+                    for i, (ax_l, ax_r) in enumerate(pairwise(residual_axs)):
+                        kwargs = dict(transform=ax_l.transAxes, color='k', clip_on=False)
+                        ax_l.spines['right'].set_visible(False)
+                        if not ax_l.spines['left'].get_visible():
+                            ax_l.yaxis.set_ticks_position('none')
+                        else:
+                            ax_l.yaxis.tick_left()
+                        ax_l.set_xlim(wl_l)
+                        ax_l.plot((1-d, 1+d), (-d, +d), **kwargs)        
+                        #ax_l.plot((1-d, 1+d), (1-d, 1+d), **kwargs)        
+
+                        kwargs = dict(transform=ax_r.transAxes, color='k', clip_on=False)
+                        ax_r.spines['left'].set_visible(False)
+                        ax_r.yaxis.tick_right()
+                        ax_r.tick_params(labelright='off') 
+                        wl_r = wl_ranges[1+i]
+                        ax_r.set_xlim(wl_r)
+                        ax_r.plot((-d, +d), (-d, +d), **kwargs)        
+                        #ax_r.plot((-d, +d), (1-d, 1+d), **kwargs)        
+                        #ax_l.spines['top'].set_visible(False)
+                        ax_l.spines['top'].set_color('none')
+                        ax_l.xaxis.set_ticks_position('bottom')
+
+                        ax_r.spines['top'].set_color('none')
+                        ax_r.xaxis.set_ticks_position('bottom')
+                        #ax_r.spines['top'].set_visible(False)
+
+                        ax_r.patch.set_facecolor('None')
+                        ax_l.patch.set_facecolor('None')
+
+                        wl_l = wl_r
+
         which = 'both'
+        ymin = np.amin(median_flux[np.isfinite(median_flux)])
+        ymax = np.amax(median_flux[np.isfinite(median_flux)])
+        if self.log_flux:
+            dy = np.log10(ymax)-np.log10(ymin)
+            ymin = 10.**(np.log10(ymin)-dy*0.1)
+            ymax = 10.**(np.log10(ymax)+dy*0.1)
+        else:
+            dy = ymax-ymin
+            ymin = ymin-dy*0.1
+            ymax = ymax+dy*0.2
+
         for ax in axs:
-            ax.set_ylim([0., 1.2*np.amax(median_flux[np.isfinite(median_flux)])])
+            ax.set_ylim([ymin, ymax])
             if self.log_flux:
                 ax.set_yscale('log')
                 which = 'x'
@@ -410,29 +475,42 @@ class Spectrum(object):
             # Set better location of tick marks
             if self.wl_range is not None:
                 set_plot_ticks(ax, which=which, prune_x='both', n_x=3)
-                for ax in axs:
-                    #ax.set_xticklabels(ax.xaxis.get_majorticklabels(), rotation=-45, rotation_mode="anchor", ha='left')
-                    for tick in ax.get_xticklabels():
-                        tick.set_rotation(45)
+                for tick in ax.get_xticklabels():
+                    tick.set_rotation(45)
+                    tick.set_ha('left')
+                    tick.set_rotation_mode("anchor")
             else:
                 set_plot_ticks(ax, which=which)
 
-        # Define plotting styles
-        xlabel = "$\lambda / " + xlabel + "$ (observed-frame)"
+        if self.show_residual:
+            for ax in axs:
+                ax.tick_params(labelbottom='off')
 
-        ylabel = "$F_{\\lambda} / (\\textnormal{erg} \, \
-                \\textnormal{s}^{-1} \, \\textnormal{cm}^{-2} \, \
-                \\textnormal{\AA}^{-1})$"
+            for ax in residual_axs:
+                if self.wl_range is not None:
+                    set_plot_ticks(ax, prune_x='both', n_x=3)
+                    for tick in ax.get_xticklabels():
+                        tick.set_rotation(45)
+
+        # Define plotting styles
+        xlabel = "$\lambda / " + xlabel + "$"
+        if not self.wl_rest:
+            xlabel = xlabel + "(observed frame)"
 
         if self.wl_range is not None:
             fig.text(0.5, -0.02, xlabel, ha='center')
         else:
             fig.text(0.5, 0.02, xlabel, ha='center')
 
-        if self.log_flux:
-            fig.text(0.01, 0.5, ylabel, va='center', rotation='vertical')
-        else:
-            fig.text(0.04, 0.5, ylabel, va='center', rotation='vertical')
+
+        ylabel = "$F_{\\lambda} / (\\textnormal{erg} \, \
+                \\textnormal{s}^{-1} \, \\textnormal{cm}^{-2} \, \
+                \\textnormal{\AA}^{-1})$"
+        axs[0].set_ylabel(ylabel)
+
+        if self.show_residual:
+            ylabel = "$(F_{\\lambda}-F_{\\lambda}^\\textnormal{mod}) / F_{\\lambda}$"
+            residual_axs[0].set_ylabel(ylabel)
 
         # Title of the plot is the object ID
         if self.print_ID: 
@@ -521,7 +599,7 @@ class Spectrum(object):
                 wrand = WalkerRandomSampling(probability, keys=indices)
                 rand_indices = wrand.random(self.n_SED_to_plot)
 
-                if args.wl_rest:
+                if self.wl_rest:
                     wl_obs = hdulist['full sed wl'].data['wl'][0,:]
 
                     for i in rand_indices:
@@ -546,15 +624,41 @@ class Spectrum(object):
 
             #autoscale.autoscale_y(ax)
 
+        if self.show_residual:
+            residual = (data_flux-median_flux)/data_flux
+            residual_err = (1./data_flux - (data_flux-median_flux)/data_flux**2) * data_flux_err
+
+            ymax = np.amax(abs(residual))
+            ymax += 0.2*ymax
+            ymax = 1.1
+
+            for ax in residual_axs:
+                ax.set_ylim([-ymax, ymax])
+                kwargs = {'alpha':0.7}
+
+                ax.plot(ax.get_xlim(), [0.,0.],
+                        color="darkgray",
+                        lw=2.0,
+                        **kwargs)
+
+                ax.errorbar(data_wl/wl_factor,
+                        residual,
+                        yerr=residual_err,
+                        color = "darkgreen",
+                        ls=" ",
+                        elinewidth = 0.5,
+                        marker='o',
+                        ms=3,
+                        **kwargs
+                        )
+
         for ax in axs:
 
             # Location of printed text
             x0, x1 = ax.get_xlim()
             x = x0 + (x1-x0)*0.03
             y0, y1 = ax.get_ylim()
-            ax.set_ylim([0.,y1])
             y = y1 - (y1-y0)*0.10
-
 
             # Label emission lines
             if self.plot_line_labels:
@@ -563,27 +667,42 @@ class Spectrum(object):
                 i = 0
                 prev_x = 0.
                 for key, label in self.line_labels.iteritems():
-                    if args.wl_rest:
+
+                    if self.wl_rest:
                         x = label["wl"]/wl_factor
                     else:
                         x = label["wl"]/wl_factor * (1.+self.observed_spectrum.data['redshift'])
+
                     if x < x0 or x > x1:
                         continue
+
                     if self.resolution is not None:
                         if abs(x-prev_x) < (x/self.resolution):
                             continue
+
                     if i >= n:
                         i=0
+
                     prev_x = x
-                    y0, y1 = ax.get_ylim() ; dy = y1-y0
-                    y = y1 - dy*0.05 - dy*0.025*i
+                    y0, y1 = ax.get_ylim() 
+                    if self.log_flux:
+                        dy = np.log10(y1)-np.log10(y0)
+                        y = 10.**(np.log10(y1)-dy*0.05-dy*0.025*i)
+                    else:
+                        dy = y1-y0
+                        y = y1 - dy*0.05 - dy*0.025*i
+
                     ax.text(x, y, 
                             label["label"], 
-                            fontsize=7, 
+                            fontsize=9, 
                             rotation=45,
                             ha='center')
 
-                    y -= dy*0.025
+                    if self.log_flux:
+                        y = 10.**(np.log10(y)-dy*0.025)
+                    else:
+                        y -= dy*0.025
+
                     ax.plot([x,x], [y,0.], 
                             ls="--",
                             lw=0.2,

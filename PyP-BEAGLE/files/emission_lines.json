@@ -1,9 +1,24 @@
 {
 
-  "HLyA":{
-    "wl": 1216.0, 
-    "label": "$\\textnormal{Ly}\\alpha$" 
-  },
+"HLyA":{
+  "wl": 1216.0, 
+  "label": "$\\textnormal{Ly}\\alpha$" 
+},
+
+"C4_1549":{
+  "wl": 1549.0, 
+  "label": "$\\textnormal{C}\\,\\textsc{iv}]$" 
+},
+
+"He2_1640":{
+ "wl": 1640.0,
+ "label": "$\\textnormal{He}\\,\\textsc{ii}$"
+},
+
+"O3_1666":{
+ "wl": 1666.0,
+ "label": "$[\\textnormal{O}\\,\\textsc{iii}]$"
+},
 
 "C3_1907":{
  "wl": 1907.0,

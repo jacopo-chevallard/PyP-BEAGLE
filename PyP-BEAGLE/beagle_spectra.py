@@ -151,6 +151,11 @@ class ObservedSpectrum(object):
         if self.description["redshift"]["keyword"] is not None:
             self.data['redshift'] = np.float(hdu[1].header[self.description["redshift"]["keyword"]])
 
+        # Set the mask spectrum
+        if self.description["mask"]["colName"] is not None:
+            self.data['mask'] = np.array(data[self.description["mask"]["colName"]], dtype=bool)
+
+
         hdu.close()
 
 class Spectrum(object):
@@ -351,6 +356,24 @@ class Spectrum(object):
             data_flux = observation.data['flux']
             data_flux_err = observation.data['fluxerr']
 
+        # Convert to correct wl units
+        model_wl /= wl_factor
+        data_wl /= wl_factor
+
+        # Load the mask spectrum if exists
+        mask_color = "grey"
+        has_mask = False
+        data_mask = np.ones(len(data_wl), dtype=bool)
+        if "mask" in observation.data:
+            data_mask = observation.data['mask']
+            has_mask = True
+
+        # Create masked versions of arrays
+        slices = list()
+        masked_array = np.ma.array(data_wl, mask=~data_mask)
+        slices.append(np.ma.clump_unmasked(masked_array))
+        slices.append(np.ma.clump_masked(masked_array))
+
         if self.show_residual:
             n_outer = 2
         else:
@@ -375,9 +398,9 @@ class Spectrum(object):
             dwl = data_wl[-1]-data_wl[0]
             wl_low = data_wl[0] - dwl*0.025
             wl_up = data_wl[-1] + dwl*0.025
-            axs[0].set_xlim([wl_low/wl_factor, wl_up/wl_factor])
+            axs[0].set_xlim([wl_low, wl_up])
             if self.show_residual:
-                residual_axs[0].set_xlim([wl_low/wl_factor, wl_up/wl_factor])
+                residual_axs[0].set_xlim([wl_low, wl_up])
         else:
             if len(self.wl_range) == 2:
                 axs[0].set_xlim(self.wl_range)
@@ -455,21 +478,7 @@ class Spectrum(object):
                         wl_l = wl_r
 
         which = 'both'
-        concat_flux = np.concatenate((median_flux[np.isfinite(median_flux)], data_flux[np.isfinite(data_flux)]))
-        ymin = np.amin(concat_flux)
-        ymax = np.amax(concat_flux)
-
-        if self.log_flux:
-            dy = np.log10(ymax)-np.log10(ymin)
-            ymin = 10.**(np.log10(ymin)-dy*0.1)
-            ymax = 10.**(np.log10(ymax)+dy*0.1)
-        else:
-            dy = ymax-ymin
-            ymin = ymin-dy*0.1
-            ymax = ymax+dy*0.2
-
         for ax in axs:
-            ax.set_ylim([ymin, ymax])
             if self.log_flux:
                 ax.set_yscale('log')
                 which = 'x'
@@ -495,7 +504,7 @@ class Spectrum(object):
                         tick.set_rotation(45)
 
         # Define plotting styles
-        xlabel = "$\lambda / " + xlabel + "$"
+        xlabel = "$\uplambda / " + xlabel + "$"
         if not self.wl_rest:
             xlabel = xlabel + "(observed frame)"
 
@@ -505,13 +514,13 @@ class Spectrum(object):
             fig.text(0.5, 0.02, xlabel, ha='center')
 
 
-        ylabel = "$F_{\\lambda} / (\\textnormal{erg} \, \
+        ylabel = "$F_{\\uplambda} / (\\textnormal{erg} \, \
                 \\textnormal{s}^{-1} \, \\textnormal{cm}^{-2} \, \
                 \\textnormal{\AA}^{-1})$"
         axs[0].set_ylabel(ylabel)
 
         if self.show_residual:
-            ylabel = "$(F_{\\lambda}-F_{\\lambda}^\\textnormal{mod}) / F_{\\lambda}$"
+            ylabel = "$(F_{\\uplambda}-F_{\\uplambda}^\\textnormal{mod}) / F_{\\uplambda}$"
             residual_axs[0].set_ylabel(ylabel)
 
         # Title of the plot is the object ID
@@ -519,49 +528,53 @@ class Spectrum(object):
             #fig.text(0.5, 0.95, str(ID).split('_')[0].strip(), ha='center', va='top')
             plt.suptitle(str(ID).split('_')[0].strip())
 
+        colors = ["red", mask_color]
+
         for ax in axs:
 
-            kwargs = {'alpha':0.7}
-            if (draw_steps):
-                ax.step(data_wl/wl_factor,
-                        data_flux,
-                        where="mid",
-                        color = "red",
-                        linewidth = 2.50,
-                        **kwargs
-                        )
-            else:
-                ax.plot(data_wl/wl_factor,
-                        data_flux,
-                        color = "red",
-                        linewidth = 2.50,
-                        **kwargs
-                        )
+            for slic, col in zip(slices, colors):
+                for s in slic:
+                    if (draw_steps):
+                        ax.step(data_wl[s],
+                                data_flux[s],
+                                where="mid",
+                                color=col,
+                                linewidth=2.50,
+                                alpha=0.7
+                                )
+                    else:
+                        ax.plot(data_wl[s],
+                                data_flux[s],
+                                color=col,
+                                linewidth=2.50,
+                                alpha=0.7
+                                )
 
-            kwargs = { 'alpha': 0.3 }
-            if (draw_steps):
-                FillBetweenStep.fill_between_steps(ax,
-                        data_wl/wl_factor,
-                        data_flux-data_flux_err,
-                        data_flux+data_flux_err,
-                        step_where="mid",
-                        color = "red", 
-                        linewidth=0,
-                        interpolate=True,
-                        **kwargs)
-            else:
-                ax.fill_between(data_wl/wl_factor,
-                        data_flux-data_flux_err,
-                        data_flux+data_flux_err,
-                        facecolor = "red", 
-                        linewidth=0,
-                        interpolate=True,
-                        **kwargs)
+                    if (draw_steps):
+                        FillBetweenStep.fill_between_steps(ax,
+                                data_wl[s],
+                                data_flux[s]-data_flux_err[s],
+                                data_flux[s]+data_flux_err[s],
+                                step_where="mid",
+                                color=col, 
+                                linewidth=0,
+                                interpolate=True,
+                                alpha=0.3
+                                )
+                    else:
+                        ax.fill_between(data_wl[s],
+                                data_flux[s]-data_flux_err[s],
+                                data_flux[s]+data_flux_err[s],
+                                facecolor=col, 
+                                linewidth=0,
+                                interpolate=True,
+                                alpha=0.3
+                                )
 
 
             kwargs = { 'alpha': 0.7 }
             if (draw_steps):
-                ax.step(model_wl/wl_factor,
+                ax.step(model_wl,
                         median_flux,
                         where="mid",
                         color = "blue",
@@ -569,7 +582,7 @@ class Spectrum(object):
                         **kwargs
                         )
             else:
-                ax.plot(model_wl/wl_factor,
+                ax.plot(model_wl,
                         median_flux,
                         color = "blue",
                         linewidth = 1.5,
@@ -579,7 +592,7 @@ class Spectrum(object):
             kwargs = { 'alpha': 0.3 }
             if (draw_steps):
                 FillBetweenStep.fill_between_steps(ax,
-                        model_wl/wl_factor,
+                        model_wl,
                         lower_flux[:], 
                         upper_flux[:],
                         step_where="mid",
@@ -587,7 +600,7 @@ class Spectrum(object):
                         linewidth=0,
                         **kwargs)
             else:
-                ax.fill_between(model_wl/wl_factor,
+                ax.fill_between(model_wl,
                         lower_flux[:],
                         upper_flux[:],
                         facecolor = "blue", 
@@ -624,7 +637,13 @@ class Spectrum(object):
 
             kwargs = { 'alpha': 0.8 }
 
-            #autoscale.autoscale_y(ax)
+        ylim = autoscale.get_autoscale_y(axs[0])
+        for ax in axs:
+            yl = autoscale.get_autoscale_y(ax, ylog=True, top_margin=0.2, bottom_margin=0.1)
+            ylim = [min(ylim[0], yl[0]), max(ylim[1], yl[1])]
+
+        for ax in axs:
+            ax.set_ylim(ylim)
 
         if self.show_residual:
             residual = (data_flux-median_flux)/data_flux
@@ -634,25 +653,38 @@ class Spectrum(object):
             ymax += 0.2*ymax
             ymax = 1.1
 
+            colors = ["darkgreen"]
+            indices = np.arange(len(data_wl))
+            if has_mask:
+                colors = ["darkgreen", mask_color]
+
             for ax in residual_axs:
                 ax.set_ylim([-ymax, ymax])
                 kwargs = {'alpha':0.7}
 
                 ax.plot(ax.get_xlim(), [0.,0.],
-                        color="darkgray",
-                        lw=2.0,
+                        color="black",
+                        lw=0.7,
+                        zorder=5,
                         **kwargs)
 
-                ax.errorbar(data_wl/wl_factor,
-                        residual,
-                        yerr=residual_err,
-                        color = "darkgreen",
-                        ls=" ",
-                        elinewidth = 0.5,
-                        marker='o',
-                        ms=3,
-                        **kwargs
-                        )
+                for i, col in enumerate(colors):
+
+                    if i==0:
+                        ind = indices[data_mask]
+                    elif i==1:
+                        ind = indices[~data_mask]
+
+                    ax.errorbar(data_wl[ind],
+                            residual[ind],
+                            yerr=residual_err[ind],
+                            color = col,
+                            ls=" ",
+                            elinewidth = 0.5,
+                            marker='o',
+                            ms=3,
+                            **kwargs
+                            )
 
         for ax in axs:
 

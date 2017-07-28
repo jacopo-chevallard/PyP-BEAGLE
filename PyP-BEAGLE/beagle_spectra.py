@@ -455,8 +455,10 @@ class Spectrum(object):
                         wl_l = wl_r
 
         which = 'both'
-        ymin = np.amin(median_flux[np.isfinite(median_flux)])
-        ymax = np.amax(median_flux[np.isfinite(median_flux)])
+        concat_flux = np.concatenate((median_flux[np.isfinite(median_flux)], data_flux[np.isfinite(data_flux)]))
+        ymin = np.amin(concat_flux)
+        ymax = np.amax(concat_flux)
+
         if self.log_flux:
             dy = np.log10(ymax)-np.log10(ymin)
             ymin = 10.**(np.log10(ymin)-dy*0.1)

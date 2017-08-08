@@ -41,6 +41,15 @@ def standard_parser():
     )
 
     parser.add_argument(
+        '--beagle-suffix',
+        help="Suffix of Beagle output files.",
+        action="store", 
+        type=str, 
+        dest="suffix",
+        default="BEAGLE.fits.gz"
+    )
+
+    parser.add_argument(
         '--ID-list',
         help="List of object IDs to post-process",
         action="store", 
@@ -63,6 +72,13 @@ def standard_parser():
         help="Plot the marginal SED.",
         action="store_true", 
         dest="plot_marginal" 
+        )
+
+    parser.add_argument(
+        '--draw-steps',
+        help="Draw the spectrum using steps instead of connected dots.",
+        action="store_true", 
+        dest="draw_steps" 
         )
 
     parser.add_argument(
@@ -89,6 +105,14 @@ def standard_parser():
         dest="filters_folder",
         default="$BEAGLE_FILTERS"
         )
+
+    parser.add_argument(
+        '--plot-suffix',
+        help="Suffix of the plots.",
+        action="store", 
+        type=str, 
+        dest="plot_suffix"
+    )
 
     parser.add_argument(
         '--log-flux',

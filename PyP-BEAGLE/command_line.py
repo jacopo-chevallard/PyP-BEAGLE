@@ -76,7 +76,7 @@ def main():
     rc('font', **font)
 
     # Get list of results files and object IDs from the results directory
-    file_list, IDs = get_files_list()
+    file_list, IDs = get_files_list(suffix=args.suffix)
     if len(file_list) == 0:
         raise ValueError("No Beagle results files are present in the directory " + BeagleDirectories.results_dir)
 
@@ -172,6 +172,8 @@ def main():
                 show_residual=args.show_residual,
                 print_ID=args.print_ID,
                 wl_rest=args.wl_rest,
+                draw_steps=args.draw_steps,
+                plot_suffix=args.plot_suffix,
                 wl_units=args.wl_units)
 
         my_spectrum.observed_spectrum.configure(config=config)

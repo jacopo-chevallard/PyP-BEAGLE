@@ -23,7 +23,7 @@ import sys
 import dependencies.WeightedKDE as WeightedKDE
 import dependencies.autoscale as autoscale
 from dependencies.walker_random_sampling import WalkerRandomSampling
-#import FillBetweenStep
+from dependencies import FillBetweenStep
 
 from beagle_utils import BeagleDirectories, prepare_plot_saving, set_plot_ticks, plot_exists
 from beagle_filters import PhotometricFilters
@@ -171,7 +171,9 @@ class Spectrum(object):
             print_ID=False,
             wl_rest=False,
             log_flux=False,
+            draw_steps=False,
             show_residual=False,
+            plot_suffix=None,
             n_SED_to_plot=100):
 
         self.observed_spectrum = ObservedSpectrum()
@@ -209,13 +211,16 @@ class Spectrum(object):
 
         self.print_ID = print_ID
 
+        self.draw_steps = draw_steps
+
         self.n_SED_to_plot = n_SED_to_plot
+
+        self.plot_suffix = plot_suffix
 
     def plot_marginal(self, ID, 
             observation_name=None,
             max_interval=95.0,
             print_text=False, 
-            draw_steps=False, 
             replot=False):    
         """ 
         Plot the fluxes predicted by BEAGLE.
@@ -260,10 +265,12 @@ class Spectrum(object):
             self.observed_spectrum.load(observation_name)
     
         # Name of the output plot
+        plot_suffix = '' 
+        if self.plot_suffix is not None: plot_suffix = '_' + self.plot_suffix
         if self.wl_rest:
-            plot_name = str(ID) + '_BEAGLE_marginal_SED_spec_rest_wl.pdf'
+            plot_name = str(ID) + '_BEAGLE_marginal_SED_spec_rest_wl' + plot_suffix + '.pdf'
         else:
-            plot_name = str(ID) + '_BEAGLE_marginal_SED_spec.pdf'
+            plot_name = str(ID) + '_BEAGLE_marginal_SED_spec' + plot_suffix + '.pdf'
 
         # Check if the plot already exists
         if plot_exists(plot_name) and not replot:
@@ -534,23 +541,23 @@ class Spectrum(object):
 
             for slic, col in zip(slices, colors):
                 for s in slic:
-                    if (draw_steps):
+                    if (self.draw_steps):
                         ax.step(data_wl[s],
                                 data_flux[s],
                                 where="mid",
                                 color=col,
-                                linewidth=2.50,
+                                linewidth=1.50,
                                 alpha=0.7
                                 )
                     else:
                         ax.plot(data_wl[s],
                                 data_flux[s],
                                 color=col,
-                                linewidth=2.50,
+                                linewidth=2.00,
                                 alpha=0.7
                                 )
 
-                    if (draw_steps):
+                    if (self.draw_steps):
                         FillBetweenStep.fill_between_steps(ax,
                                 data_wl[s],
                                 data_flux[s]-data_flux_err[s],
@@ -573,12 +580,12 @@ class Spectrum(object):
 
 
             kwargs = { 'alpha': 0.7 }
-            if (draw_steps):
+            if (self.draw_steps):
                 ax.step(model_wl,
                         median_flux,
                         where="mid",
                         color = "blue",
-                        linewidth = 1.5,
+                        linewidth = 1.0,
                         **kwargs
                         )
             else:
@@ -590,7 +597,7 @@ class Spectrum(object):
                         )
 
             kwargs = { 'alpha': 0.3 }
-            if (draw_steps):
+            if (self.draw_steps):
                 FillBetweenStep.fill_between_steps(ax,
                         model_wl,
                         lower_flux[:], 
@@ -637,17 +644,21 @@ class Spectrum(object):
 
             kwargs = { 'alpha': 0.8 }
 
-        ylim = autoscale.get_autoscale_y(axs[0])
+        ylim = autoscale.get_autoscale_y(axs[0], ylog=self.log_flux)
         for ax in axs:
-            yl = autoscale.get_autoscale_y(ax, ylog=True, top_margin=0.2, bottom_margin=0.1)
+            print "ylim: ", ylim
+            yl = autoscale.get_autoscale_y(ax, ylog=self.log_flux, top_margin=0.2, bottom_margin=0.1)
             ylim = [min(ylim[0], yl[0]), max(ylim[1], yl[1])]
 
         for ax in axs:
             ax.set_ylim(ylim)
 
         if self.show_residual:
-            residual = (data_flux-median_flux)/data_flux
-            residual_err = (1./data_flux - (data_flux-median_flux)/data_flux**2) * data_flux_err
+            data_flux_ = data_flux[data_wl==model_wl]
+            data_mask_ = data_mask[data_wl==model_wl]
+            data_flux_err_ = data_flux_err[data_wl==model_wl]
+            residual = (data_flux_-median_flux)/data_flux_
+            residual_err = (1./data_flux_ - (data_flux_-median_flux)/data_flux_**2) * data_flux_err_
 
             ymax = np.amax(abs(residual))
             ymax += 0.2*ymax
@@ -671,11 +682,11 @@ class Spectrum(object):
                 for i, col in enumerate(colors):
 
                     if i==0:
-                        ind = indices[data_mask]
+                        ind = indices[data_mask_]
                     elif i==1:
-                        ind = indices[~data_mask]
+                        ind = indices[~data_mask_]
 
-                    ax.errorbar(data_wl[ind],
+                    ax.errorbar(model_wl[ind],
                             residual[ind],
                             yerr=residual_err[ind],
                             color = col,
@@ -700,6 +711,8 @@ class Spectrum(object):
                 n = 3
                 i = 0
                 prev_x = 0.
+                y_shift = 0.050
+                y_start = 0.075
                 for key, label in self.line_labels.iteritems():
 
                     if self.wl_rest:
@@ -721,25 +734,25 @@ class Spectrum(object):
                     y0, y1 = ax.get_ylim() 
                     if self.log_flux:
                         dy = np.log10(y1)-np.log10(y0)
-                        y = 10.**(np.log10(y1)-dy*0.05-dy*0.025*i)
+                        y = 10.**(np.log10(y1)-dy*y_start-dy*y_shift*i)
                     else:
                         dy = y1-y0
-                        y = y1 - dy*0.05 - dy*0.025*i
+                        y = y1 - dy*y_start-dy*y_shift*i
 
                     ax.text(x, y, 
                             label["label"], 
-                            fontsize=9, 
+                            fontsize=14, 
                             rotation=45,
                             ha='center')
 
                     if self.log_flux:
-                        y = 10.**(np.log10(y)-dy*0.025)
+                        y = 10.**(np.log10(y)-dy*y_shift)
                     else:
-                        y -= dy*0.025
+                        y -= dy*y_shift
 
                     ax.plot([x,x], [y,0.], 
                             ls="--",
-                            lw=0.2,
+                            lw=0.5,
                             color="black",
                             zorder=0)
                     i+=1

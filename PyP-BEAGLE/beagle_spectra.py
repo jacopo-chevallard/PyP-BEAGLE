@@ -18,7 +18,7 @@ from matplotlib import rcParams
 from astropy.io import ascii
 from astropy.io import fits
 
-import set_shared_labels as shLab
+import dependencies.set_shared_labels as shLab
 import sys
 import dependencies.WeightedKDE as WeightedKDE
 import dependencies.autoscale as autoscale

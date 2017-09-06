@@ -110,10 +110,16 @@ def main():
     params_file = os.path.join(BeagleDirectories.results_dir, args.json_file_triangle)
 
     # Compute the summary catalogue
-    summary_catalogue = BeagleSummaryCatalogue()
+    summary_catalogue = BeagleSummaryCatalogue(credible_intervals=args.credible_interval)
     if args.compute_summary:
         if not summary_catalogue.exists():
             summary_catalogue.compute(file_list)
+
+    if args.latex_table_params is not None:
+        if not summary_catalogue.exists():
+            summary_catalogue.compute(file_list)
+        summary_catalogue.load()
+        summary_catalogue.make_latex_table(args.latex_table_params, IDs=args.ID_list)
 
     if args.extract_MAP:
         summary_catalogue.extract_MAP_solution(file_list)

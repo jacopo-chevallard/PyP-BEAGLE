@@ -73,7 +73,10 @@ def get1DInterval(param_values, probability, levels):
 
 class BeagleSummaryCatalogue(object):
 
-    def __init__(self, file_name=None, config_file=None):
+    def __init__(self, 
+            file_name=None, 
+            credible_intervals=None,
+            config_file=None):
 
         if file_name is not None:
             self.file_name  = file_name
@@ -89,6 +92,8 @@ class BeagleSummaryCatalogue(object):
         else:
             self.config_file = os.path.join(BeagleDirectories.results_dir, 
                     "summary_config.json")
+
+        self.credible_intervals = credible_intervals
 
     def exists(self):
 
@@ -109,7 +114,7 @@ class BeagleSummaryCatalogue(object):
         name = getPathForData(self.file_name)
         self.hdulist = fits.open(name)
 
-    def compute(self, file_list, overwrite=False, levels=[68.,95.]):
+    def compute(self, file_list, overwrite=False):
         """ 
         """ 
 
@@ -161,7 +166,7 @@ class BeagleSummaryCatalogue(object):
                 new_columns.append(fits.Column(name=col_.name+'_median',
                     format=col_.format, unit=col_.unit))
 
-                for lev in np.array(levels):
+                for lev in self.credible_intervals:
                     new_columns.append(fits.Column(name=col_.name + '_' +
                         "{:.2f}".format(lev), format='2'+col_.format[-1],
                         unit=col_.unit))
@@ -204,12 +209,12 @@ class BeagleSummaryCatalogue(object):
                     self.hdulist[hdu_name].data['ID'][i] = ID
                     par_values = hdulist[hdu_name].data[col_name]
 
-                    mean, median, interval = get1DInterval(par_values, probability, levels)
+                    mean, median, interval = get1DInterval(par_values, probability, self.credible_intervals)
 
                     self.hdulist[hdu_name].data[col_name+'_mean'][i] = mean
                     self.hdulist[hdu_name].data[col_name+'_median'][i] = median
 
-                    for j, lev in enumerate(levels):
+                    for j, lev in enumerate(self.credible_intervals):
                         levName = col_name + '_' + "{:.2f}".format(lev)
                         self.hdulist[hdu_name].data[levName][i] = interval[j]
 
@@ -270,9 +275,9 @@ class BeagleSummaryCatalogue(object):
 
     def make_latex_table(self, param_names, 
             IDs=None,
-            level=68., 
             summary_statistics='median',
-            significant_digits=2):
+            average_errors=True,
+            significant_digits=1):
 
         n = significant_digits
         
@@ -282,7 +287,7 @@ class BeagleSummaryCatalogue(object):
             IDs = self.hdulist[1].data['ID']
 
         for ID in IDs:
-            print "\nID: ", ID, 
+            print "\n", ID , 
             row = np.arange(n_rows)[self.hdulist[1].data['ID'] == ID][0]
             for param in param_names:
                 colName = param + '_' + summary_statistics
@@ -290,11 +295,19 @@ class BeagleSummaryCatalogue(object):
                     if hasattr(hdu, 'columns'):
                         if colName in hdu.columns.names:
                             sum_stat = hdu.data[colName][row]
-                            errColName = param + '_' + "{:.2f}".format(level)
-                            error = hdu.data[errColName][row]
+                            n_ = int(np.ceil(np.log10(abs(sum_stat)))) + 1
+                            #print "n_ ", n_
+                            for lev in self.credible_intervals:
+                                errColName = param + '_' + "{:.2f}".format(lev)
+                                error = hdu.data[errColName][row]
 
-                            print to_precision(sum_stat, n+2), '_{-' + to_precision(sum_stat-error[0], n) \
-                                    + '}^{+' + to_precision(error[1]-sum_stat, n) + '} &',
+                                if average_errors:
+                                    err = 0.5 * (error[1]-error[0])
+                                    print ' & $' + to_precision(sum_stat, n+n_) + '\\pm' + to_precision(err, n) + '$',
+                                else:
+                                    print ' & $' + to_precision(sum_stat, n+n_) + '_{-' + to_precision(sum_stat-error[0], n) \
+                                            + '}^{+' + to_precision(error[1]-sum_stat, n) + '}$',
                             break
+            print ' \\\\ ',
 
                         

@@ -215,6 +215,25 @@ def standard_parser():
         )
 
     parser.add_argument(
+        '--credible-interval',
+        help="Credible intervals to be plotted or pritned in LaTeX tables (e.g. 68., 95., 99.7)",
+        action="store", 
+        type=float,
+        nargs='+',
+        default=[68., 95.],
+        dest="credible_interval" 
+        )
+
+    parser.add_argument(
+        '--latex-table-params',
+        help="Print to stdout a table ready to be included in a LaTeX document",
+        action="store", 
+        type=str,
+        nargs='+',
+        dest="latex_table_params" 
+        )
+
+    parser.add_argument(
         '--extract-MAP',
         help="Extract the Maximum-a-Posteriori solution.",
         action="store_true", 

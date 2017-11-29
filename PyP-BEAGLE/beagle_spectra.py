@@ -395,9 +395,17 @@ class Spectrum(object):
                 n_ranges = int(1.*len(self.wl_range)/2.)
 
         fig = plt.figure(figsize=(12,8))
-        fig, axs_ = plt.subplots(n_outer, n_ranges, gridspec_kw = {'height_ratios':[3, 1]})
+        if self.show_residual:
+            fig, axs_ = plt.subplots(n_outer, n_ranges, gridspec_kw = {'height_ratios':[3, 1]})
+        else:
+            fig, axs_ = plt.subplots(n_outer, n_ranges)
+
         fig.subplots_adjust(wspace=0.1, hspace=0.0)
-        axs = axs_[0,:] 
+        if self.show_residual:
+            axs = axs_[0,:] 
+        else:
+            axs = axs_
+
         if self.show_residual:
             residual_axs = axs_[1,:]
 

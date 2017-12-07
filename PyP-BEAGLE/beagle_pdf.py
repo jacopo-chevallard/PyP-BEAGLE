@@ -137,7 +137,8 @@ class PDF(object):
             for par_name in _params_to_plot:
                 if key == par_name:
                     names.append(key)
-                    labels.append(par['label'])
+                    label = par['label'].replace("$","")
+                    labels.append(label)
 
                     samps[:,j] = param_values[key]
                     ranges.update({key:par['range']})

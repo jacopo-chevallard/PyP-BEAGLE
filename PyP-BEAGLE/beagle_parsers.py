@@ -293,4 +293,22 @@ def standard_parser():
         default=1
     )
 
+    parser.add_argument(
+        '--fontsize',
+        help="Fontsize of axes labels, tick marks",
+        action="store", 
+        type=float, 
+        dest="fontsize",
+        default=16
+    )
+
+    parser.add_argument(
+        '--inset-fontsize-fraction',
+        help="Fraction of fontsize for the inset text (e.g. legends)",
+        action="store", 
+        type=float, 
+        dest="inset_fontsize_fraction",
+        default=0.7
+    )
+
     return parser

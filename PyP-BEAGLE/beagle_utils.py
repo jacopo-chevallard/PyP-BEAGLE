@@ -96,6 +96,9 @@ class BeagleDirectories(object):
 
     param_file = ''
 
+    fontsize = 16
+    inset_fontsize_fraction = 0.7
+
 def get_files_list(results_dir=None, suffix=None):
     """ 
     Get all files ending with suffix.

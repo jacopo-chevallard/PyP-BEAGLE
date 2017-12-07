@@ -38,6 +38,12 @@ def main():
     # Read parameter file
     config = ConfigParser.SafeConfigParser()
 
+    # Set fontsize
+    BeagleDirectories.fontsize = args.fontsize
+    BeagleDirectories.inset_fontsize_fraction = args.inset_fontsize_fraction
+    font = {'size': BeagleDirectories.fontsize}
+    rc('font', **font)
+
     # Check if you passed a name of the parameter file, otherwise search for a
     # suitable parameter file in the BEAGLE-input-files folder
     param_file = None
@@ -70,10 +76,6 @@ def main():
 
     # Check if the parameter file contains a PHOTOMETRIC CATALOGUE
     has_photometry = config.has_option('main', 'PHOTOMETRIC CATALOGUE')
-
-    # Global font size
-    font = {'size': 16}
-    rc('font', **font)
 
     # Get list of results files and object IDs from the results directory
     file_list, IDs = get_files_list(suffix=args.suffix)

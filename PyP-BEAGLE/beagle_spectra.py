@@ -176,6 +176,8 @@ class Spectrum(object):
             plot_suffix=None,
             n_SED_to_plot=100):
 
+        self.inset_fontsize = BeagleDirectories.inset_fontsize_fraction * BeagleDirectories.fontsize
+
         self.observed_spectrum = ObservedSpectrum()
 
         self.multinest_catalogue = MultiNestCatalogue()
@@ -503,7 +505,10 @@ class Spectrum(object):
                 set_plot_ticks(ax, which=which, prune_x='both', n_x=3)
                 for tick in ax.get_xticklabels():
                     tick.set_rotation(45)
-                    tick.set_ha('left')
+                    if self.show_residual:
+                        tick.set_ha('left')
+                    else:
+                        tick.set_ha('right')
                     tick.set_rotation_mode("anchor")
             else:
                 set_plot_ticks(ax, which=which)
@@ -521,10 +526,10 @@ class Spectrum(object):
         # Define plotting styles
         xlabel = "$\uplambda / " + xlabel + "$"
         if not self.wl_rest:
-            xlabel = xlabel + "(observed frame)"
+            xlabel = xlabel + " (observed frame)"
 
         if self.wl_range is not None:
-            fig.text(0.5, -0.02, xlabel, ha='center')
+            fig.text(0.5, -0.04, xlabel, ha='center')
         else:
             fig.text(0.5, 0.02, xlabel, ha='center')
 
@@ -654,7 +659,6 @@ class Spectrum(object):
 
         ylim = autoscale.get_autoscale_y(axs[0], ylog=self.log_flux)
         for ax in axs:
-            print "ylim: ", ylim
             yl = autoscale.get_autoscale_y(ax, ylog=self.log_flux, top_margin=0.2, bottom_margin=0.1)
             ylim = [min(ylim[0], yl[0]), max(ylim[1], yl[1])]
 
@@ -707,22 +711,16 @@ class Spectrum(object):
 
         for ax in axs:
 
-            # Location of printed text
             x0, x1 = ax.get_xlim()
-            x = x0 + (x1-x0)*0.03
+
             y0, y1 = ax.get_ylim()
-            y = y1 - (y1-y0)*0.10
+            if self.log_flux:
+                y0, y1 = np.log10(y0), np.log10(y1)
+            dy = y1-y0
 
             # Label emission lines
             if self.plot_line_labels:
-                x0, x1 = ax.get_xlim()
-                n = 3
-                i = 0
-                prev_x = 0.
-                y_shift = 0.050
-                y_start = 0.075
                 for key, label in self.line_labels.iteritems():
-
                     if self.wl_rest:
                         x = label["wl"]/wl_factor
                     else:
@@ -735,42 +733,49 @@ class Spectrum(object):
                         if abs(x-prev_x) < (x/self.resolution):
                             continue
 
-                    if i >= n:
-                        i=0
+                    direction = "up"
+                    if 'direction' in label:
+                        direction = label['direction']
 
-                    prev_x = x
-                    y0, y1 = ax.get_ylim() 
-                    if self.log_flux:
-                        dy = np.log10(y1)-np.log10(y0)
-                        y = 10.**(np.log10(y1)-dy*y_start-dy*y_shift*i)
-                    else:
-                        dy = y1-y0
-                        y = y1 - dy*y_start-dy*y_shift*i
+                    color = "black"
+                    if 'color' in label:
+                        color = label['color']
+
+                    i1 = bisect_left(data_wl, x-2)
+                    i2 = bisect_left(data_wl, x+2.)
+                    if direction == "up":
+                        mm = np.amax(data_flux[i1:i2+1])
+                        y = mm+dy*0.1
+                        ydots = mm+dy*0.07
+                    elif direction == "down":
+                        mm = np.amin(data_flux[i1:i2+1])
+                        y = mm-dy*0.1
+                        ydots = mm-dy*0.07
+
+                    ha = 'center'
+                    if 'ha' in label:
+                        ha = label['ha']
 
                     ax.text(x, y, 
                             label["label"], 
-                            fontsize=14, 
+                            fontsize=self.inset_fontsize, 
                             rotation=45,
-                            ha='center')
+                            color=color,
+                            va='center',
+                            ha=ha)
 
-                    if self.log_flux:
-                        y = 10.**(np.log10(y)-dy*y_shift)
-                    else:
-                        y -= dy*y_shift
-
-                    ax.plot([x,x], [y,0.], 
-                            ls="--",
-                            lw=0.5,
-                            color="black",
+                    y0 = mm
+                    ax.plot([x,x], [y0,ydots], 
+                            ls=":",
+                            color=color,
+                            lw=1.0,
                             zorder=0)
-                    i+=1
-
 
             if print_text:
 
                 # Print the evidence
                 try:
-                    ax.text(x, y, "$\log(Z)=" + "{:.2f}".format(self.logEvidence) + "$", fontsize=10 )
+                    ax.text(x, y, "$\log(Z)=" + "{:.2f}".format(self.logEvidence) + "$", fontsize=self.inset_fontsize)
                 except AttributeError:
                     print "ciao"
 
@@ -778,7 +783,7 @@ class Spectrum(object):
                 try:
                     aver_chi_square = self.PPC.data['aver_chi_square'][self.PPC.data['ID'] == ID]
                     y = y1 - (y1-y0)*0.15
-                    ax.text(x, y, "$\langle\chi^2\\rangle=" + "{:.2f}".format(aver_chi_square) + "$", fontsize=10 )
+                    ax.text(x, y, "$\langle\chi^2\\rangle=" + "{:.2f}".format(aver_chi_square) + "$", fontsize=self.inset_fontsize)
                 except AttributeError:
                     print "`PosteriorPredictiveChecks` not computed/loaded, hence " \
                     "<chi^2> for the object `" + str(ID) + "` is not available"
@@ -791,7 +796,7 @@ class Spectrum(object):
                             "$\langle\chi^2/(\\textnormal{N}_\\textnormal{data}-1)\\rangle=" \
                             + "{:.2f}".format(aver_red_chi_square) + "\; \
                             (\\textnormal{N}_\\textnormal{data}=" + \
-                            "{:d}".format(n_data) + ")" + "$", fontsize=10 )
+                            "{:d}".format(n_data) + ")" + "$", fontsize=self.inset_fontsize)
                 except AttributeError:
                     print "`PosteriorPredictiveChecks` not computed/loaded, hence " \
                     "<chi^2_red> for the object `" + str(ID) + "` is not available"

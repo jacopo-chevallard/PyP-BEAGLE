@@ -89,7 +89,7 @@ def standard_parser():
         )
 
     parser.add_argument(
-        '--plot-single-solution',
+        '--show-single-solution',
         help="FITS table containing the columns 'ID' and 'row_index' identifying the solution, "\
                 "among those available in the posterior PDF, to overplot on the triangle and marginal plots.",
         action="store", 
@@ -107,7 +107,7 @@ def standard_parser():
         )
 
     parser.add_argument(
-        '--plot-suffix',
+        '--show-suffix',
         help="Suffix of the plots.",
         action="store", 
         type=str, 
@@ -129,7 +129,7 @@ def standard_parser():
         )
 
     parser.add_argument(
-        '--plot-line-labels',
+        '--show-line-labels',
         help="Label the strongest emission lines.",
         action="store_true", 
         dest="plot_line_labels" 
@@ -144,7 +144,7 @@ def standard_parser():
     )
 
     parser.add_argument(
-        '--plot-title',
+        '--show-title',
         help="Add title to plot.",
         action="store", 
         type=str, 
@@ -159,7 +159,7 @@ def standard_parser():
         )
 
     parser.add_argument(
-        '--plot-full-SED',
+        '--show-full-SED',
         help="Overplot the full resolution model SED.",
         action="store_true", 
         dest="plot_full_SED" 

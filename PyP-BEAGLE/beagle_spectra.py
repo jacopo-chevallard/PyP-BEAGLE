@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as plticker
 import matplotlib.gridspec as gridspec
 from matplotlib import rcParams
+from matplotlib.axes import Axes
 #import pandas as pd
 # SEABORN creates by default plots with a filled background!!
 #import seaborn as sns
@@ -411,30 +412,63 @@ class Spectrum(object):
         if self.show_residual:
             residual_axs = axs_[1,:]
 
-        if self.wl_range is None:
-            dwl = data_wl[-1]-data_wl[0]
-            wl_low = data_wl[0] - dwl*0.025
-            wl_up = data_wl[-1] + dwl*0.025
+        try:
+            isinstance(axs[0], Axes)
+        except:
+            axs = [axs]
+            residual_axs = [residual_axs]
+
+        if n_ranges == 1:
+            if self.wl_range is None:
+                dwl = data_wl[-1]-data_wl[0]
+                wl_low = data_wl[0] - dwl*0.025
+                wl_up = data_wl[-1] + dwl*0.025
+            else:
+                wl_low, wl_up = self.wl_range[0], self.wl_range[1]
+
             axs[0].set_xlim([wl_low, wl_up])
             if self.show_residual:
                 residual_axs[0].set_xlim([wl_low, wl_up])
         else:
-            if len(self.wl_range) == 2:
-                axs[0].set_xlim(self.wl_range)
-                if self.show_residual:
-                    residual_axs[0].set_xlim(self.wl_range)
-            else:
-                # how big to make the diagonal lines in axes coordinates
-                # converting "points" to axes coordinates: 
-                # https://stackoverflow.com/a/33638091
-                t = axs[0].transAxes.transform([(0,0), (1,1)])
-                t = axs[0].get_figure().get_dpi() / (t[1,1] - t[0,1]) / 72
+            # how big to make the diagonal lines in axes coordinates
+            # converting "points" to axes coordinates: 
+            # https://stackoverflow.com/a/33638091
+            t = axs[0].transAxes.transform([(0,0), (1,1)])
+            t = axs[0].get_figure().get_dpi() / (t[1,1] - t[0,1]) / 72
+            d = 0.5*(rcParams['xtick.major.size']*t)
+
+            wl_ranges = [(self.wl_range[2*i], self.wl_range[2*i+1]) for i in range(n_ranges)]
+
+            wl_l = wl_ranges[0]
+            for i, (ax_l, ax_r) in enumerate(pairwise(axs)):
+                kwargs = dict(transform=ax_l.transAxes, color='k', clip_on=False)
+                ax_l.spines['right'].set_visible(False)
+                if not ax_l.spines['left'].get_visible():
+                    ax_l.yaxis.set_ticks_position('none')
+                else:
+                    ax_l.yaxis.tick_left()
+                ax_l.set_xlim(wl_l)
+                ax_l.plot((1-d, 1+d), (-d, +d), **kwargs)        
+                ax_l.plot((1-d, 1+d), (1-d, 1+d), **kwargs)        
+
+                kwargs = dict(transform=ax_r.transAxes, color='k', clip_on=False)
+                ax_r.spines['left'].set_visible(False)
+                ax_r.yaxis.tick_right()
+                ax_r.tick_params(labelright='off') 
+                wl_r = wl_ranges[1+i]
+                ax_r.set_xlim(wl_r)
+                ax_r.plot((-d, +d), (-d, +d), **kwargs)        
+                ax_r.plot((-d, +d), (1-d, 1+d), **kwargs)        
+
+                wl_l = wl_r
+
+            if self.show_residual:
+                t = residual_axs[0].transAxes.transform([(0,0), (1,1)])
+                t = residual_axs[0].get_figure().get_dpi() / (t[1,1] - t[0,1]) / 72
                 d = 0.5*(rcParams['xtick.major.size']*t)
 
-                wl_ranges = [(self.wl_range[2*i], self.wl_range[2*i+1]) for i in range(n_ranges)]
-
                 wl_l = wl_ranges[0]
-                for i, (ax_l, ax_r) in enumerate(pairwise(axs)):
+                for i, (ax_l, ax_r) in enumerate(pairwise(residual_axs)):
                     kwargs = dict(transform=ax_l.transAxes, color='k', clip_on=False)
                     ax_l.spines['right'].set_visible(False)
                     if not ax_l.spines['left'].get_visible():
@@ -443,7 +477,7 @@ class Spectrum(object):
                         ax_l.yaxis.tick_left()
                     ax_l.set_xlim(wl_l)
                     ax_l.plot((1-d, 1+d), (-d, +d), **kwargs)        
-                    ax_l.plot((1-d, 1+d), (1-d, 1+d), **kwargs)        
+                    #ax_l.plot((1-d, 1+d), (1-d, 1+d), **kwargs)        
 
                     kwargs = dict(transform=ax_r.transAxes, color='k', clip_on=False)
                     ax_r.spines['left'].set_visible(False)
@@ -452,47 +486,19 @@ class Spectrum(object):
                     wl_r = wl_ranges[1+i]
                     ax_r.set_xlim(wl_r)
                     ax_r.plot((-d, +d), (-d, +d), **kwargs)        
-                    ax_r.plot((-d, +d), (1-d, 1+d), **kwargs)        
+                    #ax_r.plot((-d, +d), (1-d, 1+d), **kwargs)        
+                    #ax_l.spines['top'].set_visible(False)
+                    ax_l.spines['top'].set_color('none')
+                    ax_l.xaxis.set_ticks_position('bottom')
+
+                    ax_r.spines['top'].set_color('none')
+                    ax_r.xaxis.set_ticks_position('bottom')
+                    #ax_r.spines['top'].set_visible(False)
+
+                    ax_r.patch.set_facecolor('None')
+                    ax_l.patch.set_facecolor('None')
 
                     wl_l = wl_r
-
-                if self.show_residual:
-                    t = residual_axs[0].transAxes.transform([(0,0), (1,1)])
-                    t = residual_axs[0].get_figure().get_dpi() / (t[1,1] - t[0,1]) / 72
-                    d = 0.5*(rcParams['xtick.major.size']*t)
-
-                    wl_l = wl_ranges[0]
-                    for i, (ax_l, ax_r) in enumerate(pairwise(residual_axs)):
-                        kwargs = dict(transform=ax_l.transAxes, color='k', clip_on=False)
-                        ax_l.spines['right'].set_visible(False)
-                        if not ax_l.spines['left'].get_visible():
-                            ax_l.yaxis.set_ticks_position('none')
-                        else:
-                            ax_l.yaxis.tick_left()
-                        ax_l.set_xlim(wl_l)
-                        ax_l.plot((1-d, 1+d), (-d, +d), **kwargs)        
-                        #ax_l.plot((1-d, 1+d), (1-d, 1+d), **kwargs)        
-
-                        kwargs = dict(transform=ax_r.transAxes, color='k', clip_on=False)
-                        ax_r.spines['left'].set_visible(False)
-                        ax_r.yaxis.tick_right()
-                        ax_r.tick_params(labelright='off') 
-                        wl_r = wl_ranges[1+i]
-                        ax_r.set_xlim(wl_r)
-                        ax_r.plot((-d, +d), (-d, +d), **kwargs)        
-                        #ax_r.plot((-d, +d), (1-d, 1+d), **kwargs)        
-                        #ax_l.spines['top'].set_visible(False)
-                        ax_l.spines['top'].set_color('none')
-                        ax_l.xaxis.set_ticks_position('bottom')
-
-                        ax_r.spines['top'].set_color('none')
-                        ax_r.xaxis.set_ticks_position('bottom')
-                        #ax_r.spines['top'].set_visible(False)
-
-                        ax_r.patch.set_facecolor('None')
-                        ax_l.patch.set_facecolor('None')
-
-                        wl_l = wl_r
 
         which = 'both'
         for ax in axs:

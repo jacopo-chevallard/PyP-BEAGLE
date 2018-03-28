@@ -1,6 +1,7 @@
 
 import argparse
 import logging
+import os
 
 def standard_parser():
 
@@ -29,7 +30,7 @@ def standard_parser():
         action="store", 
         type=str, 
         dest="results_dir", 
-        required=True
+        default=os.getcwd()
     )
 
     parser.add_argument(

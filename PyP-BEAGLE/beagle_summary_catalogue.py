@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import os
 import logging
 from collections import OrderedDict
@@ -279,6 +281,15 @@ class BeagleSummaryCatalogue(object):
             average_errors=True,
             significant_digits=1):
 
+        # Check if a list of params has been passed, or a JSON file
+        if param_names[0].lower().endswith("json"):
+            with open(param_names[0]) as f:    
+                param_config = json.load(f, object_pairs_hook=OrderedDict)
+        else:
+            param_config = OrderedDict()
+            for name in param_names:
+                param_config[name] = {}
+
         n = significant_digits
         
         n_rows = len(self.hdulist[1].data['ID'])
@@ -287,27 +298,47 @@ class BeagleSummaryCatalogue(object):
             IDs = self.hdulist[1].data['ID']
 
         for ID in IDs:
-            print "\n", ID , 
+            print("\n " + ID, end='') 
             row = np.arange(n_rows)[self.hdulist[1].data['ID'] == ID][0]
-            for param in param_names:
+            for param, value in param_config.iteritems():
+                is_log = False
+                if "log" in value:
+                    is_log = value["log"]
+
+                factor = 1.0
+                if "factor" in value:
+                    factor = value["factor"]
+
                 colName = param + '_' + summary_statistics
                 for hdu in self.hdulist:
                     if hasattr(hdu, 'columns'):
                         if colName in hdu.columns.names:
                             sum_stat = hdu.data[colName][row]
-                            n_ = int(np.ceil(np.log10(abs(sum_stat)))) + 1
                             #print "n_ ", n_
                             for lev in self.credible_intervals:
                                 errColName = param + '_' + "{:.2f}".format(lev)
-                                error = hdu.data[errColName][row]
+                                error_low, error_up = hdu.data[errColName][row]
 
                                 if average_errors:
-                                    err = 0.5 * (error[1]-error[0])
-                                    print ' & $' + to_precision(sum_stat, n+n_) + '\\pm' + to_precision(err, n) + '$',
+                                    err = 0.5 * (error_up-error_low)
+                                    err /= factor ; sum_stat /= factor
+                                    if is_log:
+                                        err = 0.434*err/sum_stat
+                                        sum_stat = np.log10(sum_stat)
+                                    n_ = int(np.ceil(np.log10(abs(sum_stat)))) + 1
+                                    print(' & $' + to_precision(sum_stat, n+n_) + '\\pm' + to_precision(err, n) + '$', end='')
                                 else:
-                                    print ' & $' + to_precision(sum_stat, n+n_) + '_{-' + to_precision(sum_stat-error[0], n) \
-                                            + '}^{+' + to_precision(error[1]-sum_stat, n) + '}$',
+                                    error_low = sum_stat - error_low
+                                    error_up = error_up - sum_stat
+                                    error_low /= factor ; error_up /= factor ; sum_stat /= factor
+                                    if is_log:
+                                        error_low = 0.434*error_low/sum_stat
+                                        error_up = 0.434*error_up/sum_stat
+                                        sum_stat = np.log10(sum_stat)
+                                    n_ = int(np.ceil(np.log10(abs(sum_stat)))) + 1
+                                    print(' & $' + to_precision(sum_stat, n+n_) + '_{-' + to_precision(error_low, n) \
+                                            + '}^{+' + to_precision(error_up, n) + '}$', end='')
                             break
-            print ' \\\\ ',
+            print(' \\\\ ', end='')
 
                         

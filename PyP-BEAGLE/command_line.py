@@ -23,7 +23,7 @@ def main():
     # Add package version
     parser.add_argument('-v', '--version', 
             action='version', 
-            version='%(prog)s ' + __version__
+            version='%(prog)s ' + __version__ + ' - Author: Jacopo Chevallard'
             )
 
     # Get parsed arguments
@@ -144,6 +144,7 @@ def main():
         # Initialize an instance of the main "Photometry" class
         my_photometry = Photometry(key=args.ID_key, 
                 x_log=args.plot_log_wl, 
+                log_flux=args.plot_log_flux,
                 plot_single_solution=args.plot_single_solution,
                 plot_full_SED=args.plot_full_SED)
 

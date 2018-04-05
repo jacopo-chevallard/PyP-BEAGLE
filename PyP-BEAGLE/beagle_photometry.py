@@ -107,6 +107,7 @@ class Photometry:
 
     def __init__(self, key='ID', 
             x_log=False, 
+            log_flux=False,
             plot_single_solution=None,
             plot_full_SED=False):
 
@@ -127,6 +128,8 @@ class Photometry:
         self.x_log = x_log
 
         self.plot_full_SED = plot_full_SED
+
+        self.log_flux = log_flux
 
         self.single_solutions = None
         if plot_single_solution is not None:
@@ -367,7 +370,10 @@ class Photometry:
         dY = yMax-yMin
 
         yMax += dY * 0.1
-        yMin -= dY * 0.1
+        if self.log_flux:
+            yMin = 0.
+        else:
+            yMin -= dY * 0.1
 
         ax.set_ylim([yMin, yMax])
 
@@ -419,7 +425,9 @@ class Photometry:
                     alpha = 0.7
                     )
 
-
+        if self.log_flux:
+            ax.set_yscale('symlog')
+            which = 'x'
 
         # Title of the plot is the object ID
         if print_title: plt.title(str(ID))

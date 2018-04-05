@@ -1,0 +1,205 @@
+## 0.5.11 (April 05, 2018)
+  - Implemented option to plot log10(fluxes) for photometry
+
+# Change Log
+
+## [0.5.10](https://github.com/jacopo-chevallard/PyP-BEAGLE/tree/0.5.10) ("03/28/2018")
+[Full Changelog](https://github.com/jacopo-chevallard/PyP-BEAGLE/compare/0.5.9...0.5.10)
+
+**Closed issues:**
+
+- Meaning of keywords in the summary file [\#30](https://github.com/jacopo-chevallard/PyP-BEAGLE/issues/30)
+
+## [0.5.9](https://github.com/jacopo-chevallard/PyP-BEAGLE/tree/0.5.9) ("12/13/2017")
+[Full Changelog](https://github.com/jacopo-chevallard/PyP-BEAGLE/compare/0.5.8...0.5.9)
+
+**Closed issues:**
+
+- TypeError: 'AxesSubplot' object has no attribute '\_\_getitem\_\_' [\#28](https://github.com/jacopo-chevallard/PyP-BEAGLE/issues/28)
+
+## [0.5.8](https://github.com/jacopo-chevallard/PyP-BEAGLE/tree/0.5.8) ("12/07/2017")
+[Full Changelog](https://github.com/jacopo-chevallard/PyP-BEAGLE/compare/0.5.7...0.5.8)
+
+## [0.5.7](https://github.com/jacopo-chevallard/PyP-BEAGLE/tree/0.5.7) ("11/29/2017")
+[Full Changelog](https://github.com/jacopo-chevallard/PyP-BEAGLE/compare/0.5.6...0.5.7)
+
+**Closed issues:**
+
+- Error with 'gridspec\_kw' in version 0.5.6 [\#29](https://github.com/jacopo-chevallard/PyP-BEAGLE/issues/29)
+
+## [0.5.6](https://github.com/jacopo-chevallard/PyP-BEAGLE/tree/0.5.6) ("09/06/2017")
+[Full Changelog](https://github.com/jacopo-chevallard/PyP-BEAGLE/compare/0.5.5...0.5.6)
+
+## [0.5.5](https://github.com/jacopo-chevallard/PyP-BEAGLE/tree/0.5.5) ("08/24/2017")
+[Full Changelog](https://github.com/jacopo-chevallard/PyP-BEAGLE/compare/0.5.4...0.5.5)
+
+**Closed issues:**
+
+- Missing dependencies?  "No module named set\_shared\_labels" [\#27](https://github.com/jacopo-chevallard/PyP-BEAGLE/issues/27)
+
+## [0.5.4](https://github.com/jacopo-chevallard/PyP-BEAGLE/tree/0.5.4) ("08/08/2017")
+[Full Changelog](https://github.com/jacopo-chevallard/PyP-BEAGLE/compare/0.5.3...0.5.4)
+
+## [0.5.3](https://github.com/jacopo-chevallard/PyP-BEAGLE/tree/0.5.3) ("08/08/2017")
+[Full Changelog](https://github.com/jacopo-chevallard/PyP-BEAGLE/compare/0.5.2...0.5.3)
+
+## [0.5.2](https://github.com/jacopo-chevallard/PyP-BEAGLE/tree/0.5.2) ("07/28/2017")
+[Full Changelog](https://github.com/jacopo-chevallard/PyP-BEAGLE/compare/0.5.1...0.5.2)
+
+## [0.5.1](https://github.com/jacopo-chevallard/PyP-BEAGLE/tree/0.5.1) ("07/27/2017")
+[Full Changelog](https://github.com/jacopo-chevallard/PyP-BEAGLE/compare/0.5.0...0.5.1)
+
+## [0.5.0](https://github.com/jacopo-chevallard/PyP-BEAGLE/tree/0.5.0) ("07/26/2017")
+[Full Changelog](https://github.com/jacopo-chevallard/PyP-BEAGLE/compare/0.4.6...0.5.0)
+
+**Closed issues:**
+
+- Issues with --plot-triangle and --plot-marginal [\#25](https://github.com/jacopo-chevallard/PyP-BEAGLE/issues/25)
+
+## [0.4.6](https://github.com/jacopo-chevallard/PyP-BEAGLE/tree/0.4.6) ("06/22/2017")
+[Full Changelog](https://github.com/jacopo-chevallard/PyP-BEAGLE/compare/0.4.5...0.4.6)
+
+## [0.4.5](https://github.com/jacopo-chevallard/PyP-BEAGLE/tree/0.4.5) ("06/22/2017")
+[Full Changelog](https://github.com/jacopo-chevallard/PyP-BEAGLE/compare/0.4.4...0.4.5)
+
+## [0.4.4](https://github.com/jacopo-chevallard/PyP-BEAGLE/tree/0.4.4) ("06/07/2017")
+[Full Changelog](https://github.com/jacopo-chevallard/PyP-BEAGLE/compare/0.4.3...0.4.4)
+
+## [0.4.3](https://github.com/jacopo-chevallard/PyP-BEAGLE/tree/0.4.3) ("05/16/2017")
+[Full Changelog](https://github.com/jacopo-chevallard/PyP-BEAGLE/compare/0.4.2...0.4.3)
+
+## [0.4.2](https://github.com/jacopo-chevallard/PyP-BEAGLE/tree/0.4.2) ("05/04/2017")
+[Full Changelog](https://github.com/jacopo-chevallard/PyP-BEAGLE/compare/0.4.1...0.4.2)
+
+## [0.4.1](https://github.com/jacopo-chevallard/PyP-BEAGLE/tree/0.4.1) ("05/02/2017")
+[Full Changelog](https://github.com/jacopo-chevallard/PyP-BEAGLE/compare/0.4.0...0.4.1)
+
+**Closed issues:**
+
+- Error with --plot-marginal \(fit to multiple spectra\) [\#23](https://github.com/jacopo-chevallard/PyP-BEAGLE/issues/23)
+- ImportError: No module named autoscale [\#22](https://github.com/jacopo-chevallard/PyP-BEAGLE/issues/22)
+- Summary Catalog Error with "compute" [\#20](https://github.com/jacopo-chevallard/PyP-BEAGLE/issues/20)
+
+## [0.4.0](https://github.com/jacopo-chevallard/PyP-BEAGLE/tree/0.4.0) ("03/30/2017")
+[Full Changelog](https://github.com/jacopo-chevallard/PyP-BEAGLE/compare/0.3.1...0.4.0)
+
+**Closed issues:**
+
+- Error running ./postprocess\_beagle\_results.py ImportError: No module named WeightedKDE [\#21](https://github.com/jacopo-chevallard/PyP-BEAGLE/issues/21)
+- BANGS\_summary\_catalogue masses [\#3](https://github.com/jacopo-chevallard/PyP-BEAGLE/issues/3)
+
+## [0.3.1](https://github.com/jacopo-chevallard/PyP-BEAGLE/tree/0.3.1) ("03/29/2017")
+[Full Changelog](https://github.com/jacopo-chevallard/PyP-BEAGLE/compare/0.3.0...0.3.1)
+
+## [0.3.0](https://github.com/jacopo-chevallard/PyP-BEAGLE/tree/0.3.0) ("03/27/2017")
+[Full Changelog](https://github.com/jacopo-chevallard/PyP-BEAGLE/compare/0.2.10...0.3.0)
+
+## [0.2.10](https://github.com/jacopo-chevallard/PyP-BEAGLE/tree/0.2.10) ("03/08/2017")
+[Full Changelog](https://github.com/jacopo-chevallard/PyP-BEAGLE/compare/0.2.9...0.2.10)
+
+**Closed issues:**
+
+- numpy TypeError [\#19](https://github.com/jacopo-chevallard/PyP-BEAGLE/issues/19)
+
+## [0.2.9](https://github.com/jacopo-chevallard/PyP-BEAGLE/tree/0.2.9) ("12/08/2016")
+[Full Changelog](https://github.com/jacopo-chevallard/PyP-BEAGLE/compare/0.2.8...0.2.9)
+
+## [0.2.8](https://github.com/jacopo-chevallard/PyP-BEAGLE/tree/0.2.8) ("11/01/2016")
+[Full Changelog](https://github.com/jacopo-chevallard/PyP-BEAGLE/compare/0.2.7...0.2.8)
+
+**Fixed bugs:**
+
+- error creating triangle plot with single value parameter [\#17](https://github.com/jacopo-chevallard/PyP-BEAGLE/issues/17)
+
+**Closed issues:**
+
+- Error creating corner plots [\#16](https://github.com/jacopo-chevallard/PyP-BEAGLE/issues/16)
+- new hotfix branch [\#15](https://github.com/jacopo-chevallard/PyP-BEAGLE/issues/15)
+- running of the spectral example [\#11](https://github.com/jacopo-chevallard/PyP-BEAGLE/issues/11)
+
+## [0.2.7](https://github.com/jacopo-chevallard/PyP-BEAGLE/tree/0.2.7) ("10/06/2016")
+[Full Changelog](https://github.com/jacopo-chevallard/PyP-BEAGLE/compare/0.2.6...0.2.7)
+
+**Closed issues:**
+
+- Crash while making summary catalog [\#14](https://github.com/jacopo-chevallard/PyP-BEAGLE/issues/14)
+
+## [0.2.6](https://github.com/jacopo-chevallard/PyP-BEAGLE/tree/0.2.6) ("10/05/2016")
+[Full Changelog](https://github.com/jacopo-chevallard/PyP-BEAGLE/compare/0.2.5...0.2.6)
+
+**Closed issues:**
+
+- python packages for PyP-BEAGLE [\#7](https://github.com/jacopo-chevallard/PyP-BEAGLE/issues/7)
+
+## [0.2.5](https://github.com/jacopo-chevallard/PyP-BEAGLE/tree/0.2.5) ("10/05/2016")
+[Full Changelog](https://github.com/jacopo-chevallard/PyP-BEAGLE/compare/0.2.4...0.2.5)
+
+**Closed issues:**
+
+- matplotlibrc file [\#12](https://github.com/jacopo-chevallard/PyP-BEAGLE/issues/12)
+
+## [0.2.4](https://github.com/jacopo-chevallard/PyP-BEAGLE/tree/0.2.4) ("10/05/2016")
+[Full Changelog](https://github.com/jacopo-chevallard/PyP-BEAGLE/compare/0.2.3...0.2.4)
+
+**Closed issues:**
+
+- Crashin while making summary catalog [\#13](https://github.com/jacopo-chevallard/PyP-BEAGLE/issues/13)
+
+## [0.2.3](https://github.com/jacopo-chevallard/PyP-BEAGLE/tree/0.2.3) ("09/01/2016")
+[Full Changelog](https://github.com/jacopo-chevallard/PyP-BEAGLE/compare/0.2.2...0.2.3)
+
+**Closed issues:**
+
+- Error running the configuration summary [\#10](https://github.com/jacopo-chevallard/PyP-BEAGLE/issues/10)
+
+## [0.2.2](https://github.com/jacopo-chevallard/PyP-BEAGLE/tree/0.2.2) ("08/20/2016")
+[Full Changelog](https://github.com/jacopo-chevallard/PyP-BEAGLE/compare/0.2.1...0.2.2)
+
+## [0.2.1](https://github.com/jacopo-chevallard/PyP-BEAGLE/tree/0.2.1) ("07/21/2016")
+[Full Changelog](https://github.com/jacopo-chevallard/PyP-BEAGLE/compare/0.2.0...0.2.1)
+
+## [0.2.0](https://github.com/jacopo-chevallard/PyP-BEAGLE/tree/0.2.0) ("07/21/2016")
+[Full Changelog](https://github.com/jacopo-chevallard/PyP-BEAGLE/compare/0.1.7...0.2.0)
+
+**Fixed bugs:**
+
+- Calculations of medians and intervals in beagle\_summary\_catalogue [\#9](https://github.com/jacopo-chevallard/PyP-BEAGLE/issues/9)
+
+**Closed issues:**
+
+- latex - python incompatibility [\#8](https://github.com/jacopo-chevallard/PyP-BEAGLE/issues/8)
+
+## [0.1.7](https://github.com/jacopo-chevallard/PyP-BEAGLE/tree/0.1.7) ("07/11/2016")
+[Full Changelog](https://github.com/jacopo-chevallard/PyP-BEAGLE/compare/0.1.6...0.1.7)
+
+## [0.1.6](https://github.com/jacopo-chevallard/PyP-BEAGLE/tree/0.1.6) ("05/13/2016")
+[Full Changelog](https://github.com/jacopo-chevallard/PyP-BEAGLE/compare/0.1.5...0.1.6)
+
+## [0.1.5](https://github.com/jacopo-chevallard/PyP-BEAGLE/tree/0.1.5) ("05/13/2016")
+[Full Changelog](https://github.com/jacopo-chevallard/PyP-BEAGLE/compare/0.1.4...0.1.5)
+
+**Closed issues:**
+
+- Filter file parsing problem [\#5](https://github.com/jacopo-chevallard/PyP-BEAGLE/issues/5)
+- Is there some way I can get an example for how to use PyP-BEAGLE? [\#4](https://github.com/jacopo-chevallard/PyP-BEAGLE/issues/4)
+
+## [0.1.4](https://github.com/jacopo-chevallard/PyP-BEAGLE/tree/0.1.4) ("03/17/2016")
+[Full Changelog](https://github.com/jacopo-chevallard/PyP-BEAGLE/compare/0.1.3...0.1.4)
+
+## [0.1.3](https://github.com/jacopo-chevallard/PyP-BEAGLE/tree/0.1.3) ("03/16/2016")
+[Full Changelog](https://github.com/jacopo-chevallard/PyP-BEAGLE/compare/0.1.2...0.1.3)
+
+## [0.1.2](https://github.com/jacopo-chevallard/PyP-BEAGLE/tree/0.1.2) ("03/15/2016")
+[Full Changelog](https://github.com/jacopo-chevallard/PyP-BEAGLE/compare/0.1.1...0.1.2)
+
+## [0.1.1](https://github.com/jacopo-chevallard/PyP-BEAGLE/tree/0.1.1) ("03/11/2016")
+[Full Changelog](https://github.com/jacopo-chevallard/PyP-BEAGLE/compare/0.1.0...0.1.1)
+
+## [0.1.0](https://github.com/jacopo-chevallard/PyP-BEAGLE/tree/0.1.0) ("03/11/2016")
+**Fixed bugs:**
+
+- bangs\_photometry singular matrix [\#1](https://github.com/jacopo-chevallard/PyP-BEAGLE/issues/1)
+
+
+
+\* *This Change Log was automatically generated by [github_changelog_generator](https://github.com/skywinder/Github-Changelog-Generator)*

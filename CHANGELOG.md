@@ -1,3 +1,6 @@
+## 0.5.12 (June 04, 2018)
+  - Enable use of IDs longer than 20 characters (100 characters is current limit, but it can be easily changed), deals with #32
+
 ## 0.5.11 (April 05, 2018)
   - Implemented option to plot log10(fluxes) for photometry
 

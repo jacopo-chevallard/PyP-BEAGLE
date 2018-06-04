@@ -14,7 +14,7 @@ import bokeh.models as bk_mdl
 
 from beagle_utils import prepare_data_saving, prepare_plot_saving, \
         BeagleDirectories, is_FITS_file, data_exists, plot_exists, set_plot_ticks, \
-        is_integer, match_ID
+        is_integer, match_ID, ID_COLUMN_LENGTH
 
 def grouper(n, iterable, fillvalue=None):
     "grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx"
@@ -241,7 +241,7 @@ class BeagleMockCatalogue(object):
 
             # The `ID` column contains a string, while all the other columns real data
             if 'ID' in key:
-                new_columns.append(fits.Column(name=str(key), format='20A', array=data[key]))
+                new_columns.append(fits.Column(name=str(key), format=str(ID_COLUMN_LENGTH)+'A', array=data[key]))
             else:
                 new_columns.append(fits.Column(name=str(key), format='E', array=data[key]))
 

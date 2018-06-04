@@ -8,7 +8,8 @@ import numpy as np
 from scipy.interpolate import interp1d
 from astropy.io import fits
 
-from beagle_utils import prepare_data_saving, BeagleDirectories, getPathForData, data_exists
+from beagle_utils import prepare_data_saving, BeagleDirectories, getPathForData, data_exists,\
+    ID_COLUMN_LENGTH
 from significant_digits import to_precision, float_nsf
 
 def get1DInterval(param_values, probability, levels):
@@ -143,7 +144,7 @@ class BeagleSummaryCatalogue(object):
 
             # The first column of each output extension contains the object ID
             #new_columns.append(fits.Column(name='ID', format='K'))
-            new_columns.append(fits.Column(name='ID', format='20A'))
+            new_columns.append(fits.Column(name='ID', format=str(ID_COLUMN_LENGTH)+'A'))
 
             # You just consider the columns defined in the structure
             if 'columns' in hdu:

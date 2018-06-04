@@ -14,6 +14,8 @@ import dependencies.WeightedKDE as WeightedKDE
 import matplotlib.ticker as plticker
 
 
+ID_COLUMN_LENGTH = 100
+
 def is_integer(s):
     try:
         int(s)

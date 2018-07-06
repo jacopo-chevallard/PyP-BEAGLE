@@ -1,3 +1,8 @@
+## 0.5.13 (July 06, 2018)
+  - Introduced possibility to use multiprocessing to speed up the calculation of the summary catalogue; added natural sorting or rows in the summary catalogue
+  - Added dependency on 'natsort' package for natural sorting
+  - Renamed 'np' variable to 'n_proc' to avoid confusion with numpy ---> np
+
 ## 0.5.12 (June 04, 2018)
   - Enable use of IDs longer than 20 characters (100 characters is current limit, but it can be easily changed), deals with #32
 

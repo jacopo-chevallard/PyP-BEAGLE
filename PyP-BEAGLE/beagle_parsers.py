@@ -290,7 +290,7 @@ def standard_parser():
         help="Number of processors to use",
         action="store", 
         type=int, 
-        dest="np",
+        dest="n_proc",
         default=1
     )
 

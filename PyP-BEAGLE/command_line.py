@@ -112,7 +112,7 @@ def main():
     params_file = os.path.join(BeagleDirectories.results_dir, args.json_file_triangle)
 
     # Compute the summary catalogue
-    summary_catalogue = BeagleSummaryCatalogue(credible_intervals=args.credible_interval)
+    summary_catalogue = BeagleSummaryCatalogue(credible_intervals=args.credible_interval, n_proc=args.n_proc)
     if args.compute_summary:
         if not summary_catalogue.exists():
             summary_catalogue.compute(file_list)
@@ -214,12 +214,12 @@ def main():
                     break
 
     # Create "pool" of processes
-    if args.np > 1:
-        pool = ProcessingPool(nodes=args.np)
+    if args.n_proc > 1:
+        pool = ProcessingPool(nodes=args.n_proc)
 
     # Plot the marginal SED
     if args.plot_marginal:
-        if args.np > 1:
+        if args.n_proc > 1:
             if has_spectra:
                 pool.map(my_spectrum.plot_marginal, IDs, file_names)
 
@@ -241,7 +241,7 @@ def main():
                 mock_catalogue=mock_catalogue,
                 plot_single_solution=args.plot_single_solution)
 
-        if args.np > 1:
+        if args.n_proc > 1:
             pool.map(my_PDF.plot_triangle, IDs)
         else:
             for ID in IDs:

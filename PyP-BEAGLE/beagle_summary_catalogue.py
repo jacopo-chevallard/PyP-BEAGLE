@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+import time
 import os
 import logging
 from collections import OrderedDict
@@ -7,6 +8,8 @@ import json
 import numpy as np
 from scipy.interpolate import interp1d
 from astropy.io import fits
+from pathos.multiprocessing import ProcessingPool 
+from natsort import index_natsorted, order_by_index
 
 from beagle_utils import prepare_data_saving, BeagleDirectories, getPathForData, data_exists,\
     ID_COLUMN_LENGTH
@@ -79,7 +82,8 @@ class BeagleSummaryCatalogue(object):
     def __init__(self, 
             file_name=None, 
             credible_intervals=None,
-            config_file=None):
+            config_file=None,
+            n_proc=1):
 
         if file_name is not None:
             self.file_name  = file_name
@@ -97,6 +101,8 @@ class BeagleSummaryCatalogue(object):
                     "summary_config.json")
 
         self.credible_intervals = credible_intervals
+
+        self.n_proc = n_proc
 
     def exists(self):
 
@@ -116,6 +122,45 @@ class BeagleSummaryCatalogue(object):
 
         name = getPathForData(self.file_name)
         self.hdulist = fits.open(name)
+
+    def compute_single(self, file, hdu_col):
+        """ 
+        """ 
+
+        # Compute the required quantities
+        hdulist = fits.open(os.path.join(BeagleDirectories.results_dir, file))
+        end = file.find('_' + BeagleDirectories.suffix)
+
+        # Extract the object ID from the file_name
+        #ID = np.int(np.float(os.path.basename(file[0:end])))
+        ID = os.path.basename(file[0:end])
+
+        probability = hdulist['posterior pdf'].data['probability']
+        data = OrderedDict()
+
+        for hdu in hdu_col:
+            hdu_name = hdu['name']
+            if 'columns' in hdu:
+                columnNames = hdu['columns']
+            else:
+                columnNames = hdulist[hdu_name].columns.names
+
+            for col_name in columnNames:
+                data['ID'] = ID
+                par_values = hdulist[hdu_name].data[col_name]
+
+                mean, median, interval = get1DInterval(par_values, probability, self.credible_intervals)
+
+                data[col_name+'_mean'] = mean
+                data[col_name+'_median'] = median
+
+                for j, lev in enumerate(self.credible_intervals):
+                    levName = col_name + '_' + "{:.2f}".format(lev)
+                    data[levName] = interval[j]
+
+        hdulist.close()
+
+        return data
 
     def compute(self, file_list, overwrite=False):
         """ 
@@ -189,18 +234,27 @@ class BeagleSummaryCatalogue(object):
 
         hdulist.close()
 
+        #start_time = time.time()
         # Now you can go through each file, and compute the required quantities
+        if self.n_proc > 1:
+            pool = ProcessingPool(nodes=self.n_proc)
+            data = pool.map(self.compute_single, 
+                    file_list,
+                    (hdu_col,)*len(file_list))
+        else:
+            data = list()
+            for i, file in enumerate(file_list):
+                d = self.compute_single(file, hdu_col)
+                data.append(d)
+
+        #print("--- %s seconds ---" % (time.time() - start_time))
+
+        # Natural sort IDs
+        IDs = [data[i]['ID'] for i in range(len(data))]
+        index = index_natsorted(IDs)
 
         for i, file in enumerate(file_list):
-            hdulist = fits.open(os.path.join(BeagleDirectories.results_dir, file))
-            end = file.find('_' + BeagleDirectories.suffix)
-
-            # Extract the object ID from the file_name
-            #ID = np.int(np.float(os.path.basename(file[0:end])))
-            ID = os.path.basename(file[0:end])
-
-            probability = hdulist['posterior pdf'].data['probability']
-
+            idx = index[i]
             for hdu in hdu_col:
                 hdu_name = hdu['name']
                 if 'columns' in hdu:
@@ -209,19 +263,12 @@ class BeagleSummaryCatalogue(object):
                     columnNames = hdulist[hdu_name].columns.names
 
                 for col_name in columnNames:
-                    self.hdulist[hdu_name].data['ID'][i] = ID
-                    par_values = hdulist[hdu_name].data[col_name]
-
-                    mean, median, interval = get1DInterval(par_values, probability, self.credible_intervals)
-
-                    self.hdulist[hdu_name].data[col_name+'_mean'][i] = mean
-                    self.hdulist[hdu_name].data[col_name+'_median'][i] = median
-
+                    self.hdulist[hdu_name].data['ID'][i] = data[idx]['ID']
+                    self.hdulist[hdu_name].data[col_name+'_mean'][i] = data[idx][col_name+'_mean']
+                    self.hdulist[hdu_name].data[col_name+'_median'][i] = data[idx][col_name+'_median']
                     for j, lev in enumerate(self.credible_intervals):
                         levName = col_name + '_' + "{:.2f}".format(lev)
-                        self.hdulist[hdu_name].data[levName][i] = interval[j]
-
-            hdulist.close()
+                        self.hdulist[hdu_name].data[levName][i] = data[idx][levName]
 
         name = prepare_data_saving(self.file_name)
         self.hdulist.writeto(name, clobber=overwrite)

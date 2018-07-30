@@ -75,7 +75,7 @@ class ObservedSpectrum(object):
                 "fluxerr"   : {"colName" : None},  
                 "sky"       : {"colName" : None},  
                 "mask"      : {"colName" : None},  
-                "redshift"  : {"keyword" : "redshift"},  
+                "redshift"  : {"keyword" : None},  
                 "min_rel_err" : None,  
                 }
 
@@ -151,6 +151,8 @@ class ObservedSpectrum(object):
         # Set the redshift
         if self.description["redshift"]["keyword"] is not None:
             self.data['redshift'] = np.float(hdu[1].header[self.description["redshift"]["keyword"]])
+        else:
+            self.data['redshift'] = 0.
 
         # Set the mask spectrum
         if self.description["mask"]["colName"] is not None:

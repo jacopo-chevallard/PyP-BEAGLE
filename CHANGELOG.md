@@ -1,3 +1,8 @@
+## 0.5.14 (July 30, 2018)
+  - Updated dependencies
+  - Allow spectra without a redshift header keyword to be correctly processed
+  - Added version file
+
 ## 0.5.13 (July 06, 2018)
   - Introduced possibility to use multiprocessing to speed up the calculation of the summary catalogue; added natural sorting or rows in the summary catalogue
   - Added dependency on 'natsort' package for natural sorting

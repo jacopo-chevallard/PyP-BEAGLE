@@ -134,7 +134,9 @@ class PhotometricFilters(object):
 
                 transmission.append({'wl':wl, 't_wl':t_wl})
         else:
-            hdulist = fits.open(filters_throughputs)
+
+            if filters_throughputs is not None:
+                hdulist = fits.open(filters_throughputs)
 
             for i in range(self.n_bands):
 
@@ -147,7 +149,9 @@ class PhotometricFilters(object):
 
                 wl_eff[i] = np.sum(wl*t_wl) / np.sum(t_wl)
                 transmission.append({'wl':wl, 't_wl':t_wl})
-            hdulist.close()
+
+            if filters_throughputs is not None:
+                hdulist.close()
 
         trans = Column(name='transmission', data=transmission)
         my_cols = [index, name, colName, errcolName, label, wl_eff, min_rel_err, trans]

@@ -154,7 +154,10 @@ def main():
             filters_throughputs = None
         except:
             filters_file = os.path.expandvars(config.get('main', 'FILTERS CONFIGURATION'))
-            filters_throughputs = os.path.expandvars(config.get('main', 'FILTERS THROUGHPUTS'))
+            try:
+                filters_throughputs = os.path.expandvars(config.get('main', 'FILTERS THROUGHPUTS'))
+            except:
+                filters_throughputs = None
 
         my_photometry.filters.load(filters_file, 
                 filters_folder=args.filters_folder, 

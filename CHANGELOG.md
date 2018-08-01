@@ -1,3 +1,6 @@
+## 0.5.15 (August 01, 2018)
+  - Bug fix: pyp_beagle was crashing when the filter throughputs curves were passed via the 'fileName:' token inside the filter configuration file, in the absence of the 'FILTERS THROUGHPUTS' FITS file
+
 ## 0.5.14 (July 30, 2018)
   - Updated dependencies
   - Allow spectra without a redshift header keyword to be correctly processed

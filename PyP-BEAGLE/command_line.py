@@ -146,7 +146,8 @@ def main():
                 x_log=args.plot_log_wl, 
                 log_flux=args.plot_log_flux,
                 plot_single_solution=args.plot_single_solution,
-                plot_full_SED=args.plot_full_SED)
+                plot_full_SED=args.plot_full_SED,
+                plot_filter_labels=args.plot_filter_labels)
 
         # We can load a set of photometric filters
         try:

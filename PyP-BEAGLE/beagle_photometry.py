@@ -109,7 +109,10 @@ class Photometry:
             x_log=False, 
             log_flux=False,
             plot_single_solution=None,
-            plot_full_SED=False):
+            plot_full_SED=False, 
+            plot_filter_labels=False):
+
+        self.inset_fontsize = BeagleDirectories.inset_fontsize_fraction * BeagleDirectories.fontsize
 
         self.filters = PhotometricFilters()
 
@@ -130,6 +133,8 @@ class Photometry:
         self.plot_full_SED = plot_full_SED
 
         self.log_flux = log_flux
+
+        self.plot_filter_labels = plot_filter_labels
 
         self.single_solutions = None
         if plot_single_solution is not None:
@@ -254,8 +259,8 @@ class Photometry:
             min_x = np.min(xdata)
             max_x = np.max(xdata)
 
-            min_flux[i] = min_x
-            max_flux[i] = max_x
+            min_flux[i] = np.min([min_x, obs_flux[i]-obs_flux_err[i]])
+            max_flux[i] = np.max([max_x, obs_flux[i]+obs_flux_err[i]])
 
             # if min_x == max_x, then you can not use weighted KDE, since you
             # just have one value for the x...this usually happens bacause of
@@ -384,6 +389,41 @@ class Photometry:
 
         x0, x1 = ax.get_xlim()
         if yMin < 0.: plt.plot( [x0,x1], [0.,0.], color='gray', lw=0.8 )
+
+        # Plot labels of photometric filters
+        if self.plot_filter_labels:
+            for i in range(n_bands):
+                x = wl_eff[i]
+                y0, y1 = ax.get_ylim() ; dy = y1-y0
+                y = np.min([max_flux[i]+dy*0.2, y1-0.05*dy])
+
+                if old_API:
+                    band_name = self.filters.data['label'][sor[i]]
+                else:
+                    band_name = self.filters.data['name'][sor[i]]
+
+                band_name.replace("_", "") ; band_name = "$" + band_name + "$"
+
+                rotation = 0
+                if len(band_name) >= 5:
+                    rotation = 45
+
+                ax.text(x, y, 
+                        band_name, 
+                        fontsize=self.inset_fontsize, 
+                        rotation=rotation,
+                        color='black',
+                        va='center',
+                        ha='center')
+
+                ydots = y-0.025*dy
+                y = max_flux[i]
+                ax.plot([x,x], [y,ydots], 
+                        ls=":",
+                        color='darkgrey',
+                        lw=1.0,
+                        zorder=0)
+
 
         # Define plotting styles
         if self.x_log:

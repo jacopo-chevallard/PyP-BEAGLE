@@ -130,6 +130,13 @@ def standard_parser():
         )
 
     parser.add_argument(
+        '--show-filter-labels',
+        help="Label the photometric filters.",
+        action="store_true", 
+        dest="plot_filter_labels" 
+        )
+
+    parser.add_argument(
         '--show-line-labels',
         help="Label the strongest emission lines.",
         action="store_true", 

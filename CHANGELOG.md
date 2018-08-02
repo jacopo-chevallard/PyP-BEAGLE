@@ -1,3 +1,6 @@
+## 0.5.16 (August 02, 2018)
+  - Added option to show labels of photometric filters in the marginal plot
+
 ## 0.5.15 (August 01, 2018)
   - Bug fix: pyp_beagle was crashing when the filter throughputs curves were passed via the 'fileName:' token inside the filter configuration file, in the absence of the 'FILTERS THROUGHPUTS' FITS file
 

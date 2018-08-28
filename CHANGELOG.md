@@ -1,3 +1,6 @@
+## 0.5.17 (August 28, 2018)
+  - Specifying astropy version, otherwise the installation will fail, closes #33
+
 ## 0.5.16 (August 02, 2018)
   - Added option to show labels of photometric filters in the marginal plot
 

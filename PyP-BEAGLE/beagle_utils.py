@@ -112,7 +112,7 @@ def configure_matplotlib():
 
 
     mpl.rcParams['text.latex.preamble'] = '\usepackage{amssymb}, \usepackage{amsmath}, \
-            \usepackage{upgreek}, \usepackage{aas_macros}, \usepackage{txfonts}'
+            \usepackage{upgreek}, \usepackage{txfonts}'
 
     mpl.rcParams['text.latex.preview'] = True
 

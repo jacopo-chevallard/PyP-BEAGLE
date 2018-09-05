@@ -1,3 +1,6 @@
+## 0.5.19 (September 05, 2018)
+  - Removing LaTeX package aas_macros.sty, deals with #34
+
 ## 0.5.18 (September 05, 2018)
   - Included matplotlib configuration directly inside the package, to avoid the need of having to customize the matplotlibrc configuration file
 

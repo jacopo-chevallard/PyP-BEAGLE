@@ -80,6 +80,9 @@ def main():
     # Check if the parameter file contains a PHOTOMETRIC CATALOGUE
     has_photometry = config.has_option('main', 'PHOTOMETRIC CATALOGUE')
 
+    # Check if the parameter file contains a SPECTRAL INDICES CATALOGUE
+    has_spec_indices = config.has_option('main', 'SPECTRAL INDICES CATALOGUE')
+
     # Get list of results files and object IDs from the results directory
     file_list, IDs = get_files_list(suffix=args.suffix)
     if len(file_list) == 0:
@@ -170,6 +173,19 @@ def main():
         # Load observed photometric catalogue
         file_name = os.path.expandvars(config.get('main', 'PHOTOMETRIC CATALOGUE'))
         my_photometry.observed_catalogue.load(file_name)
+
+    # ---------------------------------------------------------
+    # --------- Post-processing of spectral indices data -----------
+    # ---------------------------------------------------------
+    if has_spec_indices:
+
+        # Initialize an instance of the main "SpectralIndices" class
+        my_spec_indices = SpectralIndices(key=args.ID_key,
+            )
+
+        # Load observed catalogue
+        file_name = os.path.expandvars(config.get('main', 'SPECTRAL INDICES CATALOGUE'))
+        my_spec_indices.observed_catalogue.load(file_name)
 
     # ---------------------------------------------------------
     # -------- Post-processing of spectroscopic data ----------

@@ -1,3 +1,6 @@
+## 0.5.18 (September 05, 2018)
+  - Included matplotlib configuration directly inside the package, to avoid the need of having to customize the matplotlibrc configuration file
+
 ## 0.5.17 (August 28, 2018)
   - Specifying astropy version, otherwise the installation will fail, closes #33
 

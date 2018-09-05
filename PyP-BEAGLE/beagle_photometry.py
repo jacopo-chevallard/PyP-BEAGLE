@@ -23,6 +23,7 @@ from beagle_summary_catalogue import BeagleSummaryCatalogue
 from beagle_residual_photometry import ResidualPhotometry
 from beagle_multinest_catalogue import MultiNestCatalogue
 from beagle_posterior_predictive_checks import PosteriorPredictiveChecks
+from beagle_observed_catalogue import ObservedCatalogue
 
 
 Jy = np.float32(1.E-23)
@@ -34,26 +35,7 @@ p_value_lim = 0.05
 
 
 
-class ObservedCatalogue(object):
-
-    def load(self, file_name):
-
-        """ 
-        Load a photometric catalogue of observed sources. It automatically
-        detects, and loads, FITS or ASCII files depending on the suffix.
-
-        Parameters
-        ----------
-        file_name : str
-            Contains the file name of the catalogue.
-        """
-
-        if is_FITS_file(file_name):
-            self.data = fits.open(file_name)[1].data
-            self.columns = fits.open(file_name)[1].columns
-        else:
-            self.data = ascii.read(file_name, Reader=ascii.basic.CommentedHeader)
-
+class PhotometricCatalogue(ObservedCatalogue):
 
     def extract_fluxes(self, filters, ID, key='ID', aper_corr=1.):
         """ 
@@ -116,7 +98,7 @@ class Photometry:
 
         self.filters = PhotometricFilters()
 
-        self.observed_catalogue = ObservedCatalogue()
+        self.observed_catalogue = PhotometricCatalogue()
 
         self.summary_catalogue = BeagleSummaryCatalogue()
 

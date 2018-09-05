@@ -35,6 +35,9 @@ def main():
     # Set directory containing BEAGLE results files
     BeagleDirectories.results_dir = args.results_dir
 
+    # Configure matplotlib
+    configure_matplotlib()
+
     # Read parameter file
     config = ConfigParser.SafeConfigParser()
 

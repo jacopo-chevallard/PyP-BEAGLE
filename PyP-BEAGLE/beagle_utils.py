@@ -12,6 +12,7 @@ import sys
 import dependencies.WeightedKDE as WeightedKDE
 
 import matplotlib.ticker as plticker
+import matplotlib as mpl
 
 
 ID_COLUMN_LENGTH = 100
@@ -83,6 +84,73 @@ def pause():
         wait = input("PRESS ENTER TO CONTINUE.")
     except KeyboardInterrupt:
         raise SystemExit
+
+def configure_matplotlib():
+
+    # I used this useful vi replace command to create some of the commands below
+    # :s/-\(\S\+\)\s\+:\s\+\(\S\+\)/mpl\.rcParams[\'\1\']\ =\ \2/g
+    # which would turn, e.g.  
+    # -ytick.minor.right    : True
+    # into 
+    # mpl.rcParams['ytick.minor.right'] = True
+
+    mpl.rcParams['backend'] = 'TkAgg'
+
+    mpl.rc('lines', 
+            linewidth=1.5, linestyle='-', 
+            color='blue', markeredgewidth=0.0, 
+            markersize=6)
+
+    mpl.rc('font', 
+            family='serif', style='normal', 
+            variant='normal', weight='normal',
+            stretch='normal', size=16.0, 
+            serif='Times')
+
+    mpl.rc('text', 
+            color='black', usetex=True)
+
+
+    mpl.rcParams['text.latex.preamble'] = '\usepackage{amssymb}, \usepackage{amsmath}, \
+            \usepackage{upgreek}, \usepackage{aas_macros}, \usepackage{txfonts}'
+
+    mpl.rcParams['text.latex.preview'] = True
+
+    mpl.rc('axes', 
+            facecolor='white', edgecolor='black',
+            linewidth=1.5, grid=False, labelpad=4.0,
+            labelcolor='black')
+
+    mpl.rcParams['axes.formatter.limits'] = [-7., 7.]
+
+    mpl.rcParams['xtick.top'] = True  ## draw ticks on the top side
+    mpl.rcParams['xtick.bottom'] = True   ## draw ticks on the bottom side
+    mpl.rcParams['xtick.major.size'] = 6.5    ## major tick size in points
+    mpl.rcParams['xtick.minor.size'] = 4      ## minor tick size in points
+    mpl.rcParams['xtick.major.width'] = 1.5    ## major tick width in points
+    mpl.rcParams['xtick.minor.width'] = 1.2    ## minor tick width in points
+    mpl.rcParams['xtick.direction'] = 'in'    ## direction: in, out, or inout
+    mpl.rcParams['xtick.minor.visible'] = True   ## visibility of minor ticks on x-axis
+    mpl.rcParams['xtick.major.top'] = True   ## draw x axis top major ticks
+    mpl.rcParams['xtick.major.bottom'] = True   ## draw x axis bottom major ticks
+    mpl.rcParams['xtick.minor.top'] = True   ## draw x axis top minor ticks
+    mpl.rcParams['xtick.minor.bottom'] = True   ## draw x axis bottom minor ticks
+
+    mpl.rcParams['ytick.left'] = True    ## draw ticks on the left side
+    mpl.rcParams['ytick.right'] = True    ## draw ticks on the right side
+    mpl.rcParams['ytick.major.size'] = 6.5    ## major tick size in points
+    mpl.rcParams['ytick.minor.size'] = 4      ## minor tick size in points
+    mpl.rcParams['ytick.major.width'] = 1.5    ## major tick width in points
+    mpl.rcParams['ytick.minor.width'] = 1.2    ## minor tick width in points
+    mpl.rcParams['ytick.direction'] = 'in'     ## direction: in, out, or inout
+    mpl.rcParams['ytick.minor.visible'] = True  ## visibility of minor ticks on y-axis
+    mpl.rcParams['ytick.major.left'] = True   ## draw y axis left major ticks
+    mpl.rcParams['ytick.major.right'] = True   ## draw y axis right major ticks
+    mpl.rcParams['ytick.minor.left'] = True   ## draw y axis left minor ticks
+    mpl.rcParams['ytick.minor.right'] = True   ## draw y axis right minorticks
+
+    mpl.rc('legend', 
+            frameon=False, numpoints=1, handletextpad=0.2)
 
 class BeagleDirectories(object):
 

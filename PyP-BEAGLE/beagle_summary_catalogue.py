@@ -83,6 +83,7 @@ class BeagleSummaryCatalogue(object):
             file_name=None, 
             credible_intervals=None,
             config_file=None,
+            hdu_col=None,
             n_proc=1):
 
         if file_name is not None:
@@ -90,15 +91,29 @@ class BeagleSummaryCatalogue(object):
         else:
             self.file_name = "BEAGLE_summary_catalogue.fits" 
 
+        self.hdu_col = hdu_col
+
         if config_file is not None:
             if os.path.dirname(config_file) is None:
-                self.config_file  = os.path.join(BeagleDirectories.results_dir, 
+                _config_file  = os.path.join(BeagleDirectories.results_dir, 
                         config_file)
             else:
-                self.config_file = config_file
+                _config_file = config_file
+
+            with open(_config_file) as f:    
+                self.hdu_col = json.load(f, object_pairs_hook=OrderedDict)
+
         else:
-            self.config_file = os.path.join(BeagleDirectories.results_dir, 
-                    "summary_config.json")
+            _config_file = os.path.join(BeagleDirectories.results_dir, "summary_config.json")
+            if os.path.isfile(_config_file):
+                with open(_config_file) as f:    
+                    self.hdu_col = json.load(f, object_pairs_hook=OrderedDict)
+
+        self.exclude_columns = ['probability', 'ln_likelihood', 'chi_square', 'n_data'] 
+
+        if self.hdu_col is None:
+            self.hdu_col = list()
+            self.hdu_col.append({'name':'POSTERIOR PDF'})
 
         self.credible_intervals = credible_intervals
 
@@ -166,9 +181,6 @@ class BeagleSummaryCatalogue(object):
         """ 
         """ 
 
-        with open(self.config_file) as f:    
-            hdu_col = json.load(f, object_pairs_hook=OrderedDict)
-
         # You consider the first file in the list and use as a "mold" to create
         # the structure (binary tables and their columns) of the output FITS file
         firstfile = os.path.join(BeagleDirectories.results_dir, file_list[0])
@@ -181,7 +193,7 @@ class BeagleSummaryCatalogue(object):
     
         # Now you cycle over all extension and columns that you want to put in
         # the summary catalogue
-        for hdu in hdu_col:
+        for hdu in self.hdu_col:
             new_columns = list()
 
             # Pick the extension name
@@ -196,7 +208,7 @@ class BeagleSummaryCatalogue(object):
                 columnNames = hdu['columns']
             # While by default you take all columns in that extensions
             else:
-                columnNames = hdulist[hdu_name].columns.names
+                columnNames = [name for name in hdulist[hdu_name].columns.names if name not in self.exclude_columns]
 
             # For each column, you add a '_mean', '_median' and confidence
             # intervals columns, taking the appropriate units from the FITS
@@ -240,11 +252,11 @@ class BeagleSummaryCatalogue(object):
             pool = ProcessingPool(nodes=self.n_proc)
             data = pool.map(self.compute_single, 
                     file_list,
-                    (hdu_col,)*len(file_list))
+                    (self.hdu_col,)*len(file_list))
         else:
             data = list()
             for i, file in enumerate(file_list):
-                d = self.compute_single(file, hdu_col)
+                d = self.compute_single(file, self.hdu_col)
                 data.append(d)
 
         #print("--- %s seconds ---" % (time.time() - start_time))
@@ -255,12 +267,12 @@ class BeagleSummaryCatalogue(object):
 
         for i, file in enumerate(file_list):
             idx = index[i]
-            for hdu in hdu_col:
+            for hdu in self.hdu_col:
                 hdu_name = hdu['name']
                 if 'columns' in hdu:
                     columnNames = hdu['columns']
                 else:
-                    columnNames = hdulist[hdu_name].columns.names
+                    columnNames = [name for name in hdulist[hdu_name].columns.names if name not in self.exclude_columns]
 
                 for col_name in columnNames:
                     self.hdulist[hdu_name].data['ID'][i] = data[idx]['ID']

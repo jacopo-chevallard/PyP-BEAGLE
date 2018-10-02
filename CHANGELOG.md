@@ -1,3 +1,7 @@
+## 0.5.20 (October 02, 2018)
+  - The font size in the triangle plots can now be set using the '--fontsize' command-line option; for aesthetical reasons, reduced the number of tick marks and tick labels in the triangle plots
+  - In the absence of a JSON file, the summary catalogue is now computed by default for the 'POSTERIOR PDF' extension
+
 ## 0.5.19 (September 05, 2018)
   - Removing LaTeX package aas_macros.sty, deals with #34
 

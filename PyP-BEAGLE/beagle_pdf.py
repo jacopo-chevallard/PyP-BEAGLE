@@ -15,7 +15,10 @@ from beagle_utils import BeagleDirectories, prepare_plot_saving, plot_exists
 
 class PDF(object):
 
-    def __init__(self, params_file, mock_catalogue=None, plot_single_solution=None):
+    def __init__(self, params_file, 
+            mock_catalogue=None, 
+            plot_single_solution=None,
+            triangle_font_size=None):
 
         # Names of parameters, used to label the axes, and whether they are log
         # or not
@@ -32,6 +35,9 @@ class PDF(object):
             with fits.open(plot_single_solution) as f:
                 self.single_solutions['ID'] = f[1].data['ID']
                 self.single_solutions['row'] = f[1].data['row_index']
+
+
+        self.triangle_font_size = triangle_font_size
 
     def plot_triangle(self, ID, 
             params_to_plot=None, 
@@ -167,22 +173,41 @@ class PDF(object):
         g.settings.num_plot_contours = 3
         g.settings.prob_y_ticks = True
 
+        # Change the size of the labels 
+        if self.triangle_font_size is None:
+            g.settings.lab_fontsize = 7 + 4 * g.settings.subplot_size_inch
+            g.settings.axes_fontsize = 4 + 4 * g.settings.subplot_size_inch
+        else:
+            g.settings.lab_fontsize = self.triangle_font_size
+            g.settings.axes_fontsize = self.triangle_font_size
+
         line_args = {"lw":2, "color":colorConverter.to_rgb("#006FED") } 
 
         g.triangle_plot(samples, filled=True, line_args=line_args)
 
         g.fig.subplots_adjust(wspace=0.1, hspace=0.1)
 
-        for i, ax in enumerate([g.subplots[i,i] for i in range(nParamsToPlot)]):
-            ax.set_autoscalex_on(True)
+        prune  = 'both'
+
+        #for i, ax in enumerate([g.subplots[i,i] for i in range(nParamsToPlot)]):
+        #    ax.set_autoscalex_on(True)
+
+        for i in range(len(names)):
+            for i2 in range(i, len(names)):
+                _ax = g._subplot(i, i2)
+                _ax.xaxis.set_major_locator(plt.MaxNLocator(3, prune=prune))
+                _ax.yaxis.set_major_locator(plt.MaxNLocator(3, prune=prune))
 
         # Add tick labels at top of diagonal panels
         for i, ax in enumerate([g.subplots[i,i] for i in range(nParamsToPlot)]):
             par_name = keys[i]
+
             if i < nParamsToPlot-1: 
-                ticklabels = [item.get_text() for item in g.subplots[-1,i].xaxis.get_ticklabels()]
-                ax.xaxis.set_ticklabels(ticklabels)
-                ax.tick_params(labelbottom='off',labeltop='on')
+                ax.tick_params(which='both', labelbottom=False, 
+                        top=True, labeltop=True, left=False, labelleft=False)
+            else:
+                ax.tick_params(which='both', labelbottom=True, 
+                        top=True, labeltop=False, left=False, labelleft=False)
 
             # Add shaded region showing 1D 68% credible interval
             y0, y1 = ax.get_ylim()

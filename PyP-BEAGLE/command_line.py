@@ -246,7 +246,8 @@ def main():
         # Set parameter names and labels
         my_PDF = PDF(params_file, 
                 mock_catalogue=mock_catalogue,
-                plot_single_solution=args.plot_single_solution)
+                plot_single_solution=args.plot_single_solution,
+                triangle_font_size=args.fontsize)
 
         if args.n_proc > 1:
             pool.map(my_PDF.plot_triangle, IDs)

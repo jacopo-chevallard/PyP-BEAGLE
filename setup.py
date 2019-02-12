@@ -37,7 +37,7 @@ setup(
     long_description=long_description,
     url='https://github.com/jacopo-chevallard/PyP-BEAGLE',
     author='Jacopo Chevallard',
-    author_email='jacopo.chevallard@gmail.com',
+    author_email='jacopo.chevallard@mailfence.com',
     license='MIT',
 
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers

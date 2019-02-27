@@ -1,3 +1,15 @@
+## 0.6.0 (February 27, 2019)
+  - Merge branch 'feature/spectral_indices' into develop
+  - Added SpectralIndices module
+  - Finished integration of module to plot spectral indices (integrated line fluxes and EWs)
+  - Added option to print values of line fluxes in the output image
+  - Started integrating the new 'SpectralIndices' class in the main module
+  - Started implementing the new module to post-process fitting to spectral indices / integrated fluxes / EWs
+  - Using the new class 'ObservedCatalogue'
+  - Added new module containing a generic 'observed catalogue'
+  - Changed mail address
+  - Removed support for python 2.6
+
 ## 0.5.20 (October 02, 2018)
   - The font size in the triangle plots can now be set using the '--fontsize' command-line option; for aesthetical reasons, reduced the number of tick marks and tick labels in the triangle plots
   - In the absence of a JSON file, the summary catalogue is now computed by default for the 'POSTERIOR PDF' extension

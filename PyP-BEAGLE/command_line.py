@@ -80,6 +80,9 @@ def main():
     # Check if the parameter file contains a PHOTOMETRIC CATALOGUE
     has_photometry = config.has_option('main', 'PHOTOMETRIC CATALOGUE')
 
+    # Check if the parameter file contains a SPECTRAL INDICES CATALOGUE
+    has_spec_indices = config.has_option('main', 'SPECTRAL INDICES CATALOGUE')
+
     # Get list of results files and object IDs from the results directory
     file_list, IDs = get_files_list(suffix=args.suffix)
     if len(file_list) == 0:
@@ -172,6 +175,24 @@ def main():
         my_photometry.observed_catalogue.load(file_name)
 
     # ---------------------------------------------------------
+    # --------- Post-processing of spectral indices data -----------
+    # ---------------------------------------------------------
+    if has_spec_indices and args.line_labels_json:
+
+        # Initialize an instance of the main "SpectralIndices" class
+        my_spec_indices = SpectralIndices(args.line_labels_json, 
+                key=args.ID_key,
+                log_flux=args.plot_log_flux,
+                print_values=args.plot_line_values)
+
+        file_name = os.path.expandvars(config.get('main', 'SPECTRAL INDICES CONFIGURATION'))
+        my_spec_indices.observed_catalogue.configure(file_name)
+
+        # Load observed catalogue
+        file_name = os.path.expandvars(config.get('main', 'SPECTRAL INDICES CATALOGUE'))
+        my_spec_indices.observed_catalogue.load(file_name)
+
+    # ---------------------------------------------------------
     # -------- Post-processing of spectroscopic data ----------
     # ---------------------------------------------------------
     if has_spectra:
@@ -232,6 +253,9 @@ def main():
 
             if has_photometry:
                 pool.map(my_photometry.plot_marginal, IDs)
+
+            if has_spec_indices:
+                pool.map(my_spec_indices.plot_line_fluxes, IDs)
         else:
             for i, ID in enumerate(IDs):
                 if has_spectra:
@@ -239,6 +263,9 @@ def main():
 
                 if has_photometry:
                     my_photometry.plot_marginal(ID)
+
+                if has_spec_indices:
+                    my_spec_indices.plot_line_fluxes(ID)
 
     # Plot the triangle plot
     if args.plot_triangle:

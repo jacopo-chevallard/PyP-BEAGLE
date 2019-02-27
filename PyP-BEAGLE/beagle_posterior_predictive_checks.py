@@ -205,7 +205,7 @@ class PosteriorPredictiveChecks(object):
 
         Parameters
         ----------
-        observed_catalogue : `beagle_photometry.ObservedCatalogue`
+        observed_catalogue : `beagle_photometry.PhotometricCatalogue`
             Class containing an observed photometric catalogue.
 
         filters : `beagle_filters.PhotometricFilters`

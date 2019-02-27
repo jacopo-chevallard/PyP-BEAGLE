@@ -9,3 +9,4 @@ from beagle_mock_catalogue import BeagleMockCatalogue
 from beagle_residual_photometry import ResidualPhotometry
 from beagle_multinest_catalogue import MultiNestCatalogue
 from beagle_posterior_predictive_checks import PosteriorPredictiveChecks
+from beagle_spectral_indices import SpectralIndices

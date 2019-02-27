@@ -144,6 +144,13 @@ def standard_parser():
         )
 
     parser.add_argument(
+        '--show-line-values',
+        help="Show the line flux values in the output image.",
+        action="store_true", 
+        dest="plot_line_values" 
+        )
+
+    parser.add_argument(
         '--json-line-labels',
         help="JSON file containing the configuration for labelling emission lines.",
         action="store", 

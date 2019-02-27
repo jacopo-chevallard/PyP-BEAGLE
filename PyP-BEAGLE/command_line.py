@@ -180,8 +180,9 @@ def main():
     if has_spec_indices:
 
         # Initialize an instance of the main "SpectralIndices" class
-        my_spec_indices = SpectralIndices(key=args.ID_key,
-            )
+        my_spec_indices = SpectralIndices(args.line_labels_json, 
+                key=args.ID_key,
+                print_values=args.plot_line_values)
 
         # Load observed catalogue
         file_name = os.path.expandvars(config.get('main', 'SPECTRAL INDICES CATALOGUE'))

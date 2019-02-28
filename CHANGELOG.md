@@ -1,3 +1,9 @@
+## 0.6.1 (February 28, 2019)
+  - Implemented option to print the values of observed and model fluxes on the plot
+  - Removed unused function
+  - Changed parser variable name
+  - Cosmetics: added dotted lines linking symbols in the plot to the line labels on the x-axis
+
 ## 0.6.0 (February 27, 2019)
   - Merge branch 'feature/spectral_indices' into develop
   - Added SpectralIndices module

@@ -222,7 +222,7 @@ class SpectralIndices(object):
             minY_values[i] = _min
 
             _all = np.concatenate((_observed_flux+_observed_flux_err, x_plot))
-            _max = np.amax(_all)
+            _max = np.amax(_all[_all > 0.])
             maxY_values[i] = _max
 
         minY = np.amin(minY_values)
@@ -292,6 +292,8 @@ class SpectralIndices(object):
 
             if self.print_values:
                 _val = _observed_fluxes[i]
+                if not _val > 0.:
+                    continue
                 _val_err = _observed_flux_errors[i]
                 _n = int(np.floor(np.log10(_val)))
                 _norm = 10.**_n

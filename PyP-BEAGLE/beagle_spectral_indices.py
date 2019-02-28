@@ -25,6 +25,7 @@ import dependencies.WeightedKDE as WeightedKDE
 import dependencies.autoscale as autoscale
 from dependencies.walker_random_sampling import WalkerRandomSampling
 from dependencies import FillBetweenStep
+from significant_digits import to_precision
 
 from beagle_utils import BeagleDirectories, prepare_plot_saving, set_plot_ticks, plot_exists, \
         prepare_violin_plot, extract_row
@@ -104,11 +105,11 @@ class SpectralIndices(object):
 
     def plot_line_fluxes(self, 
             ID, replot=False, 
-            title=False, letter=None):
+            title=False, letter=None, signif_digits=1):
 
         suffix = ""
-        if self.print_values:
-            suffix = "_printed_values"
+        #if self.print_values:
+        #    suffix = "_printed_values"
 
         plot_name = str(ID) + '_BEAGLE_spectral_indices' + suffix + ".pdf"
 
@@ -132,19 +133,19 @@ class SpectralIndices(object):
 
         # Read model fluxes
         model_fluxes = hdulist['spectral indices'].data
-        n_lines = len(model_fluxes.columns)
+        n_lines = len(self.line_list)
 
         # Read the posterior probability
         probability = hdulist['posterior pdf'].data['probability']
 
         width = 0.5
 
-        minY_values = list()
-        maxY_values = list()
+        minY_values = np.zeros(n_lines) ; maxY_values = np.zeros(n_lines)
+        _observed_fluxes = np.zeros(n_lines) ; _observed_flux_errors = np.zeros(n_lines)
+        _model_fluxes = np.zeros(n_lines)
         for i, (key, value) in enumerate(self.line_list.iteritems()):
 
             X = i+1
-
             _line_conf = self.observed_catalogue.line_config[key]
             if 'lum' in _line_conf:
                 _col_name = _line_conf['lum']
@@ -154,13 +155,17 @@ class SpectralIndices(object):
                 _err_col_name = _line_conf['ewErr']
 
             _observed_flux = observation[_col_name]
+            _observed_fluxes[i] = _observed_flux 
+
             _observed_flux_err = observation[_err_col_name]
+            _observed_flux_errors[i] = _observed_flux_err
 
             _label = value["label"]
 
             # This function provides you with all the necessary info to draw violin plots
             _model_flux = model_fluxes[key]
             kde_pdf, pdf_norm, median_flux, x_plot, y_plot = prepare_violin_plot(_model_flux, weights=probability) 
+            _model_fluxes[i] = median_flux
 
             _max_y = np.max(y_plot)
             w = width / _max_y
@@ -214,24 +219,19 @@ class SpectralIndices(object):
 
             _all = np.concatenate((_observed_flux-_observed_flux_err, x_plot))
             _min = np.amin(_all[_all > 0.])
-            minY_values.append(_min)
+            minY_values[i] = _min
 
             _all = np.concatenate((_observed_flux+_observed_flux_err, x_plot))
             _max = np.amax(_all)
-            maxY_values.append(_max)
+            maxY_values[i] = _max
 
-            if self.print_values:
-                t = ax.text(X, ax.get_ylim()[1],
-                        "${:.2f}".format(_observed_flux) + "\\pm "+ "{:.2f}$".format(_observed_flux_err),
-                        horizontalalignment='center',
-                        verticalalignment='center',
-                        color="black", 
-                        fontsize=self.inset_fontsize)
+        minY = np.amin(minY_values)
+        maxY = np.max(maxY_values)
+        if self.print_values:
+            _factor = 0.15
+        else:
+            _factor = 0.10
 
-
-        minY_values = np.array(minY_values) ; minY = np.amin(minY_values)
-        maxY_values = np.array(maxY_values) ; maxY = np.max(maxY_values)
-        _factor = 0.10
         if self.plot_log_flux:
             dY = np.log10(maxY)-np.log10(minY)
             minY = 10.**(np.log10(minY)-_factor*dY)
@@ -267,20 +267,55 @@ class SpectralIndices(object):
         ticklabels = list()
         alpha = 0.6
         minY, maxY = ax.get_ylim() ; dY = maxY - minY
-        _factor = 0.03
+        _factor = 0.03  ; _init_fact = 0.04
+        j = 1
+        _fontsize = min(self.inset_fontsize, self.inset_fontsize/(0.075*n_lines))
         for i, (line_key, line_value) in enumerate(self.line_list.iteritems()):
             X = i+1
             ticklabels.append(line_value["label"])
+            _variab_fact = _init_fact * j
             if self.plot_log_flux:
                 dY = np.log10(maxY) - np.log10(minY)
                 Y = 10.**(np.log10(minY_values[i]) - _factor*dY)
+                Y_t0 = 10.**(np.log10(maxY) - _variab_fact*dY)
+                Y_t1 = 10.**(np.log10(maxY) - _variab_fact*dY - 1.4*_init_fact*dY)
             else:
                 Y = minY_values[i] - _factor*dY
+                Y_t0 = maxY - _variab_fact*dY
+                Y_t1 = maxY - _variab_fact*dY - 1.4*_init_fact*dY
+
             ax.plot([X,X], [minY, Y],
                     color="black",
                     ls=":",
                     zorder=2,
                     alpha=alpha)
+
+            if self.print_values:
+                _val = _observed_fluxes[i]
+                _val_err = _observed_flux_errors[i]
+                _n = int(np.floor(np.log10(_val)))
+                _norm = 10.**_n
+                #_text = '$' + to_precision(_val/_norm, signif_digits+1) + '\\pm' + to_precision(_val_err/_norm, signif_digits) + '\\; 10^{' + str(_n) + '}$'
+                _text = '$' + to_precision(_val/_norm, signif_digits+2) + '\\pm' + to_precision(_val_err/_norm, signif_digits) + '$'
+                ax.text(X, Y_t0,
+                        _text,
+                        horizontalalignment='center',
+                        verticalalignment='center',
+                        color="black", 
+                        fontsize=_fontsize)
+
+                _val = _model_fluxes[i]
+                _text = '$' + to_precision(_val/_norm, signif_digits+2) + '$'
+                ax.text(X, Y_t1,
+                        _text,
+                        horizontalalignment='center',
+                        verticalalignment='center',
+                        color="black", 
+                        fontsize=_fontsize)
+
+            j += 1
+            if j%4 == 0:
+                j = 1
 
         ax.set_xticklabels(ticklabels, rotation=45, rotation_mode="anchor", ha='right')
         #zed = [tick.label.set_fontsize(fontsize*factor) for tick in ax.yaxis.get_major_ticks()]

@@ -183,7 +183,7 @@ def main():
         my_spec_indices = SpectralIndices(args.line_labels_json, 
                 key=args.ID_key,
                 log_flux=args.plot_log_flux,
-                print_values=args.plot_line_values)
+                print_values=args.print_line_values)
 
         file_name = os.path.expandvars(config.get('main', 'SPECTRAL INDICES CONFIGURATION'))
         my_spec_indices.observed_catalogue.configure(file_name)

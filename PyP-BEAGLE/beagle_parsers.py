@@ -147,7 +147,7 @@ def standard_parser():
         '--show-line-values',
         help="Show the line flux values in the output image.",
         action="store_true", 
-        dest="plot_line_values" 
+        dest="print_line_values" 
         )
 
     parser.add_argument(

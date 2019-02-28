@@ -13,7 +13,7 @@ from natsort import index_natsorted, order_by_index
 
 from beagle_utils import prepare_data_saving, BeagleDirectories, getPathForData, data_exists,\
     ID_COLUMN_LENGTH
-from significant_digits import to_precision, float_nsf
+from significant_digits import to_precision
 
 def get1DInterval(param_values, probability, levels):
 

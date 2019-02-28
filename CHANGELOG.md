@@ -1,3 +1,6 @@
+## 0.6.2 (February 28, 2019)
+  - Correctly dealing with lines not observed (i.e. negative fluxes and errors in the observed catalogue)
+
 ## 0.6.1 (February 28, 2019)
   - Implemented option to print the values of observed and model fluxes on the plot
   - Removed unused function

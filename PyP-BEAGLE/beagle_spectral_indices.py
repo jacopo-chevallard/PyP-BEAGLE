@@ -140,6 +140,7 @@ class SpectralIndices(object):
         width = 0.5
 
         minY_values = list()
+        maxY_values = list()
         for i, (key, value) in enumerate(self.line_list.iteritems()):
 
             X = i+1
@@ -170,14 +171,20 @@ class SpectralIndices(object):
             kwargs = {'alpha':0.8}
             ax.errorbar(X,
                     _observed_flux, 
-                    yerr = _observed_flux_err,
-                    color = "dodgerblue",
-                    ls = " ",
-                    marker = "D",
-                    markeredgewidth = 0.,
+                    yerr=_observed_flux_err,
+                    color="dodgerblue",
+                    ls=" ",
+                    marker=" ",
+                    zorder=5,
+                    **kwargs)
+
+            ax.plot(X,
+                    _observed_flux, 
+                    color="dodgerblue",
+                    ls=" ",
+                    marker="D",
+                    markeredgewidth=0.,
                     markersize = 8,
-                    elinewidth=1.0,
-                    capsize=3,
                     zorder=3,
                     **kwargs)
 
@@ -205,8 +212,13 @@ class SpectralIndices(object):
                     alpha = 0.7
                     )
 
-            _min = np.amin(np.concatenate((_observed_flux-_observed_flux_err, [median_flux])))
+            _all = np.concatenate((_observed_flux-_observed_flux_err, x_plot))
+            _min = np.amin(_all[_all > 0.])
             minY_values.append(_min)
+
+            _all = np.concatenate((_observed_flux+_observed_flux_err, x_plot))
+            _max = np.amax(_all)
+            maxY_values.append(_max)
 
             if self.print_values:
                 t = ax.text(X, ax.get_ylim()[1],
@@ -216,6 +228,21 @@ class SpectralIndices(object):
                         color="black", 
                         fontsize=self.inset_fontsize)
 
+
+        minY_values = np.array(minY_values) ; minY = np.amin(minY_values)
+        maxY_values = np.array(maxY_values) ; maxY = np.max(maxY_values)
+        _factor = 0.10
+        if self.plot_log_flux:
+            dY = np.log10(maxY)-np.log10(minY)
+            minY = 10.**(np.log10(minY)-_factor*dY)
+            maxY = 10.**(np.log10(maxY)+_factor*dY)
+        else:
+            dY = maxY-minY
+            minY -= _factor*dY
+            maxY += _factor*dY
+            
+        ax.set_ylim(minY, maxY) 
+        
         # Set better location of tick marks
         set_plot_ticks(ax, n_x=5)
 
@@ -239,13 +266,17 @@ class SpectralIndices(object):
 
         ticklabels = list()
         alpha = 0.6
-        minY, maxY = ax.get_ylim()
-        #print "min, max", minY, maxY
+        minY, maxY = ax.get_ylim() ; dY = maxY - minY
+        _factor = 0.03
         for i, (line_key, line_value) in enumerate(self.line_list.iteritems()):
+            X = i+1
             ticklabels.append(line_value["label"])
-            Y = minY_values[i] - 0.03*(maxY-minY)
-            #print "--> ", minY, Y
-            ax.plot([i,i], [minY, Y],
+            if self.plot_log_flux:
+                dY = np.log10(maxY) - np.log10(minY)
+                Y = 10.**(np.log10(minY_values[i]) - _factor*dY)
+            else:
+                Y = minY_values[i] - _factor*dY
+            ax.plot([X,X], [minY, Y],
                     color="black",
                     ls=":",
                     zorder=2,

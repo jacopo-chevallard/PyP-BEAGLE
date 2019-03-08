@@ -93,17 +93,15 @@ def main():
         #regex = re.compile(r"_MC\w+", re.IGNORECASE)
         regex = re.compile(args.regex_ignore, re.IGNORECASE)
 
-    if args.ID_list is not None:
-        IDs_ = IDs
-        file_list_ = file_list
-        for ID, file in zip(IDs_, file_list_):
-            if regex is not None:
-                ID_ = regex.sub('', ID)
-            else:
-                ID_ = ID
-            if not ID_ in args.ID_list:
+    for i, (ID, file) in enumerate(zip(IDs, file_list)):
+        if args.ID_list is not None:
+            if not ID in args.ID_list:
                 IDs.remove(ID)
                 file_list.remove(file)
+                continue
+        if regex is not None:
+            _ID = regex.sub('', ID)
+            IDs[i] = _ID
 
     # Load mock catalogue
     mock_catalogue = None
@@ -230,16 +228,19 @@ def main():
         file_names = list()
 
         for ID in IDs:
-            ID_ = ID
+            _ID = ID
             if regex is not None:
-                ID_ = regex.sub('', ID_)
+                _ID = regex.sub('', _ID)
             for line in lines:
-                line_ = trimFitsSuffix(os.path.basename(line))
+                _line = trimFitsSuffix(os.path.basename(line))
                 if regex is not None:
-                    line_ = regex.sub('', line_)
-                if ID_ == line_:
+                    _line = regex.sub('', _line)
+                _line = _line.split('_')[0]
+                if _ID == _line:
                     file_names.append(line)
                     break
+
+        print "file_names: ", file_names
 
     # Create "pool" of processes
     if args.n_proc > 1:

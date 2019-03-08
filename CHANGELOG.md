@@ -1,3 +1,6 @@
+## 0.6.3 (March 08, 2019)
+  - Bug fix: file names of spectra and object IDs were not correctly matched
+
 ## 0.6.2 (February 28, 2019)
   - Correctly dealing with lines not observed (i.e. negative fluxes and errors in the observed catalogue)
 

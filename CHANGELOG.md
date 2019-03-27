@@ -1,3 +1,7 @@
+## 0.6.4 (March 27, 2019)
+  - Introduced option to overplot on a photometric SED the maximum-a-posteriori (MAP) spectrum
+  - Exploiting the *args and **kwargs appraoches to simplify the passing of command-line arguments to the different classes
+
 ## 0.6.3 (March 08, 2019)
   - Bug fix: file names of spectra and object IDs were not correctly matched
 

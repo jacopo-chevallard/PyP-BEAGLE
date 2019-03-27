@@ -29,6 +29,9 @@ def main():
     # Get parsed arguments
     args = parser.parse_args()    
 
+    # Convert argparse.ArgumentParser() Namespace object into a dictionary (see https://stackoverflow.com/a/16878364)
+    args_dict = vars(args)
+
     # Set logging level
     logging.basicConfig(level=args.loglevel)
 
@@ -146,13 +149,8 @@ def main():
     if has_photometry:
 
         # Initialize an instance of the main "Photometry" class
-        my_photometry = Photometry(key=args.ID_key, 
-                x_log=args.plot_log_wl, 
-                log_flux=args.plot_log_flux,
-                plot_single_solution=args.plot_single_solution,
-                plot_full_SED=args.plot_full_SED,
-                plot_filter_labels=args.plot_filter_labels)
-
+        my_photometry = Photometry(**args_dict)
+                
         # We can load a set of photometric filters
         try:
             filters_file = os.path.expandvars(config.get('main', 'FILTERS FILE'))
@@ -178,10 +176,7 @@ def main():
     if has_spec_indices and args.line_labels_json:
 
         # Initialize an instance of the main "SpectralIndices" class
-        my_spec_indices = SpectralIndices(args.line_labels_json, 
-                key=args.ID_key,
-                log_flux=args.plot_log_flux,
-                print_values=args.print_line_values)
+        my_spec_indices = SpectralIndices(**args_dict)
 
         file_name = os.path.expandvars(config.get('main', 'SPECTRAL INDICES CONFIGURATION'))
         my_spec_indices.observed_catalogue.configure(file_name)
@@ -197,19 +192,8 @@ def main():
 
         # Initialize an instance of the main "Spectrum" class
         my_spectrum = Spectrum(params_file, 
-                resolution=args.resolution, 
-                plot_full_SED=args.plot_full_SED,
-                wl_range=args.wl_range,
-                line_labels_json=args.line_labels_json,
-                plot_line_labels=args.plot_line_labels, 
-                mock_catalogue=mock_catalogue,
-                log_flux=args.plot_log_flux,
-                show_residual=args.show_residual,
-                print_ID=args.print_ID,
-                wl_rest=args.wl_rest,
-                draw_steps=args.draw_steps,
-                plot_suffix=args.plot_suffix,
-                wl_units=args.wl_units)
+                **args_dict
+                )
 
         my_spectrum.observed_spectrum.configure(config=config)
 
@@ -240,8 +224,6 @@ def main():
                     file_names.append(line)
                     break
 
-        print "file_names: ", file_names
-
     # Create "pool" of processes
     if args.n_proc > 1:
         pool = ProcessingPool(nodes=args.n_proc)
@@ -255,7 +237,7 @@ def main():
             if has_photometry:
                 pool.map(my_photometry.plot_marginal, IDs)
 
-            if has_spec_indices:
+            if has_spec_indices and args.line_labels_json:
                 pool.map(my_spec_indices.plot_line_fluxes, IDs)
         else:
             for i, ID in enumerate(IDs):
@@ -265,7 +247,7 @@ def main():
                 if has_photometry:
                     my_photometry.plot_marginal(ID)
 
-                if has_spec_indices:
+                if has_spec_indices and args.line_labels_json:
                     my_spec_indices.plot_line_fluxes(ID)
 
     # Plot the triangle plot
@@ -274,8 +256,7 @@ def main():
         # Set parameter names and labels
         my_PDF = PDF(params_file, 
                 mock_catalogue=mock_catalogue,
-                plot_single_solution=args.plot_single_solution,
-                triangle_font_size=args.fontsize)
+                **args_dict)
 
         if args.n_proc > 1:
             pool.map(my_PDF.plot_triangle, IDs)

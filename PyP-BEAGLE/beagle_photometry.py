@@ -87,13 +87,8 @@ class PhotometricCatalogue(ObservedCatalogue):
 
 class Photometry:
 
-    def __init__(self, key='ID', 
-            x_log=False, 
-            log_flux=False,
-            plot_single_solution=None,
-            plot_full_SED=False, 
-            plot_filter_labels=False):
-
+    def __init__(self, **kwargs):
+        
         self.inset_fontsize = BeagleDirectories.inset_fontsize_fraction * BeagleDirectories.fontsize
 
         self.filters = PhotometricFilters()
@@ -108,20 +103,20 @@ class Photometry:
 
         self.PPC = PosteriorPredictiveChecks()
 
-        self.key = key
+        self.key = kwargs.get('ID_key', 'ID')
         
-        self.x_log = x_log
+        self.x_log = kwargs.get('plot_log_wl', False)
 
-        self.plot_full_SED = plot_full_SED
+        self.plot_full_SED = kwargs.get('plot_full_SED', False)
 
-        self.log_flux = log_flux
+        self.log_flux = kwargs.get('log_flux', False)
 
-        self.plot_filter_labels = plot_filter_labels
+        self.plot_filter_labels = kwargs.get('plot_filter_labels', False)
 
         self.single_solutions = None
-        if plot_single_solution is not None:
+        if kwargs.get('plot_single_solution') is not None:
             self.single_solutions = OrderedDict()
-            with fits.open(plot_single_solution) as f:
+            with fits.open(kwargs.get('plot_single_solution')) as f:
                 self.single_solutions['ID'] = f[1].data['ID']
                 self.single_solutions['row'] = f[1].data['row_index']
 

@@ -164,20 +164,7 @@ class ObservedSpectrum(object):
 class Spectrum(object):
 
     def __init__(self, params_file,
-            line_labels_json=None,
-            plot_line_labels=False,
-            resolution=None,
-            mock_catalogue=None,
-            wl_range=None,
-            wl_units='micron',
-            plot_full_SED=False,
-            print_ID=False,
-            wl_rest=False,
-            log_flux=False,
-            draw_steps=False,
-            show_residual=False,
-            plot_suffix=None,
-            n_SED_to_plot=100):
+            **kwargs):
 
         self.inset_fontsize = BeagleDirectories.inset_fontsize_fraction * BeagleDirectories.fontsize
 
@@ -185,42 +172,42 @@ class Spectrum(object):
 
         self.multinest_catalogue = MultiNestCatalogue()
 
-        self.mock_catalogue = mock_catalogue
+        self.mock_catalogue = kwargs.get('mock_catalogue')
 
         #self.residual = ResidualPhotometry()
 
         self.PPC = PosteriorPredictiveChecks()
 
-        if line_labels_json == None:
+        if kwargs.get('line_labels_json') is None:
             self.line_labels = json.load(resource_stream(__name__, 'files/emission_lines.json'), 
                     object_pairs_hook=OrderedDict)
         else:
-            with open(line_labels_json) as f:    
+            with open(kwargs.get('line_labels_json')) as f:    
                  self.line_labels = json.load(f, object_pairs_hook=OrderedDict)
 
-        self.plot_line_labels = plot_line_labels
+        self.plot_line_labels = kwargs.get('plot_line_labels', False)
 
-        self.resolution = resolution
+        self.resolution = kwargs.get('resolution')
     
-        self.wl_range = wl_range
+        self.wl_range = kwargs.get('wl_range')
 
-        self.wl_units = wl_units
+        self.wl_units = kwargs.get('wl_units', 'micron')
 
-        self.wl_rest = wl_rest
+        self.wl_rest = kwargs.get('wl_rest', False)
 
-        self.log_flux = log_flux
+        self.log_flux = kwargs.get('plot_log_flux', False)
 
-        self.plot_full_SED = plot_full_SED
+        self.plot_full_SED = kwargs.get('plot_full_SED', False)
 
-        self.show_residual = show_residual
+        self.show_residual = kwargs.get('show_residual', False)
 
-        self.print_ID = print_ID
+        self.print_ID = kwargs.get('print_ID', False)
 
-        self.draw_steps = draw_steps
+        self.draw_steps = kwargs.get('draw_steps', False)
 
-        self.n_SED_to_plot = n_SED_to_plot
+        self.n_SED_to_plot = kwargs.get('n_SED_to_plot', 100)
 
-        self.plot_suffix = plot_suffix
+        self.plot_suffix = kwargs.get('plot_suffix')
 
     def plot_marginal(self, ID, 
             observation_name=None,

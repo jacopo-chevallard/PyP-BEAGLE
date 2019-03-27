@@ -80,27 +80,22 @@ class SpectralIndicesCatalogue(ObservedCatalogue):
 
 class SpectralIndices(object):
 
-    def __init__(self, 
-            line_list_json,
-            key='ID',
-            log_flux=False,
-            print_values=False,
-            max_interval=95.0):
+    def __init__(self, **kwargs):
 
-        self.key = key 
+        with open(kwargs.get('line_labels_json')) as f:    
+            self.line_list = json.load(f, object_pairs_hook=OrderedDict)
 
         self.inset_fontsize = BeagleDirectories.inset_fontsize_fraction * BeagleDirectories.fontsize
 
-        self.plot_log_flux = log_flux
-
         self.observed_catalogue = SpectralIndicesCatalogue()
 
-        with open(line_list_json) as f:    
-            self.line_list = json.load(f, object_pairs_hook=OrderedDict)
+        self.key = kwargs.get('ID_key') 
 
-        self.print_values = print_values
+        self.plot_log_flux = kwargs.get('plot_log_flux')
 
-        self.max_interval = max_interval
+        self.print_values = kwargs.get('print_line_values')
+
+        self.max_interval = kwargs.get('max_interval')
 
 
     def plot_line_fluxes(self, 

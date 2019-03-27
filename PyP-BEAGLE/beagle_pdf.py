@@ -15,10 +15,7 @@ from beagle_utils import BeagleDirectories, prepare_plot_saving, plot_exists
 
 class PDF(object):
 
-    def __init__(self, params_file, 
-            mock_catalogue=None, 
-            plot_single_solution=None,
-            triangle_font_size=None):
+    def __init__(self, params_file, **kwargs):
 
         # Names of parameters, used to label the axes, and whether they are log
         # or not
@@ -27,17 +24,17 @@ class PDF(object):
             # entries in the dictionary reflects the order in the file
             self.adjust_params = json.load(f, object_pairs_hook=OrderedDict)
 
-        self.mock_catalogue = mock_catalogue
+        self.mock_catalogue = kwargs.get('mock_catalogue')
 
         self.single_solutions = None
-        if plot_single_solution is not None:
+        if kwargs.get('plot_single_solution') is not None:
             self.single_solutions = OrderedDict()
-            with fits.open(plot_single_solution) as f:
+            with fits.open(kwargs.get('plot_single_solution')) as f:
                 self.single_solutions['ID'] = f[1].data['ID']
                 self.single_solutions['row'] = f[1].data['row_index']
 
 
-        self.triangle_font_size = triangle_font_size
+        self.triangle_font_size = kwargs.get('fontsize')
 
     def plot_triangle(self, ID, 
             params_to_plot=None, 

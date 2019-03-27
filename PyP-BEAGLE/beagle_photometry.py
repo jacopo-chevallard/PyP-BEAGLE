@@ -109,6 +109,8 @@ class Photometry:
 
         self.plot_full_SED = kwargs.get('plot_full_SED', False)
 
+        self.plot_MAP_SED = kwargs.get('plot_MAP_SED', False)
+
         self.log_flux = kwargs.get('log_flux', False)
 
         self.plot_filter_labels = kwargs.get('plot_filter_labels', False)
@@ -294,55 +296,74 @@ class Photometry:
 
 
         # Plot the full SED
-        if 'full sed wl' in hdulist and self.plot_full_SED:
-            wl = hdulist['full sed wl'].data['wl'][0,:]
-            redshifts = hdulist['galaxy properties'].data['redshift']
+        if 'full sed wl' in hdulist: 
 
-            if SED_prob_log_scale:
-                max_prob = np.log10(np.amax(probability))
-                min_prob = np.log10(np.amin(probability))
-            else:
-                max_prob = np.amax(probability)
-                min_prob = np.amin(probability)
+            if self.plot_full_SED or self.plot_MAP_SED:
 
-            indices = np.arange(len(probability))
+                _n_SED_to_plot = 0
+                if self.plot_full_SED: 
+                    _n_SED_to_plot = n_SED_to_plot
 
-            wrand = WalkerRandomSampling(probability, keys=indices)
-            rand_indices = wrand.random(n_SED_to_plot)
-            max_alpha = 0.4
+                if self.plot_MAP_SED:
+                    _n_SED_to_plot += 1
 
-            for j in range(n_SED_to_plot):
+                wl = hdulist['full sed wl'].data['wl'][0,:]
+                redshifts = hdulist['galaxy properties'].data['redshift']
 
-                i = rand_indices[j]
-                SED = hdulist['full sed'].data[i,:]
-
-                z = 0.
-                if redshifts[i] > 0.:
-                    z = redshifts[i]
-
-                # Redshift the SED and wl
-                flux_obs = SED / (1.+z)
-                wl_obs = wl * (1.+z)
-
-                # Convert F_lambda [erg s^-1 cm^-2 A^-1] ----> F_nu [erg s^-1 cm^-2 Hz^-1]
-                flux_obs = (wl_obs)**2/c_light*flux_obs
-
-                # Scale to nanoJy
-                flux_obs = flux_obs * 1.e+23 * 1.e+09
-
-                prob = probability[i]
                 if SED_prob_log_scale:
-                    alpha = (np.log10(prob)-min_prob)/(max_prob-min_prob)
+                    max_prob = np.log10(np.amax(probability))
+                    min_prob = np.log10(np.amin(probability))
                 else:
-                    alpha = (prob-min_prob)/(max_prob-min_prob)
+                    max_prob = np.amax(probability)
+                    min_prob = np.amin(probability)
 
-                alpha=1.
-                ax.plot(wl_obs, 
-                        flux_obs,
-                        color="black",
-                        ls="-",
-                        lw=0.5,
-                        alpha=alpha*max_alpha)
+                indices = np.arange(len(probability))
+
+                wrand = WalkerRandomSampling(probability, keys=indices)
+                rand_indices = wrand.random(n_SED_to_plot)
+
+                for j in range(_n_SED_to_plot):
+
+                    if self.plot_MAP_SED and j == 0:
+                        i = np.argmax(probability)
+                        color = "black"
+                        lw=1.2
+                        max_alpha = 0.8
+                    else:
+                        i = rand_indices[j]
+                        color = "black"
+                        lw=0.5
+                        max_alpha = 0.4
+
+                    SED = hdulist['full sed'].data[i,:]
+
+                    z = 0.
+                    if redshifts[i] > 0.:
+                        z = redshifts[i]
+
+                    # Redshift the SED and wl
+                    flux_obs = SED / (1.+z)
+                    wl_obs = wl * (1.+z)
+
+                    # Convert F_lambda [erg s^-1 cm^-2 A^-1] ----> F_nu [erg s^-1 cm^-2 Hz^-1]
+                    flux_obs = (wl_obs)**2/c_light*flux_obs
+
+                    # Scale to nanoJy
+                    flux_obs = flux_obs * 1.e+23 * 1.e+09
+
+                    prob = probability[i]
+                    if SED_prob_log_scale:
+                        alpha = (np.log10(prob)-min_prob)/(max_prob-min_prob)
+                    else:
+                        alpha = (prob-min_prob)/(max_prob-min_prob)
+
+                    alpha=1.
+                    ax.plot(wl_obs, 
+                            flux_obs,
+                            color=color,
+                            ls="-",
+                            lw=lw,
+                            alpha=alpha*max_alpha)
 
 
         # Determine min and max values of y-axis

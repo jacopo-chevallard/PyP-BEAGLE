@@ -181,6 +181,13 @@ def standard_parser():
         )
 
     parser.add_argument(
+        '--show-MAP-SED',
+        help="Overplot the full resolution model SED corresponding to the MAP solution.",
+        action="store_true", 
+        dest="plot_MAP_SED" 
+        )
+
+    parser.add_argument(
         '--wl-range',
         help="Wavelength range(s) to plot.",
         action="store",

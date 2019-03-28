@@ -224,7 +224,7 @@ class Photometry:
 
         width = 5*np.min(wl_eff[1:]-wl_eff[0:-1])
 
-        kwargs = {'color':'tomato', 'alpha':0.7, 'edgecolor':'black', 'linewidth':0.2}
+        kwargs = {'color':'tomato', 'alpha':0.8, 'edgecolor':'black', 'linewidth':0.2}
 
         for i in range(n_bands):
 
@@ -260,6 +260,7 @@ class Photometry:
 
         delta_wl = wl_eff[1:]-wl_eff[0:-1]
         delta_wl = np.concatenate(([delta_wl[0]], delta_wl))
+        delta_wl /=  2.
 
         for i in range(n_bands):
 
@@ -291,7 +292,8 @@ class Photometry:
                     color = 'black',
                     marker = "o",
                     markersize = 5,
-                    alpha = 0.7
+                    zorder=3,
+                    alpha = 0.6
                     )
 
 
@@ -356,6 +358,9 @@ class Photometry:
                         alpha = (np.log10(prob)-min_prob)/(max_prob-min_prob)
                     else:
                         alpha = (prob-min_prob)/(max_prob-min_prob)
+
+                    if self.x_log:
+                        wl_obs = np.log10(wl_obs)
 
                     alpha=1.
                     ax.plot(wl_obs, 
@@ -425,16 +430,16 @@ class Photometry:
 
         # Define plotting styles
         if self.x_log:
-            ax.set_xlabel("$\\log (\lambda_\\textnormal{eff} / \\textnormal{\AA}$ (observed-frame))")
+            ax.set_xlabel("$\\log (\lambda_\\textnormal{eff} / \\textnormal{\AA})$")
         else:
-            ax.set_xlabel("$\lambda_\\textnormal{eff} / \\textnormal{\AA}$ (observed-frame)")
+            ax.set_xlabel("$\lambda_\\textnormal{eff} / \\textnormal{\AA}$")
 
         ax.set_ylabel("$f_{\\nu}/\\textnormal{nanoJy}$")
 
         # Set better location of tick marks
         set_plot_ticks(ax, n_x=5)
 
-        kwargs = {'alpha':0.8}
+        kwargs = {'alpha':0.7}
 
         plt.errorbar(wl_eff[ok], 
                 obs_flux[ok], 

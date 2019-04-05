@@ -1,3 +1,8 @@
+## 0.6.5 (April 05, 2019)
+  - Read object redshift from the Beagle output file, so that pyp_beagle correctly deals with redshifts when provided in the prior catalogue; correctly plots masked regions read from the 'MARGINAL SED MASK' extension
+  - Correctly identify object ID from Beagle output file name
+  - Cosmetics improvements to the marginal photometry plot
+
 ## 0.6.4 (March 27, 2019)
   - Introduced option to overplot on a photometric SED the maximum-a-posteriori (MAP) spectrum
   - Exploiting the *args and **kwargs appraoches to simplify the passing of command-line arguments to the different classes

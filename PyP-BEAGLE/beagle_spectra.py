@@ -75,7 +75,7 @@ class ObservedSpectrum(object):
                 "fluxerr"   : {"colName" : None},  
                 "sky"       : {"colName" : None},  
                 "mask"      : {"colName" : None},  
-                "redshift"  : {"keyword" : None},  
+                "redshift"  : {"keyword" : "redshift"},  
                 "min_rel_err" : None,  
                 }
 
@@ -149,15 +149,16 @@ class ObservedSpectrum(object):
                 raise AttributeError(msg)
 
         # Set the redshift
+        self.data['redshift'] = None
         if self.description["redshift"]["keyword"] is not None:
-            self.data['redshift'] = np.float(hdu[1].header[self.description["redshift"]["keyword"]])
-        else:
-            self.data['redshift'] = 0.
+            try:
+                self.data['redshift'] = np.float(hdu[1].header[self.description["redshift"]["keyword"]])
+            except:
+                pass
 
         # Set the mask spectrum
         if self.description["mask"]["colName"] is not None:
             self.data['mask'] = np.array(data[self.description["mask"]["colName"]], dtype=bool)
-
 
         hdu.close()
 
@@ -340,7 +341,17 @@ class Spectrum(object):
         # Set the plot limits from the minimum and maximum wl_eff
         axs = list()
         residual_axs = list()
-        z1 = (1.+observation.data['redshift'])
+        if observation.data['redshift'] is not None:
+            redshift = observation.data['redshift']
+        else:
+            _redshifts =  hdulist['galaxy properties'].data['redshift']
+            _, _counts = np.unique(_redshifts, return_counts=True)
+            if len(_counts) > 1:
+                raise ValueError("The `redshift` of the object is not unique!")
+            redshift = _redshifts[0]
+
+        z1 = 1. + redshift
+
         if self.wl_rest:
             data_wl = observation.data['wl'] / z1
             data_flux = observation.data['flux'] * z1
@@ -372,6 +383,17 @@ class Spectrum(object):
         masked_array = np.ma.array(data_wl, mask=~data_mask)
         slices.append(np.ma.clump_unmasked(masked_array))
         slices.append(np.ma.clump_masked(masked_array))
+
+        model_mask = np.ones(len(model_wl), dtype=bool)
+        if "marginal sed mask" in hdulist:
+            model_mask = np.array(hdulist['marginal sed mask'].data['mask'][0], dtype=bool)
+
+        # Create masked versions of arrays
+        slices_model = list()
+        masked_array = np.ma.array(model_wl, mask=~model_mask)
+        slices_model.append(np.ma.clump_unmasked(masked_array))
+        slices_model.append(np.ma.clump_masked(masked_array))
+
 
         if self.show_residual:
             n_outer = 2
@@ -543,10 +565,12 @@ class Spectrum(object):
             #fig.text(0.5, 0.95, str(ID).split('_')[0].strip(), ha='center', va='top')
             plt.suptitle(str(ID).split('_')[0].strip())
 
-        colors = ["red", mask_color]
+        alpha_line = 0.7
+        alpha_fill = 0.3
 
         for ax in axs:
 
+            colors = ["red", "salmon"]
             for slic, col in zip(slices, colors):
                 for s in slic:
                     if (self.draw_steps):
@@ -555,14 +579,14 @@ class Spectrum(object):
                                 where="mid",
                                 color=col,
                                 linewidth=1.50,
-                                alpha=0.7
+                                alpha=alpha_line
                                 )
                     else:
                         ax.plot(data_wl[s],
                                 data_flux[s],
                                 color=col,
                                 linewidth=2.00,
-                                alpha=0.7
+                                alpha=alpha_line
                                 )
 
                     if (self.draw_steps):
@@ -574,7 +598,7 @@ class Spectrum(object):
                                 color=col, 
                                 linewidth=0,
                                 interpolate=True,
-                                alpha=0.3
+                                alpha=alpha_fill
                                 )
                     else:
                         ax.fill_between(data_wl[s],
@@ -583,45 +607,48 @@ class Spectrum(object):
                                 facecolor=col, 
                                 linewidth=0,
                                 interpolate=True,
-                                alpha=0.3
+                                alpha=alpha_fill
                                 )
 
 
-            kwargs = { 'alpha': 0.7 }
-            if (self.draw_steps):
-                ax.step(model_wl,
-                        median_flux,
-                        where="mid",
-                        color = "blue",
-                        linewidth = 1.0,
-                        **kwargs
-                        )
-            else:
-                ax.plot(model_wl,
-                        median_flux,
-                        color = "blue",
-                        linewidth = 1.5,
-                        **kwargs
-                        )
+            colors = ["blue", "deepskyblue"]
+            for slic, col in zip(slices_model, colors):
+                for s in slic:
+                    if (self.draw_steps):
+                        ax.step(model_wl[s],
+                                median_flux[s],
+                                where="mid",
+                                color=col,
+                                linewidth = 1.0,
+                                alpha=alpha_line
+                                )
+                    else:
+                        ax.plot(model_wl[s],
+                                median_flux[s],
+                                color=col,
+                                linewidth = 1.5,
+                                alpha=alpha_line
+                                )
 
-            kwargs = { 'alpha': 0.3 }
-            if (self.draw_steps):
-                FillBetweenStep.fill_between_steps(ax,
-                        model_wl,
-                        lower_flux[:], 
-                        upper_flux[:],
-                        step_where="mid",
-                        color = "blue", 
-                        linewidth=0,
-                        **kwargs)
-            else:
-                ax.fill_between(model_wl,
-                        lower_flux[:],
-                        upper_flux[:],
-                        facecolor = "blue", 
-                        linewidth=0,
-                        interpolate=True,
-                        **kwargs)
+                    if (self.draw_steps):
+                        FillBetweenStep.fill_between_steps(ax,
+                                model_wl[s],
+                                lower_flux[s], 
+                                upper_flux[s],
+                                step_where="mid",
+                                color=col, 
+                                linewidth=0,
+                                alpha=alpha_fill
+                                )
+                    else:
+                        ax.fill_between(model_wl[s],
+                                lower_flux[s],
+                                upper_flux[s],
+                                facecolor=col, 
+                                linewidth=0,
+                                interpolate=True,
+                                alpha=alpha_fill
+                                )
 
             # Extract and plot full SED
             if 'full sed wl' in hdulist and self.plot_full_SED:
@@ -635,12 +662,10 @@ class Spectrum(object):
                     for i in rand_indices:
                         SED = hdulist['full sed'].data[i,:]
                 else:
-                    z1 = (1.+self.observed_spectrum.data['redshift'])
                     wl_obs = hdulist['full sed wl'].data['wl'][0,:] * z1
 
                     for i in rand_indices:
                         SED = hdulist['full sed'].data[i,:] / z1
-
 
                     ax.plot(wl_obs, 
                             flux_obs,
@@ -648,7 +673,6 @@ class Spectrum(object):
                             ls="-",
                             lw=0.5,
                             alpha=0.5)
-
 
             kwargs = { 'alpha': 0.8 }
 
@@ -719,7 +743,7 @@ class Spectrum(object):
                     if self.wl_rest:
                         x = label["wl"]/wl_factor
                     else:
-                        x = label["wl"]/wl_factor * (1.+self.observed_spectrum.data['redshift'])
+                        x = label["wl"]/wl_factor * z1
 
                     if x < x0 or x > x1:
                         continue

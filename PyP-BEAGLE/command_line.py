@@ -219,7 +219,7 @@ def main():
                 _line = trimFitsSuffix(os.path.basename(line))
                 if regex is not None:
                     _line = regex.sub('', _line)
-                _line = _line.split('_')[0]
+                _line = _line.split('_BEAGLE')[0]
                 if _ID == _line:
                     file_names.append(line)
                     break

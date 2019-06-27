@@ -1,3 +1,7 @@
+# PyP-BEAGLE
+
+PyP-BEAGLE (**Py**thon **P**ostprocessing of **BEAGLE**) is a Python package to postprocess the analyses performed with the galaxy SED modelling tool [Beagle](http://www.jacopochevallard.org/beagle/) (**B**ay**E**sian **A**nalysis of **G**a**L**axy s**E**ds). PyP-BEAGLE allows one to create different types of publication-quality plots, LaTeX tables, as well as several higher level "summary" catalogues.  
+
 # Installing PyP-BEAGLE
 
 * Make sure that you have a (science-ready!) installation of Python 2.7, for instance [Anaconda](https://www.continuum.io/downloads) (the Python 2.7 version)
@@ -23,10 +27,12 @@
 
 # Using PyP-BEAGLE
 
-The post-processing of Beagle results obtained is performed by means of the command ``pyp_beagle``. You can visualize the possible command-line options of the script with the command
+The post-processing of Beagle results is performed by means of the command ``pyp_beagle``. Since PyP-BEAGLE is often updated, you can visualize the (entire) possible options via the PyP-BEAGLE ``help``, with the command
 ```csh
 pyp_beagle --help
 ```
+
+Below we report a few of some common PyP-BEAGLE use cases and related commands.
 
 * [triangle plots](#plotting-the-posterior-probability-distributions-aka-triangle-plots)
 * [marginal plots](#plotting-the-comparison-of-data-and-model-observables-aka-marginal-plots)

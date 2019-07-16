@@ -72,6 +72,11 @@ class PhotometricCatalogue(ObservedCatalogue):
 
             # observed flux and its error
             name = filters.data['flux_colName'][j]
+            if not name:
+                flux[j] = -99.
+                flux_err[j] = -99.
+                continue
+
             flux[j] = row[name] * aper_corr * filters.units / Jy
 
             name = filters.data['flux_errcolName'][j]
@@ -115,6 +120,8 @@ class Photometry:
 
         self.plot_filter_labels = kwargs.get('plot_filter_labels', False)
 
+        self.flux_units = kwargs.get('flux_units', 'microJy')
+
         self.single_solutions = None
         if kwargs.get('plot_single_solution') is not None:
             self.single_solutions = OrderedDict()
@@ -153,6 +160,18 @@ class Photometry:
             Whether to redo the plot, even if it already exists
         """
 
+        if self.flux_units == 'milliJy':
+            flux_factor = 1.E+03
+            ylabel = "$f_{\\nu}/\\textnormal{mJy}$"
+        elif self.flux_units == 'microJy':
+            flux_factor = 1.E+06
+            ylabel = "$f_{\\nu}/\\upmu\\textnormal{Jy}$"
+        elif self.flux_units == 'nanoJy':
+            flux_factor = 1.E+09
+            ylabel = "$f_{\\nu}/\\textnormal{nJy}$"
+        else:
+            raise ValueError("Flux units `" + self.flux_units + "` not recognised!")
+
         # Name of the output plot
         plot_name = str(ID)+'_BEAGLE_marginal_SED_phot.pdf'
 
@@ -173,9 +192,8 @@ class Photometry:
 
         # Put observed photometry and its error in arrays
         obs_flux, obs_flux_err = self.observed_catalogue.extract_fluxes(self.filters, ID, key=self.key)
-        obs_flux *= 1.E+09
-        obs_flux_err *= 1.E+09
-
+        obs_flux *= flux_factor
+        obs_flux_err *= flux_factor
 
         fig = plt.figure()
         ax = fig.add_subplot(1, 1, 1)
@@ -230,10 +248,10 @@ class Photometry:
 
             if old_API:
                 band_name = self.filters.data['label'][sor[i]]
-                xdata = model_sed.data['_'+band_name+'_'] / nanoJy
+                xdata = model_sed.data['_'+band_name+'_'] / Jy * flux_factor
             else:
                 band_name = self.filters.data['name'][sor[i]] + "_APP"
-                xdata = 10.**(0.4*(8.9-model_sed.data[band_name])) / 1.E-09
+                xdata = 10.**(0.4*(8.9-model_sed.data[band_name])) * flux_factor
 
             min_x = np.min(xdata)
             max_x = np.max(xdata)
@@ -351,7 +369,7 @@ class Photometry:
                     flux_obs = (wl_obs)**2/c_light*flux_obs
 
                     # Scale to nanoJy
-                    flux_obs = flux_obs * 1.e+23 * 1.e+09
+                    flux_obs = flux_obs / Jy * flux_factor
 
                     prob = probability[i]
                     if SED_prob_log_scale:
@@ -434,7 +452,7 @@ class Photometry:
         else:
             ax.set_xlabel("$\lambda_\\textnormal{eff} / \\textnormal{\AA}$")
 
-        ax.set_ylabel("$f_{\\nu}/\\textnormal{nanoJy}$")
+        ax.set_ylabel(ylabel)
 
         # Set better location of tick marks
         set_plot_ticks(ax, n_x=5)
@@ -556,6 +574,18 @@ class Photometry:
             Whether to redo the plot, even if it already exists
         """
 
+        if self.flux_units == 'milliJy':
+            flux_factor = 1.E+03
+            ylabel = "$f_{\\nu}/\\textnormal{mJy}$"
+        elif self.flux_units == 'microJy':
+            flux_factor = 1.E+06
+            ylabel = "$f_{\\nu}/\\upmu\\textnormal{Jy}$"
+        elif self.flux_units == 'nanoJy':
+            flux_factor = 1.E+09
+            ylabel = "$f_{\\nu}/\\textnormal{nJy}$"
+        else:
+            raise ValueError("Flux units `" + self.flux_units + "` not recognised!")
+
         # Name of the output plot
         plot_name = str(ID)+'_BEAGLE_replic_data_phot.pdf'
 
@@ -591,8 +621,8 @@ class Photometry:
 
         obs_flux, obs_flux_err, wl_eff = obs_flux[sor], obs_flux_err[sor], wl_eff[sor]
 
-        obs_flux *= 1.E+09
-        obs_flux_err *= 1.E+09
+        obs_flux *= flux_factor
+        obs_flux_err *= flux_factor
 
         # Consider only those bands with measurements!
         ok = np.where(obs_flux_err > 0.)[0]
@@ -621,7 +651,7 @@ class Photometry:
         noiseless_flux = np.zeros((n_bands, indices.size))
 
         for i, band_name in enumerate((self.filters.data['label'][sor])):
-            noiseless_flux[i, :] = model_sed.data['_'+band_name+'_'] / nanoJy
+            noiseless_flux[i, :] = model_sed.data['_'+band_name+'_'] / Jy * flux_factor
 
         # Compute the p-value band-by-band
         p_value_bands = np.zeros(n_bands)
@@ -630,9 +660,9 @@ class Photometry:
             
             if obs_flux_err[i] > 0.:
                 obs_discr = (obs_flux[i].repeat(n_replicated)-noiseless_flux[i, :])**2 / obs_flux_err[i].repeat(n_replicated)**2
-                repl_discr = (replic_data.data['_'+band_name+'_']/1.E-09-noiseless_flux[i, :])**2 / obs_flux_err[i].repeat(n_replicated)**2
+                repl_discr = (replic_data.data['_'+band_name+'_']*flux_factor - noiseless_flux[i, :])**2 / obs_flux_err[i].repeat(n_replicated)**2
 
-                replic_fluxes[i,:] = replic_data.data['_'+band_name+'_']/1.E-09
+                replic_fluxes[i,:] = replic_data.data['_'+band_name+'_'] * flux_factor
                 p_value_bands[i] = 1. * np.count_nonzero((repl_discr >
                     obs_discr)) / n_replicated
 
@@ -661,8 +691,8 @@ class Photometry:
         replic_fluxes = np.zeros((n_bands, n_replicated))
         mean_replic_fluxes = np.zeros(n_bands)
         for i, band_name in enumerate((self.filters.data['label'][sor])):
-            mean_replic_fluxes[i] = np.mean(replic_data.data['_'+band_name+'_'])/1.E-09
-            replic_fluxes[i,:] = replic_data.data['_'+band_name+'_']/1.E-09
+            mean_replic_fluxes[i] = np.mean(replic_data.data['_'+band_name+'_']) * flux_factor
+            replic_fluxes[i,:] = replic_data.data['_'+band_name+'_'] * flux_factor
 
         mean_residual = (mean_replic_fluxes-obs_flux)/obs_flux_err 
 
@@ -751,7 +781,7 @@ class Photometry:
 #                cap.set_markeredgewidth(1)
 #
             temp_data = replic_data.data[replic_data_rows[i]]
-            replic_fluxes = np.array(temp_data[1:])/1.E-09
+            replic_fluxes = np.array(temp_data[1:]) * flux_factor
 
             diff_fluxes = (replic_fluxes-obs_flux) / obs_flux_err
 

@@ -1,3 +1,9 @@
+## 0.6.6 (July 16, 2019)
+  - Fix pypi failure: specifying that the README is in Markdown format, otherwise pushing to pypi fails, see https://pypi.org/help/#description-content-type and https://github.com/di/markdown-description-example
+  - Bug fix: the marginal photometry plot was failing when the filter configuration file contained bands not present in the observations, but only computed for the models
+  - Added option to specify flux units for photometry
+  - Update README.md
+
 ## 0.6.5 (April 05, 2019)
   - Read object redshift from the Beagle output file, so that pyp_beagle correctly deals with redshifts when provided in the prior catalogue; correctly plots masked regions read from the 'MARGINAL SED MASK' extension
   - Correctly identify object ID from Beagle output file name

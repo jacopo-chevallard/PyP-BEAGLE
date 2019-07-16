@@ -35,6 +35,7 @@ setup(
     version=verstr,
     description='Package for post-processing of results obtained with the Beagle SED fitting tool',
     long_description=long_description,
+    long_description_content_type='text/markdown', # This is important!
     url='https://github.com/jacopo-chevallard/PyP-BEAGLE',
     author='Jacopo Chevallard',
     author_email='jacopo.chevallard@mailfence.com',

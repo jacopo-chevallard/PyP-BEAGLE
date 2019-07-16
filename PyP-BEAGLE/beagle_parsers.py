@@ -116,6 +116,16 @@ def standard_parser():
     )
 
     parser.add_argument(
+        '--flux-units',
+        help="Flux units.",
+        action="store",
+        type=str,
+        dest="flux_units",
+        choices=['milliJy', 'microJy', 'nanoJy'],
+        default='microJy'
+        )
+
+    parser.add_argument(
         '--log-flux',
         help="Plot logarithmic axis for flux.",
         action="store_true", 

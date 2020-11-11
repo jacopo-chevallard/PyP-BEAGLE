@@ -204,9 +204,9 @@ def main():
     if has_spectra:
 
         # Initialize an instance of the main "Spectrum" class
-        my_spectrum = Spectrum(params_file, 
-                **args_dict
-                )
+        print 'here'
+        my_spectrum = Spectrum(**args_dict)
+        print 'here 2'
 
         my_spectrum.observed_spectrum.configure(config=config)
 

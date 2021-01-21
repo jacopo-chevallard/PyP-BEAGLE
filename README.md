@@ -4,7 +4,7 @@ PyP-BEAGLE (**Py**thon **P**ostprocessing of **BEAGLE**) is a Python package to 
 
 # Installing PyP-BEAGLE
 
-* Make sure that you have a (science-ready!) installation of Python 2.7, for instance [Anaconda](https://www.continuum.io/downloads) (the Python 2.7 version)
+* Make sure that you have a (science-ready!) installation of Python 3.x (starting from PyP-BEAGLE version 7.0), for instance [Anaconda](https://www.continuum.io/downloads)
 
 * To install PyP-BEAGLE simply run
   ```

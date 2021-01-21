@@ -1,3 +1,7 @@
+## 0.7.1 (January 21, 2021)
+  - Python 3.8 not yet available on Shippable, using 3.7 instead
+  - Updating README to reflect move to Python 3
+
 ## 0.7.0 (January 21, 2021)
   - Merge branch 'python_3' into develop
   - Moving to support of Python 3 (3.8) exclusively

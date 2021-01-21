@@ -1,13 +1,16 @@
+from __future__ import absolute_import
+from __future__ import print_function
 import numpy as np
 from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
-import cPickle
+import six.moves.cPickle
 
 import os
 import sys
-import dependencies.WeightedKDE as WeightedKDE
+import pyp_beagle.dependencies.WeightedKDE 
 
-from beagle_utils import weighted_avg_and_std, BeagleDirectories, match_ID, prepare_plot_saving
+from .beagle_utils import weighted_avg_and_std, BeagleDirectories, match_ID, prepare_plot_saving
+from six.moves import range
 
 class ResidualPhotometry(object):
 
@@ -25,7 +28,7 @@ class ResidualPhotometry(object):
                 BeagleDirectories.pypbeagle_data, file_name)
 
         file = open(name, 'rb')
-        self.residual_kde_pdf = cPickle.load(file)
+        self.residual_kde_pdf = six.moves.cPickle.load(file)
         file.close()
 
     def compute(self, observed_catalogue, beagle_summary_catalogue,
@@ -63,8 +66,8 @@ class ResidualPhotometry(object):
         beagle_data = beagle_data[indx_beagle]
         catalogue_data = catalogue_data[indx_catalogue]
 
-        print "ID: ", beagle_data['ID']
-        print "ID: ", catalogue_data['ID']
+        print("ID: ", beagle_data['ID'])
+        print("ID: ", catalogue_data['ID'])
 
         # As a sanity check, check if the ID match among the two catalogues, by
         # random picking some indices here and there...
@@ -107,7 +110,7 @@ class ResidualPhotometry(object):
             self.residual_kde_pdf.append(kde_pdf)
 
         if cPickleName is not None:
-            cPickle.dump(self.residual_kde_pdf, cPickleName, cPickle.HIGHEST_PROTOCOL)
+            six.moves.cPickle.dump(self.residual_kde_pdf, cPickleName, six.moves.cPickle.HIGHEST_PROTOCOL)
 
     def plot(self, 
             filters, 
@@ -166,12 +169,12 @@ class ResidualPhotometry(object):
                 med = interp_cumul_pdf(0.5)
                 # This corresponds to a 68 % credible region
                 interval = interp_cumul_pdf(0.84) - interp_cumul_pdf(0.16)
-                print "\n median = {:.3f}".format(med)
-                print "68 % interval = {:.3f}".format(interval)
+                print("\n median = {:.3f}".format(med))
+                print("68 % interval = {:.3f}".format(interval))
             elif "mean" in summary_stat:
                 mean, stddev = weighted_avg_and_std(x_grid, kde_pdf_grid)
-                print "\n mean = {:.3f}".format(mean)
-                print "stddev = {:.3f}".format(stddev)
+                print("\n mean = {:.3f}".format(mean))
+                print("stddev = {:.3f}".format(stddev))
 
         # Compute interpolant of cumulative PDF (linear interpolation)
         fig = plt.figure()

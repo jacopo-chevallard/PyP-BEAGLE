@@ -1,5 +1,6 @@
 # Taken from http://nbviewer.ipython.org/gist/tillahoffmann/f844bce2ec264c1c8cb5
 
+from __future__ import absolute_import
 import numpy as np
 from scipy.spatial.distance import cdist
 

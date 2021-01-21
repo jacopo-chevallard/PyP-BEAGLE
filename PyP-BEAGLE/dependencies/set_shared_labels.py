@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import matplotlib.pyplot as plt
 
 def set_shared_ylabel(a, ylabel, labelpad = 0.01):

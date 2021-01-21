@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+from __future__ import absolute_import
 import time
 import os
 import logging
@@ -11,9 +12,11 @@ from astropy.io import fits
 from pathos.multiprocessing import ProcessingPool 
 from natsort import index_natsorted, order_by_index
 
-from beagle_utils import prepare_data_saving, BeagleDirectories, getPathForData, data_exists,\
+from .beagle_utils import prepare_data_saving, BeagleDirectories, getPathForData, data_exists,\
     ID_COLUMN_LENGTH
-from significant_digits import to_precision
+from .significant_digits import to_precision
+import six
+from six.moves import range
 
 def get1DInterval(param_values, probability, levels):
 
@@ -360,7 +363,7 @@ class BeagleSummaryCatalogue(object):
         for ID in IDs:
             print("\n " + ID, end='') 
             row = np.arange(n_rows)[self.hdulist[1].data['ID'] == ID][0]
-            for param, value in param_config.iteritems():
+            for param, value in six.iteritems(param_config):
                 is_log = False
                 if "log" in value:
                     is_log = value["log"]

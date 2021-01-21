@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import logging
 import numpy as np
 import os
@@ -11,7 +12,9 @@ from astropy.io import fits
 
 from getdist import plots, MCSamples
 
-from beagle_utils import BeagleDirectories, prepare_plot_saving, plot_exists
+from .beagle_utils import BeagleDirectories, prepare_plot_saving, plot_exists
+import six
+from six.moves import range
 
 class PDF(object):
 
@@ -96,7 +99,7 @@ class PDF(object):
         hdulist = fits.open(fits_file)
 
         param_values = OrderedDict()
-        for key, value in self.adjust_params.iteritems():
+        for key, value in six.iteritems(self.adjust_params):
             extName = "POSTERIOR PDF"
             if "extName" in value:
                 extName = value["extName"]
@@ -116,7 +119,7 @@ class PDF(object):
         # By default you plot all parameters
         if params_to_plot is None:
             _params_to_plot = list()
-            for key, value in self.adjust_params.iteritems():
+            for key, value in six.iteritems(self.adjust_params):
                 _params_to_plot.append(key)
         else: 
             _params_to_plot = params_to_plot
@@ -135,7 +138,7 @@ class PDF(object):
         keys = list()
 
         j = 0
-        for key, par in self.adjust_params.iteritems():
+        for key, par in six.iteritems(self.adjust_params):
             keys.append(key)
             for par_name in _params_to_plot:
                 if key == par_name:

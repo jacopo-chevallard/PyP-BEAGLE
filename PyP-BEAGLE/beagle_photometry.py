@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+from __future__ import print_function
 import logging
 import os
 from scipy.interpolate import interp1d
@@ -13,17 +15,18 @@ from astropy.io import ascii
 from astropy.io import fits
 
 import sys
-import dependencies.WeightedKDE as WeightedKDE
-from dependencies.walker_random_sampling import WalkerRandomSampling
+import pyp_beagle.dependencies.WeightedKDE 
+from pyp_beagle.dependencies.walker_random_sampling import WalkerRandomSampling
 
-from beagle_utils import BeagleDirectories, prepare_plot_saving, set_plot_ticks, \
+from .beagle_utils import BeagleDirectories, prepare_plot_saving, set_plot_ticks, \
         prepare_violin_plot, plot_exists, pause, extract_row, is_FITS_file
-from beagle_filters import PhotometricFilters
-from beagle_summary_catalogue import BeagleSummaryCatalogue
-from beagle_residual_photometry import ResidualPhotometry
-from beagle_multinest_catalogue import MultiNestCatalogue
-from beagle_posterior_predictive_checks import PosteriorPredictiveChecks
-from beagle_observed_catalogue import ObservedCatalogue
+from .beagle_filters import PhotometricFilters
+from .beagle_summary_catalogue import BeagleSummaryCatalogue
+from .beagle_residual_photometry import ResidualPhotometry
+from .beagle_multinest_catalogue import MultiNestCatalogue
+from .beagle_posterior_predictive_checks import PosteriorPredictiveChecks
+from .beagle_observed_catalogue import ObservedCatalogue
+from six.moves import range
 
 
 Jy = np.float32(1.E-23)
@@ -450,7 +453,7 @@ class Photometry:
         if self.x_log:
             ax.set_xlabel("$\\log (\lambda_\\textnormal{eff} / \\textnormal{\AA})$")
         else:
-            ax.set_xlabel("$\lambda_\\textnormal{eff} / \\textnormal{\AA}$")
+            ax.set_xlabel("$\\lambda_\\textnormal{eff} / \\textnormal{\AA}$")
 
         ax.set_ylabel(ylabel)
 
@@ -503,19 +506,19 @@ class Photometry:
 
             # Print the evidence
             try:
-                ax.text(x, y, "$\log(Z)=" + "{:.2f}".format(self.logEvidence) + "$", fontsize=10 )
+                ax.text(x, y, "$\\log(Z)=" + "{:.2f}".format(self.logEvidence) + "$", fontsize=10 )
             except AttributeError:
-                print "ciao"
+                print("ciao")
 
             # Print the average reduced chi-square
             try:
                 row = extract_row(self.PPC.data, ID, key=self.key)
                 aver_chi_square = row['aver_chi_square']
                 y = y1 - (y1-y0)*0.15
-                ax.text(x, y, "$\langle\chi^2\\rangle=" + "{:.2f}".format(aver_chi_square) + "$", fontsize=10 )
+                ax.text(x, y, "$\\langle\chi^2\\rangle=" + "{:.2f}".format(aver_chi_square) + "$", fontsize=10 )
             except AttributeError:
-                print "`PosteriorPredictiveChecks` not computed/loaded, hence " \
-                "<chi^2> for the object `" + str(ID) + "` is not available"
+                print("`PosteriorPredictiveChecks` not computed/loaded, hence " \
+                "<chi^2> for the object `" + str(ID) + "` is not available")
 
             try:
                 row = extract_row(self.PPC.data, ID, key=self.key)
@@ -523,13 +526,13 @@ class Photometry:
                 n_data = row['n_used_bands']
                 y = y1 - (y1-y0)*0.20
                 ax.text(x, y,
-                        "$\langle\chi^2/(\\textnormal{N}_\\textnormal{data}-1)\\rangle=" \
+                        "$\\langle\chi^2/(\\textnormal{N}_\\textnormal{data}-1)\\rangle=" \
                         + "{:.2f}".format(aver_red_chi_square) + "\; \
                         (\\textnormal{N}_\\textnormal{data}=" + \
                         "{:d}".format(n_data) + ")" + "$", fontsize=10 )
             except AttributeError:
-                print "`PosteriorPredictiveChecks` not computed/loaded, hence " \
-                "<chi^2_red> for the object `" + str(ID) + "` is not available"
+                print("`PosteriorPredictiveChecks` not computed/loaded, hence " \
+                "<chi^2_red> for the object `" + str(ID) + "` is not available")
 
         if y0 < 0.: plt.plot( [x0,x1], [0.,0.], color='gray', lw=1.0 )
 
@@ -669,7 +672,7 @@ class Photometry:
         markers = np.array("o").repeat(n_bands)
         loc = np.where(p_value_bands <= p_value_lim)[0]
         markers[loc] = "o"
-        print "p_value_bands: ", p_value_bands
+        print("p_value_bands: ", p_value_bands)
 
         ext_obs_flux = obs_flux.reshape(n_bands, 1).repeat(n_replicated, 1)
         ext_obs_flux_err = obs_flux_err.reshape(n_bands, 1).repeat(n_replicated, 1)
@@ -680,7 +683,7 @@ class Photometry:
         p_value = 1. * np.count_nonzero((repl_discr >
             obs_discr)) / n_replicated
         
-        print "p_value: ", p_value
+        print("p_value: ", p_value)
 
         median_flux = np.zeros(n_bands)
         pdf_norm = np.zeros(n_bands)
@@ -702,7 +705,7 @@ class Photometry:
                     1).repeat(n_replicated, 1)
 
         residual_covar = np.cov(residual_fluxes)
-        print "residual_covar: ", residual_covar
+        print("residual_covar: ", residual_covar)
 
         # Plot the variance-covariance matrix of residuals
         if 'sns' in sys.modules:
@@ -881,9 +884,9 @@ class Photometry:
             # Set better location of tick marks
             set_plot_ticks(ax, n_x=4, prune_x='both', prune_y='both')
 
-        xlabel = "$\lambda_\\textnormal{eff} / \\textnormal{\AA}$ (observed-frame)"
+        xlabel = "$\\lambda_\\textnormal{eff} / \\textnormal{\AA}$ (observed-frame)"
         #ylabel = "$f_{\\nu}/\\textnormal{nanoJy}$"
-        ylabel = "$\left(f_{\\nu}^\\textnormal{rep}-f_{\\nu}\\right) / \sigma$"
+        ylabel = "$\\left(f_{\\nu}^\\textnormal{rep}-f_{\\nu}\\right) / \sigma$"
 
         fig.text(0.5, 0.02, xlabel, ha='center', fontsize=fontsize+1)
         fig.text(0.03, 0.5, ylabel, va='center', rotation='vertical', fontsize=fontsize+1)
@@ -901,19 +904,19 @@ class Photometry:
 
             # Print the evidence
             try:
-                ax.text(x, y, "$\log(Z)=" + "{:.2f}".format(self.logEvidence) + "$", fontsize=10 )
+                ax.text(x, y, "$\\log(Z)=" + "{:.2f}".format(self.logEvidence) + "$", fontsize=10 )
             except AttributeError:
-                print "ciao"
+                print("ciao")
 
             # Print the average reduced chi-square
             try:
                 row = extract_row(self.PPC.data, ID, key=self.key)
                 aver_chi_square = row['aver_chi_square']
                 y = y1 - (y1-y0)*0.15
-                ax.text(x, y, "$\langle\chi^2\\rangle=" + "{:.2f}".format(aver_chi_square) + "$", fontsize=10 )
+                ax.text(x, y, "$\\langle\chi^2\\rangle=" + "{:.2f}".format(aver_chi_square) + "$", fontsize=10 )
             except AttributeError:
-                print "`PosteriorPredictiveChecks` not computed/loaded, hence " \
-                "<chi^2> for the object `" + str(ID) + "` is not available"
+                print("`PosteriorPredictiveChecks` not computed/loaded, hence " \
+                "<chi^2> for the object `" + str(ID) + "` is not available")
 
             try:
                 row = extract_row(self.PPC.data, ID, key=self.key)
@@ -921,13 +924,13 @@ class Photometry:
                 n_data = row['n_used_bands']
                 y = y1 - (y1-y0)*0.20
                 ax.text(x, y,
-                        "$\langle\chi^2/(\\textnormal{N}_\\textnormal{data}-1)\\rangle=" \
+                        "$\\langle\chi^2/(\\textnormal{N}_\\textnormal{data}-1)\\rangle=" \
                         + "{:.2f}".format(aver_red_chi_square) + "\; \
                         (\\textnormal{N}_\\textnormal{data}=" + \
                         "{:d}".format(n_data) + ")" + "$", fontsize=10 )
             except AttributeError:
-                print "`PosteriorPredictiveChecks` not computed/loaded, hence " \
-                "<chi^2_red> for the object `" + str(ID) + "` is not available"
+                print("`PosteriorPredictiveChecks` not computed/loaded, hence " \
+                "<chi^2_red> for the object `" + str(ID) + "` is not available")
 
 
         #fig.tight_layout()

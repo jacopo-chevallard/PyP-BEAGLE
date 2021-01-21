@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+from __future__ import print_function
 import os
 from scipy import stats
 import numpy as np
@@ -6,11 +8,12 @@ from astropy.io import fits
 from astropy.table import Table, Column
 
 import sys
-import dependencies.WeightedKDE as WeightedKDE
-from dependencies.walker_random_sampling import WalkerRandomSampling
+import pyp_beagle.dependencies.WeightedKDE 
+from pyp_beagle.dependencies.walker_random_sampling import WalkerRandomSampling
 
-from beagle_utils import prepare_data_saving, prepare_plot_saving, \
+from .beagle_utils import prepare_data_saving, prepare_plot_saving, \
     BeagleDirectories, set_plot_ticks
+from six.moves import range
 
 # 1 jy = 10^-23 erg s^-1 cm^-2 hz^-1
 jy = 1.E-23 
@@ -283,8 +286,8 @@ class PosteriorPredictiveChecks(object):
 
             if os.path.isfile(file):
 
-                print ""
-                print "HERE"
+                print("")
+                print("HERE")
                 obs_flux, obs_flux_err = observed_catalogue.extract_fluxes(filters, ID)
 
                 replic_flux, noiseless_flux, model_flux, n_data = self.compute_replicated(observed_catalogue, filters, ID)
@@ -352,7 +355,7 @@ class PosteriorPredictiveChecks(object):
         ax = fig.add_subplot(1, 1, 1)
 
         ax.set_ylabel("Number of galaxies")
-        ax.set_xlabel("$\langle \chi^2 \\rangle$")
+        ax.set_xlabel("$\\langle \chi^2 \\rangle$")
 
         ax.set_xlim((min_x, max_x))
 
@@ -491,7 +494,7 @@ class PosteriorPredictiveChecks(object):
         for lev in levels:
             l = lev
             frac = 1.*len(np.where(xdata <= l)[0])/n_data
-            print "Fraction of galaxies with p-value < " + "{:.2f}".format(lev) + " = {:.2f}".format(frac)
+            print("Fraction of galaxies with p-value < " + "{:.2f}".format(lev) + " = {:.2f}".format(frac))
            # ax.plot((l, l),
            #         (y0, y1),
            #         color='black',

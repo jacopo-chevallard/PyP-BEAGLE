@@ -6,6 +6,7 @@ https://github.com/pypa/sampleproject
 """
 
 # Always prefer setuptools over distutils
+from __future__ import absolute_import
 from setuptools import setup, find_packages
 # To use a consistent encoding
 from codecs import open
@@ -20,6 +21,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 # Read the file version (see http://stackoverflow.com/a/7071358)
 PACKAGE_NAME = "pyp_beagle"
+DEPENDENCIES_NAME = "dependencies"
 PACKAGE_DIR = "PyP-BEAGLE"
 VERSION_FILE = PACKAGE_DIR + "/_version.py"
 verstrline = open(VERSION_FILE, "rt").read()
@@ -58,7 +60,7 @@ setup(
 
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate whether you support Python 2, Python 3 or both.
-        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.8'
     ],
 
     # What does your project relate to?
@@ -67,8 +69,10 @@ setup(
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
     packages=[PACKAGE_NAME],
+    #packages=find_packages(),    
 
     package_dir={PACKAGE_NAME: PACKAGE_DIR},
+    #package_dir={PACKAGE_NAME: PACKAGE_DIR, DEPENDENCIES_NAME: path.join(PACKAGE_DIR, DEPENDENCIES_NAME)},
 
     # Alternatively, if you want to distribute just a my_module.py, uncomment
     # this:
@@ -78,7 +82,8 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['matplotlib', 'scipy', 'numpy', 'atpy', 'getdist', 'pathos', 'astropy<3', 'bokeh', 'natsort'],
+    install_requires=['matplotlib', 'scipy', 'numpy', 'atpy', 'getdist', 'pathos', 
+                      'astropy', 'bokeh', 'natsort', 'six'],
 
     include_package_data=True, 
 

@@ -1,3 +1,9 @@
+## 0.7.0 (January 21, 2021)
+  - Merge branch 'python_3' into develop
+  - Moving to support of Python 3 (3.8) exclusively
+  - Updated setup for Python 3
+  - Updated modules for Python 3
+
 ## 0.6.6 (July 16, 2019)
   - Fix pypi failure: specifying that the README is in Markdown format, otherwise pushing to pypi fails, see https://pypi.org/help/#description-content-type and https://github.com/di/markdown-description-example
   - Bug fix: the marginal photometry plot was failing when the filter configuration file contained bands not present in the observations, but only computed for the models

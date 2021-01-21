@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 
+from __future__ import absolute_import
+from __future__ import print_function
 from numpy import arange, array, bincount, ndarray, ones, where
 from numpy.random import seed, random, randint
+import six
 
 __author__ = "Tamas Nepusz, Denis Bzowy"
 __version__ = "27jul2011"
@@ -42,15 +45,15 @@ class WalkerRandomSampling(object):
         inx = -ones(n, dtype=int)
         short = where(weights < 1)[0].tolist()
         long = where(weights > 1)[0].tolist()
-        while short and long:
+        while short and int:
             j = short.pop()
-            k = long[-1]
+            k = int[-1]
 
             inx[j] = k
             weights[k] -= (1 - weights[j])
             if weights[k] < 1:
                 short.append( k )
-                long.pop()
+                int.pop()
 
         self.prob = weights
         self.inx = inx
@@ -83,21 +86,21 @@ if __name__ == "__main__":
     if randomseed:
         seed(randomseed)
 
-    print Nrand, "Walker random sampling with weights .1 .2 .3 .4:"
+    print(Nrand, "Walker random sampling with weights .1 .2 .3 .4:")
     wrand = WalkerRandomSampling(arange(1, N))
     nrand = bincount(wrand.random(Nrand)).tolist()
     s = str(nrand)
-    print s
+    print(s)
     if N==5 and Nrand==1000 and randomseed==1:
         assert s == "[97, 207, 316, 380]"
 
-    print Nrand, "Walker random sampling, strings with weights .1 .2 .3 .4:"
+    print(Nrand, "Walker random sampling, strings with weights .1 .2 .3 .4:")
     abcd = dict(A=1, D=4, C=3, B=2)
-    wrand = WalkerRandomSampling(abcd.values(), abcd.keys())
+    wrand = WalkerRandomSampling(list(abcd.values()), list(abcd.keys()))
     nrand = defaultdict(int)
     for sample in wrand.random(Nrand):
         nrand[sample] += 1
-    s = str(sorted(nrand.iteritems()))
-    print s
+    s = str(sorted(six.iteritems(nrand)))
+    print(s)
     if N==5 and Nrand==1000 and randomseed==1:
         assert s == "[('A', 85), ('B', 199), ('C', 343), ('D', 373)]"

@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 def float_nsf(q,n):
     """
     Truncate a float to n significant figures.  May produce overflow in 

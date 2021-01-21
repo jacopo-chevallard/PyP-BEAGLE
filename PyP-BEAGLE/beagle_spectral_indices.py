@@ -1,11 +1,12 @@
+from __future__ import absolute_import
 import os
 import logging
-import ConfigParser
+import six.moves.configparser
 from collections import OrderedDict
 from scipy.interpolate import interp1d
 from bisect import bisect_left
 import numpy as np
-from itertools import tee, izip
+from itertools import tee
 
 import json
 import matplotlib.pyplot as plt
@@ -19,23 +20,28 @@ from matplotlib.axes import Axes
 from astropy.io import ascii
 from astropy.io import fits
 
-import dependencies.set_shared_labels as shLab
 import sys
-import dependencies.WeightedKDE as WeightedKDE
-import dependencies.autoscale as autoscale
-from dependencies.walker_random_sampling import WalkerRandomSampling
-from dependencies import FillBetweenStep
-from significant_digits import to_precision
 
-from beagle_utils import BeagleDirectories, prepare_plot_saving, set_plot_ticks, plot_exists, \
+import pyp_beagle.dependencies.WeightedKDE 
+from pyp_beagle.dependencies.walker_random_sampling import WalkerRandomSampling
+import pyp_beagle.dependencies.autoscale
+from pyp_beagle.dependencies import FillBetweenStep
+import pyp_beagle.dependencies.set_shared_labels  as shLab
+
+from .significant_digits import to_precision
+
+from .beagle_utils import BeagleDirectories, prepare_plot_saving, set_plot_ticks, plot_exists, \
         prepare_violin_plot, extract_row
 
-from beagle_observed_catalogue import ObservedCatalogue
+from .beagle_observed_catalogue import ObservedCatalogue
 
 # See here
 # http://peak.telecommunity.com/DevCenter/PythonEggs#accessing-package-resources
 # for an explanation on this approach to include data files
 from pkg_resources import resource_stream
+import six
+from six.moves import zip
+from six.moves import range
 
 TOKEN_SEP = ":"
 microJy = np.float32(1.E-23 * 1.E-06)
@@ -47,7 +53,7 @@ def pairwise(iterable):
     "s -> (s0,s1), (s1,s2), (s2, s3), ..."
     a, b = tee(iterable)
     next(b, None)
-    return izip(a, b)
+    return zip(a, b)
 
 
 _TOKENS = ['lum', 'lumErr', 'ew', 'ewErr']
@@ -138,7 +144,7 @@ class SpectralIndices(object):
         minY_values = np.zeros(n_lines) ; maxY_values = np.zeros(n_lines)
         _observed_fluxes = np.zeros(n_lines) ; _observed_flux_errors = np.zeros(n_lines)
         _model_fluxes = np.zeros(n_lines)
-        for i, (key, value) in enumerate(self.line_list.iteritems()):
+        for i, (key, value) in enumerate(six.iteritems(self.line_list)):
 
             X = i+1
             _line_conf = self.observed_catalogue.line_config[key]
@@ -256,7 +262,7 @@ class SpectralIndices(object):
             top='off',      # ticks along the bottom edge are off
             bottom='off')         # ticks along the top edge are off
 
-        xticks = range(1, len(self.line_list)+1)
+        xticks = list(range(1, len(self.line_list)+1))
         ax.set_xticks(xticks)
 
         ticklabels = list()
@@ -265,7 +271,7 @@ class SpectralIndices(object):
         _factor = 0.03  ; _init_fact = 0.04
         j = 1
         _fontsize = min(self.inset_fontsize, self.inset_fontsize/(0.075*n_lines))
-        for i, (line_key, line_value) in enumerate(self.line_list.iteritems()):
+        for i, (line_key, line_value) in enumerate(six.iteritems(self.line_list)):
             X = i+1
             ticklabels.append(line_value["label"])
             _variab_fact = _init_fact * j

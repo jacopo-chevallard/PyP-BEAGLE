@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+from __future__ import print_function
 import fnmatch
 import re
 import os
@@ -9,11 +11,14 @@ from scipy.interpolate import interp1d
 from datetime import datetime
 
 import sys
-import dependencies.WeightedKDE as WeightedKDE
 
 import matplotlib.ticker as plticker
 import matplotlib as mpl
+import six
+from six.moves import range
+from six.moves import input
 
+import pyp_beagle.dependencies.WeightedKDE 
 
 ID_COLUMN_LENGTH = 100
 
@@ -68,7 +73,7 @@ def extract_row(table, ID, key=None):
     if key is None:
         key='ID'
 
-    if isinstance(table[key][0], basestring):
+    if isinstance(table[key][0], six.string_types):
         row = table[table[key] == str(ID)]
     else:
         row = table[table[key] == int(ID)]
@@ -81,7 +86,7 @@ def extract_row(table, ID, key=None):
 def pause():
 
     try:
-        wait = input("PRESS ENTER TO CONTINUE.")
+        wait = eval(input("PRESS ENTER TO CONTINUE."))
     except KeyboardInterrupt:
         raise SystemExit
 
@@ -111,8 +116,8 @@ def configure_matplotlib():
             color='black', usetex=True)
 
 
-    mpl.rcParams['text.latex.preamble'] = '\usepackage{amssymb}, \usepackage{amsmath}, \
-            \usepackage{upgreek}, \usepackage{txfonts}'
+    mpl.rcParams['text.latex.preamble'] = '\\usepackage{amssymb}, \\usepackage{amsmath}, \
+            \\usepackage{upgreek}, \\usepackage{txfonts}'
 
     mpl.rcParams['text.latex.preview'] = True
 
@@ -235,7 +240,7 @@ def find_file(file_name, path):
         Full path to the file_name
     """ 
 
-    print "file_name: ", file_name
+    print("file_name: ", file_name)
 
     for root, dirs, files in os.walk(path):
         for file in files:
@@ -471,8 +476,8 @@ def match_ID(ID_list_1, ID_list_2, sorted=False, ignore_string=None):
         n_short = n1
 
     is_int = False
-    sort_long = range(n_long)
-    sort_short = range(n_short)
+    sort_long = list(range(n_long))
+    sort_short = list(range(n_short))
     if issubclass(ID_long.dtype.type, np.integer) and issubclass(ID_short.dtype.type, np.integer):
         is_int = True
         if not sorted:

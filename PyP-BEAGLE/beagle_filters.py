@@ -1,9 +1,12 @@
+from __future__ import absolute_import
+from __future__ import print_function
 import os
 import logging
 import ast
 import numpy as np
 from astropy.table import Table, Column
 from astropy.io import fits, ascii
+from six.moves import range
 
 
 class UnitsError(Exception):
@@ -26,9 +29,9 @@ def jy_to_erg(jy):
         try:
             # Raise an exception with argument
             raise UnitsError(jy)
-        except UnitsError, arg:
+        except UnitsError as arg:
             # Catch the custom exception
-            print 'Error: ', arg.msg
+            print('Error: ', arg.msg)
 
 class PhotometricFilters(object):
 

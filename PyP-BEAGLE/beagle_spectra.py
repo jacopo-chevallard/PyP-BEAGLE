@@ -1,11 +1,13 @@
+from __future__ import absolute_import
+from __future__ import print_function
 import os
 import logging
-import ConfigParser
+import six.moves.configparser
 from collections import OrderedDict
 from scipy.interpolate import interp1d
 from bisect import bisect_left
 import numpy as np
-from itertools import tee, izip
+from itertools import tee
 
 import json
 import matplotlib.pyplot as plt
@@ -19,25 +21,28 @@ from matplotlib.axes import Axes
 from astropy.io import ascii
 from astropy.io import fits
 
-import dependencies.set_shared_labels as shLab
 import sys
-import dependencies.WeightedKDE as WeightedKDE
-import dependencies.autoscale as autoscale
-from dependencies.walker_random_sampling import WalkerRandomSampling
-from dependencies import FillBetweenStep
+import pyp_beagle.dependencies.WeightedKDE 
+from pyp_beagle.dependencies.walker_random_sampling import WalkerRandomSampling
+import pyp_beagle.dependencies.autoscale
+from pyp_beagle.dependencies import FillBetweenStep
+import pyp_beagle.dependencies.set_shared_labels  as shLab
 
-from beagle_utils import BeagleDirectories, prepare_plot_saving, set_plot_ticks, plot_exists
-from beagle_filters import PhotometricFilters
-from beagle_summary_catalogue import BeagleSummaryCatalogue
+from .beagle_utils import BeagleDirectories, prepare_plot_saving, set_plot_ticks, plot_exists
+from .beagle_filters import PhotometricFilters
+from .beagle_summary_catalogue import BeagleSummaryCatalogue
 #from beagle_residual_photometry import ResidualPhotometry
-from beagle_multinest_catalogue import MultiNestCatalogue
-from beagle_posterior_predictive_checks import PosteriorPredictiveChecks
-from beagle_mock_catalogue import BeagleMockCatalogue
+from .beagle_multinest_catalogue import MultiNestCatalogue
+from .beagle_posterior_predictive_checks import PosteriorPredictiveChecks
+from .beagle_mock_catalogue import BeagleMockCatalogue
 
 # See here
 # http://peak.telecommunity.com/DevCenter/PythonEggs#accessing-package-resources
 # for an explanation on this approach to include data files
 from pkg_resources import resource_stream
+import six
+from six.moves import zip
+from six.moves import range
 
 TOKEN_SEP = ":"
 microJy = np.float32(1.E-23 * 1.E-06)
@@ -50,7 +55,7 @@ def pairwise(iterable):
     "s -> (s0,s1), (s1,s2), (s2, s3), ..."
     a, b = tee(iterable)
     next(b, None)
-    return izip(a, b)
+    return zip(a, b)
 
 class ObservedSpectrum(object):
 
@@ -64,7 +69,7 @@ class ObservedSpectrum(object):
             param_file = os.path.join(BeagleDirectories.results_dir, BeagleDirectories.param_file)
 
         if config is None:
-            config = ConfigParser.SafeConfigParser()
+            config = six.moves.configparser.SafeConfigParser()
             config.read(param_file)
 
         line = config.get('main', 'SPECTRUM FILE DESCRIPTION')
@@ -79,12 +84,12 @@ class ObservedSpectrum(object):
                 "min_rel_err" : None,  
                 }
 
-        for key, value in self.description.iteritems():
+        for key, value in six.iteritems(self.description):
 
             token = key + TOKEN_SEP
 
             if isinstance(value, dict):
-                for in_key, in_value in value.iteritems():
+                for in_key, in_value in six.iteritems(value):
                     in_token = token + in_key + TOKEN_SEP
                     if in_token in line:
                         self.description[key][in_key] = line.split(in_token)[1].split(" ")[0]
@@ -541,7 +546,7 @@ class Spectrum(object):
                         tick.set_rotation(45)
 
         # Define plotting styles
-        xlabel = "$\uplambda / " + xlabel + "$"
+        xlabel = "$\\uplambda / " + xlabel + "$"
         if not self.wl_rest:
             xlabel = xlabel + " (observed frame)"
 
@@ -739,7 +744,7 @@ class Spectrum(object):
 
             # Label emission lines
             if self.plot_line_labels:
-                for key, label in self.line_labels.iteritems():
+                for key, label in six.iteritems(self.line_labels):
                     if self.wl_rest:
                         x = label["wl"]/wl_factor
                     else:
@@ -794,31 +799,31 @@ class Spectrum(object):
 
                 # Print the evidence
                 try:
-                    ax.text(x, y, "$\log(Z)=" + "{:.2f}".format(self.logEvidence) + "$", fontsize=self.inset_fontsize)
+                    ax.text(x, y, "$\\log(Z)=" + "{:.2f}".format(self.logEvidence) + "$", fontsize=self.inset_fontsize)
                 except AttributeError:
-                    print "ciao"
+                    print("ciao")
 
                 # Print the average reduced chi-square
                 try:
                     aver_chi_square = self.PPC.data['aver_chi_square'][self.PPC.data['ID'] == ID]
                     y = y1 - (y1-y0)*0.15
-                    ax.text(x, y, "$\langle\chi^2\\rangle=" + "{:.2f}".format(aver_chi_square) + "$", fontsize=self.inset_fontsize)
+                    ax.text(x, y, "$\\langle\chi^2\\rangle=" + "{:.2f}".format(aver_chi_square) + "$", fontsize=self.inset_fontsize)
                 except AttributeError:
-                    print "`PosteriorPredictiveChecks` not computed/loaded, hence " \
-                    "<chi^2> for the object `" + str(ID) + "` is not available"
+                    print("`PosteriorPredictiveChecks` not computed/loaded, hence " \
+                    "<chi^2> for the object `" + str(ID) + "` is not available")
 
                 try:
                     aver_red_chi_square = self.PPC.data['aver_red_chi_square'][self.PPC.data['ID'] == ID]
                     n_data = self.PPC.data['n_used_bands'][self.PPC.data['ID'] == ID]
                     y = y1 - (y1-y0)*0.20
                     ax.text(x, y,
-                            "$\langle\chi^2/(\\textnormal{N}_\\textnormal{data}-1)\\rangle=" \
+                            "$\\langle\chi^2/(\\textnormal{N}_\\textnormal{data}-1)\\rangle=" \
                             + "{:.2f}".format(aver_red_chi_square) + "\; \
                             (\\textnormal{N}_\\textnormal{data}=" + \
                             "{:d}".format(n_data) + ")" + "$", fontsize=self.inset_fontsize)
                 except AttributeError:
-                    print "`PosteriorPredictiveChecks` not computed/loaded, hence " \
-                    "<chi^2_red> for the object `" + str(ID) + "` is not available"
+                    print("`PosteriorPredictiveChecks` not computed/loaded, hence " \
+                    "<chi^2_red> for the object `" + str(ID) + "` is not available")
 
             if y0 < 0.: plt.plot( [x0,x1], [0.,0.], color='gray', lw=1.0 )
 

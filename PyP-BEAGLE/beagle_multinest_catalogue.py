@@ -1,9 +1,10 @@
+from __future__ import absolute_import
 import numpy as np
 import os
 import logging
-import cPickle
+import six.moves.cPickle
 
-from beagle_utils import prepare_data_saving, BeagleDirectories, get_files_list
+from .beagle_utils import prepare_data_saving, BeagleDirectories, get_files_list
 
 class MultiNestMode(object):
 
@@ -71,7 +72,7 @@ class MultiNestCatalogue(object):
         if os.path.isfile(name):
             logging.info("Loading the `MultiNestCatalogue`: " + name)
             file = open(name, 'rb')
-            self.MNObjects = cPickle.load(file)
+            self.MNObjects = six.moves.cPickle.load(file)
             file.close()
             return
 
@@ -199,7 +200,7 @@ class MultiNestCatalogue(object):
 
             # Print to a file the data read from the different *stats* files, and
             # saved into self.MNObjects  
-            cPickle.dump(self.MNObjects, fOut, cPickle.HIGHEST_PROTOCOL)
+            six.moves.cPickle.dump(self.MNObjects, fOut, six.moves.cPickle.HIGHEST_PROTOCOL)
 
             # Close the output file containing the cataogue
             fOut.close()

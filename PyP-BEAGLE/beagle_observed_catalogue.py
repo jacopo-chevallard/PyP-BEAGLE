@@ -1,7 +1,8 @@
+from __future__ import absolute_import
 from astropy.io import ascii
 from astropy.io import fits
 
-from beagle_utils import is_FITS_file
+from .beagle_utils import is_FITS_file
         
 class ObservedCatalogue(object):
 

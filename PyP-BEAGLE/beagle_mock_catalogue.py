@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+from __future__ import print_function
 import os
 import logging
 from collections import OrderedDict
@@ -7,19 +9,22 @@ import matplotlib.pyplot as plt
 from matplotlib import rcParams
 from scipy.interpolate import interp1d
 from astropy.io import fits
-from  itertools import izip_longest
+from six.moves import range
+
 
 import bokeh.plotting as bk_plt
 import bokeh.models as bk_mdl
 
-from beagle_utils import prepare_data_saving, prepare_plot_saving, \
+from .beagle_utils import prepare_data_saving, prepare_plot_saving, \
         BeagleDirectories, is_FITS_file, data_exists, plot_exists, set_plot_ticks, \
         is_integer, match_ID, ID_COLUMN_LENGTH
+import six
+from six.moves import zip_longest
 
 def grouper(n, iterable, fillvalue=None):
     "grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx"
     args = [iter(iterable)] * n
-    return izip_longest(fillvalue=fillvalue, *args)
+    return zip_longest(fillvalue=fillvalue, *args)
 
 def test_dim(testlist, dim=0):
    """tests if testlist is a list and how many dimensions it has
@@ -205,12 +210,12 @@ class BeagleMockCatalogue(object):
         # the "true" parameters
         params_dict = dict()
         # This cycles over all keys containing the parameter names
-        for key, value in self.adjust_params.iteritems():
+        for key, value in six.iteritems(self.adjust_params):
             d = { "extName" : "POSTERIOR PDF", "colName" : key}
             log = {"log" : False}
             log.update(value)
             # This cycles over the dictioary items for one parameter
-            for in_key, in_value in value.iteritems():
+            for in_key, in_value in six.iteritems(value):
                 if in_key == "mock":
                     # This will merge the default dictionary `d` with the
                     # one found in the json file
@@ -226,7 +231,7 @@ class BeagleMockCatalogue(object):
         for i, file in enumerate(file_list):
             hdulist = fits.open(os.path.join(BeagleDirectories.results_dir, file))
             data['ID'][i] = os.path.basename(file).split('_BEAGLE')[0]
-            for key, value in params_dict.iteritems():
+            for key, value in six.iteritems(params_dict):
                 val = hdulist[value["extName"]].data[value["colName"]]
                 if not key in data:
                     data[key] = np.zeros(n_files)
@@ -237,7 +242,7 @@ class BeagleMockCatalogue(object):
         hdulist = fits.HDUList(fits.PrimaryHDU())
     
         new_columns = list()
-        for key, value in data.iteritems():
+        for key, value in six.iteritems(data):
 
             # The `ID` column contains a string, while all the other columns real data
             if 'ID' in key:
@@ -291,7 +296,7 @@ class BeagleMockCatalogue(object):
         # By default you plot all parameters
         if params_to_plot is None:
             params_to_plot = list()
-            for key, value in self.adjust_params.iteritems():
+            for key, value in six.iteritems(self.adjust_params):
                 params_to_plot.append(key)
 
         _n = int(np.ceil(np.sqrt(len(params_to_plot))))
@@ -392,7 +397,7 @@ class BeagleMockCatalogue(object):
                     lw=0,
                     **kwargs)
 
-                ax.text(0.1+i*0.25, 1.05, "$\sigma=" + "{:.3f}".format(dispersion) + "$", 
+                ax.text(0.1+i*0.25, 1.05, "$\\sigma=" + "{:.3f}".format(dispersion) + "$", 
                     fontsize=8, 
                     horizontalalignment='center', 
                     transform=ax.transAxes)
@@ -461,7 +466,7 @@ class BeagleMockCatalogue(object):
         # By default you plot all parameters
         if params_to_plot is None:
             params_to_plot = list()
-            for key, value in self.adjust_params.iteritems():
+            for key, value in six.iteritems(self.adjust_params):
                 params_to_plot.append(key)
 
         # Do you consider only some rows in the catalogue?
@@ -592,7 +597,7 @@ class BeagleMockCatalogue(object):
             path = os.path.join(os.getcwd(),
                     '@strID')
             url = "file://" + path
-            print "url: ", url
+            print("url: ", url)
             taptool = p.select(type=bk_mdl.TapTool)
             taptool.callback = bk_mdl.OpenURL(url=url)
 
@@ -729,7 +734,7 @@ class BeagleMockCatalogue(object):
 
         last = n_par-1
 
-        for i, (keyX, valueX) in enumerate(self.adjust_params.iteritems()):
+        for i, (keyX, valueX) in enumerate(six.iteritems(self.adjust_params)):
 
             if "extName" in self.adjust_params[keyX]:
                 extNameX = self.adjust_params[keyX]["extName"]
@@ -748,7 +753,7 @@ class BeagleMockCatalogue(object):
 
             xlabel = self.adjust_params[keyX]['label']
 
-            for j, (keyY, valueY) in enumerate(self.adjust_params.iteritems()):
+            for j, (keyY, valueY) in enumerate(six.iteritems(self.adjust_params)):
 
                 if "extName" in self.adjust_params[keyY]:
                     extNameY = self.adjust_params[keyY]["extName"]

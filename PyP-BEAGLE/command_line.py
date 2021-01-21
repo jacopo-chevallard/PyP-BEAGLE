@@ -1,18 +1,28 @@
 #!/usr/bin/env python
+from __future__ import absolute_import
 import sys
 import os
 import argparse
 import re
 import numpy as np
-import ConfigParser
+import six.moves.configparser
 import logging
 from matplotlib import rc
 from astropy.io import ascii
 from astropy.io import fits
-
 from pathos.multiprocessing import ProcessingPool 
-from pyp_beagle import *
-from _version import __version__
+
+from .beagle_parsers import standard_parser
+from .beagle_utils import BeagleDirectories, get_files_list
+from .beagle_mock_catalogue import BeagleMockCatalogue
+from .beagle_summary_catalogue import BeagleSummaryCatalogue
+from .beagle_photometry import Photometry
+from .beagle_spectral_indices import SpectralIndices
+from .beagle_spectra import Spectrum
+from .beagle_pdf import PDF
+
+from ._version import __version__
+from six.moves import zip
 
 
 def main():
@@ -42,7 +52,7 @@ def main():
     configure_matplotlib()
 
     # Read parameter file
-    config = ConfigParser.SafeConfigParser()
+    config = six.moves.configparser.SafeConfigParser()
 
     # Set fontsize
     BeagleDirectories.fontsize = args.fontsize

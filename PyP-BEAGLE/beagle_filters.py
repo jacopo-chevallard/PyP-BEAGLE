@@ -144,7 +144,7 @@ class PhotometricFilters(object):
             for i in range(self.n_bands):
 
                 if fileName[i].strip():
-                    data = ascii.read(fileName[i])
+                    data = ascii.read(os.path.expandvars(fileName[i]), data_start=1)
                     wl, t_wl = data.field(0), data.field(1)
                 else:
                     d = hdulist['TRANSMISSION'].data[name[i]][0]

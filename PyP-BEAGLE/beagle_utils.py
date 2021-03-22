@@ -118,6 +118,8 @@ def configure_matplotlib():
 
     mpl.rcParams['text.usetex'] = True
 
+    mpl.rcParams['axes.unicode_minus'] = False
+
     mpl.rcParams['text.latex.preamble'] = '\\usepackage{amssymb}, \\usepackage{amsmath}, \
             \\usepackage{upgreek}, \\usepackage{txfonts}'
 

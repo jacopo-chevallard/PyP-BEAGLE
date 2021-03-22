@@ -1,3 +1,12 @@
+## 0.7.2 (March 22, 2021)
+  - RuntimeError: latex was not able to process the following string:b'lp' solved following https://stackoverflow.com/a/32020370, i.e. redefining the minus sign in the preamble 
+  - Recognizing use of env variables in the filters definition; skipping the header line in the ASCII filter transmission files
+  - Trying to solve a LaTeX error RuntimeError: latex was not able to process the following string: b'lp' using hints from here https://github.com/garrettj403/SciencePlots/issues/2 and here https://stackoverflow.com/a/53080504
+  - Adding LaTex use through our matplotlib configuration
+  - Updated env variables
+  - Updating README
+  - Adding missing import; adding configparser option since the default option has changed
+
 ## 0.7.1 (January 21, 2021)
   - Python 3.8 not yet available on Shippable, using 3.7 instead
   - Updating README to reflect move to Python 3

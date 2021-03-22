@@ -24,6 +24,7 @@ branches:
 
 build:
   ci:
+    - pip install --upgrade pip
     - pip install twine
     - python setup.py bdist_egg 
     - python setup.py sdist

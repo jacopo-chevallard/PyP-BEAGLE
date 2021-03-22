@@ -1,3 +1,6 @@
+## 0.7.3 (March 22, 2021)
+  - Trying to solve CI error: can't find Rust compiler
+
 ## 0.7.2 (March 22, 2021)
   - RuntimeError: latex was not able to process the following string:b'lp' solved following https://stackoverflow.com/a/32020370, i.e. redefining the minus sign in the preamble 
   - Recognizing use of env variables in the filters definition; skipping the header line in the ASCII filter transmission files

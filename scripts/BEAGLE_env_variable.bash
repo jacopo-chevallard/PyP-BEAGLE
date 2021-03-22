@@ -13,10 +13,7 @@ export BEAGLE_DATA="${BEAGLE_ROOT}/data"
 export BEAGLE_SF_CHE="${BEAGLE_ROOT}/sf_che"
 export BEAGLE_RESULTS="${BEAGLE_ROOT}/results"
 
-# This environment variable is already defined by BC03 routines, but here you
-# redefine it to be sure that the filters used are those in the BEAGLE directory
-# tree 
-export FILTERS="${BEAGLE_FILTERS}/FILTERBIN.RES"
+export BEAGLE_GENERAL="${HOME}/BEAGLE-general"
 
 ###################################################
 # END BEAGLE environment variables

@@ -13,7 +13,7 @@ from astropy.io import fits
 from pathos.multiprocessing import ProcessingPool 
 
 from .beagle_parsers import standard_parser
-from .beagle_utils import BeagleDirectories, get_files_list
+from .beagle_utils import BeagleDirectories, get_files_list, configure_matplotlib
 from .beagle_mock_catalogue import BeagleMockCatalogue
 from .beagle_summary_catalogue import BeagleSummaryCatalogue
 from .beagle_photometry import Photometry
@@ -52,7 +52,7 @@ def main():
     configure_matplotlib()
 
     # Read parameter file
-    config = six.moves.configparser.SafeConfigParser()
+    config = six.moves.configparser.SafeConfigParser(strict=False)
 
     # Set fontsize
     BeagleDirectories.fontsize = args.fontsize

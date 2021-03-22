@@ -99,7 +99,7 @@ def configure_matplotlib():
     # into 
     # mpl.rcParams['ytick.minor.right'] = True
 
-    mpl.rcParams['backend'] = 'TkAgg'
+    mpl.rcParams['backend'] = 'MacOSX'
 
     mpl.rc('lines', 
             linewidth=1.5, linestyle='-', 
@@ -120,8 +120,8 @@ def configure_matplotlib():
 
     mpl.rcParams['axes.unicode_minus'] = False
 
-    mpl.rcParams['text.latex.preamble'] = '\\usepackage{amssymb}, \\usepackage{amsmath}, \
-            \\usepackage{upgreek}, \\usepackage{txfonts}'
+    mpl.rcParams['text.latex.preamble'] = '\\usepackage{amssymb} \\usepackage{amsmath} \
+            \\usepackage{upgreek} \\usepackage{txfonts} \\usepackage[utf8]{inputenc} \\DeclareUnicodeCharacter{2212}{$-$}'
 
     mpl.rcParams['text.latex.preview'] = True
 

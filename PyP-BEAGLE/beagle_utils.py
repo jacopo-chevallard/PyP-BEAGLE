@@ -116,6 +116,8 @@ def configure_matplotlib():
             color='black', usetex=True)
 
 
+    mpl.rcParams['text.usetex'] = True
+
     mpl.rcParams['text.latex.preamble'] = '\\usepackage{amssymb}, \\usepackage{amsmath}, \
             \\usepackage{upgreek}, \\usepackage{txfonts}'
 

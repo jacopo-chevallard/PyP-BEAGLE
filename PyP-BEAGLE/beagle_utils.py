@@ -18,7 +18,7 @@ import six
 from six.moves import range
 from six.moves import input
 
-import pyp_beagle.dependencies.WeightedKDE 
+import pyp_beagle.dependencies.WeightedKDE as WeightedKDE
 
 ID_COLUMN_LENGTH = 100
 

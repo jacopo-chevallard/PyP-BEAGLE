@@ -1,3 +1,8 @@
+## 0.7.4 (March 23, 2021)
+  - Fixing some Python 3 conversion issues
+  - Corrected a wrong import
+  - Enabling reading the ID column name of a photometric catalogue from the filters configuration file (it can still be overridden through the command line argument)
+
 ## 0.7.3 (March 22, 2021)
   - Trying to solve CI error: can't find Rust compiler
 

@@ -43,17 +43,17 @@ class WalkerRandomSampling(object):
         weights = weights * n / weights.sum()
 
         inx = -ones(n, dtype=int)
-        short = where(weights < 1)[0].tolist()
-        long = where(weights > 1)[0].tolist()
-        while short and int:
-            j = short.pop()
-            k = int[-1]
+        _short = where(weights < 1)[0].tolist()
+        _long = where(weights > 1)[0].tolist()
+        while _short and _long:
+            j = _short.pop()
+            k = _long[-1]
 
             inx[j] = k
             weights[k] -= (1 - weights[j])
             if weights[k] < 1:
-                short.append( k )
-                int.pop()
+                _short.append( k )
+                _long.pop()
 
         self.prob = weights
         self.inx = inx

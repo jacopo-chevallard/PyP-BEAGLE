@@ -304,8 +304,7 @@ def standard_parser():
         help="Name of the column containing the object ID in the source catalogue",
         action="store", 
         type=str, 
-        dest="ID_key",
-        default="ID"
+        dest="ID_key"
     )
 
     parser.add_argument(

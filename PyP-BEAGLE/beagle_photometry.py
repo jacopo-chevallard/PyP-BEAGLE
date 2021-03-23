@@ -15,7 +15,6 @@ from astropy.io import ascii
 from astropy.io import fits
 
 import sys
-import pyp_beagle.dependencies.WeightedKDE 
 from pyp_beagle.dependencies.walker_random_sampling import WalkerRandomSampling
 
 from .beagle_utils import BeagleDirectories, prepare_plot_saving, set_plot_ticks, \
@@ -95,11 +94,17 @@ class PhotometricCatalogue(ObservedCatalogue):
 
 class Photometry:
 
-    def __init__(self, **kwargs):
+    def __init__(self, filters, **kwargs):
         
-        self.inset_fontsize = BeagleDirectories.inset_fontsize_fraction * BeagleDirectories.fontsize
+        self.filters = filters
 
-        self.filters = PhotometricFilters()
+        if kwargs.get('ID_key') is not None:
+            print('here')
+            self.key = kwargs.get('ID_key')
+        else:
+            self.key = self.filters.ID_key
+
+        self.inset_fontsize = BeagleDirectories.inset_fontsize_fraction * BeagleDirectories.fontsize
 
         self.observed_catalogue = PhotometricCatalogue()
 
@@ -110,8 +115,6 @@ class Photometry:
         self.residual = ResidualPhotometry()
 
         self.PPC = PosteriorPredictiveChecks()
-
-        self.key = kwargs.get('ID_key', 'ID')
         
         self.x_log = kwargs.get('plot_log_wl', False)
 

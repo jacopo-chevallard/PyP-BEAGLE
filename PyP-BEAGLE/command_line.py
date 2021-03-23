@@ -17,6 +17,7 @@ from .beagle_utils import BeagleDirectories, get_files_list, configure_matplotli
 from .beagle_mock_catalogue import BeagleMockCatalogue
 from .beagle_summary_catalogue import BeagleSummaryCatalogue
 from .beagle_photometry import Photometry
+from .beagle_filters import PhotometricFilters
 from .beagle_spectral_indices import SpectralIndices
 from .beagle_spectra import Spectrum
 from .beagle_pdf import PDF
@@ -158,9 +159,6 @@ def main():
     # ---------------------------------------------------------
     if has_photometry:
 
-        # Initialize an instance of the main "Photometry" class
-        my_photometry = Photometry(**args_dict)
-                
         # We can load a set of photometric filters
         try:
             filters_file = os.path.expandvars(config.get('main', 'FILTERS FILE'))
@@ -172,9 +170,14 @@ def main():
             except:
                 filters_throughputs = None
 
-        my_photometry.filters.load(filters_file, 
+        my_filters = PhotometricFilters()
+
+        my_filters.load(filters_file, 
                 filters_folder=args.filters_folder, 
                 filters_throughputs=filters_throughputs)
+
+        # Initialize an instance of the main "Photometry" class
+        my_photometry = Photometry(my_filters, **args_dict)
 
         # Load observed photometric catalogue
         file_name = os.path.expandvars(config.get('main', 'PHOTOMETRIC CATALOGUE'))

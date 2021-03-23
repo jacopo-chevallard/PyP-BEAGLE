@@ -35,6 +35,9 @@ def jy_to_erg(jy):
 
 class PhotometricFilters(object):
 
+    def __init__(self):
+        pass
+
     def load(self, file_name, 
             filters_folder="$BEAGLE_FILTERS", 
             filters_throughputs=None):
@@ -87,6 +90,8 @@ class PhotometricFilters(object):
                     self.units = ast.literal_eval(line.split('flux:conversion:')[1])
                 elif 'units:' in line:
                     self.units = jy_to_erg(line.split('units:')[1])
+                elif 'object_ID:colName:' in line:
+                    self.ID_key = line.split('object_ID:colName:')[1].split()[0]
                 elif 'name:' in line or 'index:' in line:
                     if 'index:' in line:
                         old_API = True

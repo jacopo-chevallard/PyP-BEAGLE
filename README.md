@@ -1,3 +1,6 @@
+![PyP-BEAGLE](https://github.com/jacopo-chevallard/PyP-BEAGLE/actions/workflows/python-publish.yml/badge.svg?event=release)
+
+
 # PyP-BEAGLE
 
 PyP-BEAGLE (**Py**thon **P**ostprocessing of **BEAGLE**) is a Python package to postprocess the analyses performed with the galaxy SED modelling tool [Beagle](http://www.jacopochevallard.org/beagle/) (**B**ay**E**sian **A**nalysis of **G**a**L**axy s**E**ds). PyP-BEAGLE allows one to create different types of publication-quality plots, LaTeX tables, as well as several higher level "summary" catalogues.  

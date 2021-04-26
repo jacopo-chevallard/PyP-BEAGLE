@@ -82,8 +82,9 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['matplotlib', 'scipy', 'numpy', 'atpy', 'getdist', 'pathos', 
-                      'astropy', 'bokeh', 'natsort', 'six'],
+    install_requires=['matplotlib', 'scipy', 'numpy', 'getdist', 'pathos', 
+                      'astropy', 'bokeh', 'natsort', 'six', 'logging', 'ast', 
+                      'argparse', 'bisect', 'json', 'fnmatch', 're', 'datetime'],
 
     include_package_data=True, 
 

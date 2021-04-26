@@ -1,3 +1,11 @@
+## 0.8.0 (April 26, 2021)
+  - Merge branch 'feature/github_actions' into develop
+  - Removing Shippable file
+  - Modifying Github actions workflow
+  - Editing Github workflow/actions
+  - Updated requirements
+  - Adding directory for Github actions
+
 ## 0.7.4 (March 23, 2021)
   - Fixing some Python 3 conversion issues
   - Corrected a wrong import

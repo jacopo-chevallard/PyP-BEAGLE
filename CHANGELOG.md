@@ -1,3 +1,10 @@
+## 0.8.1 (April 26, 2021)
+  - Modifying Github action badge
+  - Editing Github workflow
+  - Modifying the workflow to trigger the action at releases
+  - Adding workflow badge
+  - Changed Github workflow path and file name
+
 ## 0.8.0 (April 26, 2021)
   - Merge branch 'feature/github_actions' into develop
   - Removing Shippable file

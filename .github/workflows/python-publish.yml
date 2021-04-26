@@ -4,8 +4,11 @@
 name: Upload Python Package
 
 on:
-  release:
-    types: [published]
+  push:
+    # Pattern matched against refs/tags
+    tags:        
+      - '*'           # Push events to every tag not containing /
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -14,10 +17,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+      with:
+        username: ${{ secrets.PAT_USERNAME }}
+        password: ${{ secrets.PAT_PASSWORD }}
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: '3.x'
+        python-version: '3.7'
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip

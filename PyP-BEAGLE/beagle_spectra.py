@@ -24,7 +24,7 @@ from astropy.io import fits
 import sys
 import pyp_beagle.dependencies.WeightedKDE 
 from pyp_beagle.dependencies.walker_random_sampling import WalkerRandomSampling
-import pyp_beagle.dependencies.autoscale
+import pyp_beagle.dependencies.autoscale as autoscale
 from pyp_beagle.dependencies import FillBetweenStep
 import pyp_beagle.dependencies.set_shared_labels  as shLab
 

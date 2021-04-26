@@ -1,3 +1,6 @@
+## 0.8.2 (April 26, 2021)
+  - Fixing wrong module imports, fixes #44
+
 ## 0.8.1 (April 26, 2021)
   - Modifying Github action badge
   - Editing Github workflow

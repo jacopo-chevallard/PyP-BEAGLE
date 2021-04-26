@@ -1,5 +1,4 @@
-![PyP-BEAGLE](https://github.com/jacopo-chevallard/PyP-BEAGLE/actions/workflows/python-publish.yml/badge.svg?event=release)
-
+[![Upload Python Package](https://github.com/jacopo-chevallard/PyP-BEAGLE/actions/workflows/python-publish.yml/badge.svg)](https://github.com/jacopo-chevallard/PyP-BEAGLE/actions/workflows/python-publish.yml)
 
 # PyP-BEAGLE
 

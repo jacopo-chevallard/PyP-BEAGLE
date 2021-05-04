@@ -1,3 +1,6 @@
+## 0.8.3 (May 04, 2021)
+  - Removed dependencies which are already included in the Python Standard Library
+
 ## 0.8.2 (April 26, 2021)
   - Fixing wrong module imports, fixes #44
 

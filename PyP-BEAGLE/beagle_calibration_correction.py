@@ -2,6 +2,7 @@ import ConfigParser
 import json
 from collections import OrderedDict
 import numpy as np
+import scipy.special as special
     
 class CalibrationCorrection:
 
@@ -41,5 +42,8 @@ class CalibrationCorrection:
         if self.type == "polynomial":
             for i in range(self.degree+1):
                 y = y + coeff[i]*np.power(x,i)
+        if self.type == "legendre":
+            for i in range(self.degree+1):
+                y = y + coeff[i]*special.eval_legendre(i,x)
         return y
 

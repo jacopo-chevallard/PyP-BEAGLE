@@ -116,7 +116,6 @@ class ObservedSpectrum(object):
                     "the `configure` method!")
             raise AttributeError(msg)
 
-
         hdu = fits.open(os.path.expandvars(file_name))
         data = hdu[1].data
 
@@ -171,7 +170,6 @@ class Spectrum(object):
 
     def __init__(self, param_file=None, config=None,
             **kwargs):
-        print 'entering Spectrum __init__ ', param_file
 
         self.inset_fontsize = BeagleDirectories.inset_fontsize_fraction * BeagleDirectories.fontsize
 
@@ -340,22 +338,21 @@ class Spectrum(object):
         # If plotting the calibration correction, create calibration_correction fluxes
         if self.show_calibration_correction:
             #Sample 100 from the output
-            nSamp = 100
-            idx = np.random.choice(np.fromiter((x for x in range(model_fluxes.shape[0])),np.int),\
-                                               size=nSamp,p=probability)
-            calibration_correction_arr = np.zeros([nSamp,n_wl])
+#            nSamp = 100
+#            idx = np.random.choice(np.fromiter((x for x in range(model_fluxes.shape[0])),np.int),\
+#                                               size=nSamp,p=probability)
+            calibration_correction_arr = np.zeros([model_fluxes.shape[0],n_wl])
             w0 = 0.5*(model_wl[0]+model_wl[-1])
-            for i in range(nSamp):
+            for i in range(model_fluxes.shape[0]):
                 tmp_coeff = []
                 for d in range(self.calibration_correction.degree+1):
                     print d, self.calibration_correction.degree
                     label = 'continuum_coeff-'+str(d+1)
                     if self.calibration_correction.coeff_params[label]['fitted']:
-                        tmp_coeff.append(hdulist['posterior pdf'].data[label][idx[i]])
+                        tmp_coeff.append(hdulist['posterior pdf'].data[label][i])
                     else:
-                        tmp_coeff.append(np.zeros(model_fluxes.shape[0]) + self.calibration_correction.coeff_params[label]['value'])
+                        tmp_coeff.append(self.calibration_correction.coeff_params[label]['value'])
               
-                print tmp_coeff, w0
                 calibration_correction_arr[i,:] = self.calibration_correction.return_correction((model_wl-w0)/1E4, tmp_coeff)
                 
             median_calibration = np.zeros(n_wl)
@@ -394,8 +391,14 @@ class Spectrum(object):
             upper_flux[i] = f_interp(lev)
             
             if self.show_calibration_correction:
-                lower_calibration[i] = np.min(calibration_correction_arr[:,i])
-                upper_calibration[i] = np.max(calibration_correction_arr[:,i])
+                f_interp = interp1d(cumul_pdf, calibration_correction_arr[sort_,i])
+                median_calibration[i] = f_interp(0.5)
+                
+                lev = (1.-max_interval/100.)/2.
+                lower_calibration[i] = f_interp(lev)
+
+                lev = 1.-(1.-max_interval/100.)/2.
+                upper_calibration[i] = f_interp(lev)
 #        pylab.figure()
 #        pylab.plot(model_wl, lower_calibration)
 #        pylab.plot(model_wl, upper_calibration)
@@ -480,8 +483,11 @@ class Spectrum(object):
             else:
                 n_ranges = int(1.*len(self.wl_range)/2.)
 
-        fig = plt.figure(figsize=(12,8))
-        if self.show_residual:
+        figsize = [12,8]
+        if self.show_calibration_correction and self.show_residual:
+            figsize = [12,12]
+        fig = plt.figure(figsize=figsize)
+        if self.show_residual or self.show_calibration_correction:
             fig, axs_ = plt.subplots(n_outer, n_ranges, gridspec_kw = {'height_ratios':height_ratios})
         else:
             fig, axs_ = plt.subplots(n_outer, n_ranges)
@@ -677,8 +683,12 @@ class Spectrum(object):
         axs[0].set_ylabel(ylabel)
 
         if self.show_residual:
-            ylabel = "$(F_{\\uplambda}-F_{\\uplambda}^\\textnormal{mod}) / F_{\\uplambda}$"
+            ylabel = "$\\frac{F_{\\uplambda}-F_{\\uplambda}^\\textnormal{mod}}{F_{\\uplambda}}$"
             residual_axs[0].set_ylabel(ylabel)
+            
+        if self.show_calibration_correction:
+            ylabel = "$\\mathcal{P}(\\uplambda)$"
+            calibration_axs[0].set_ylabel(ylabel)
 
         # Title of the plot is the object ID
         if self.print_ID: 
@@ -854,14 +864,14 @@ class Spectrum(object):
 
                 print np.min(median_calibration), np.max(median_calibration)
                 print np.min(lower_calibration), np.max(upper_calibration)
-#                ax.plot(model_wl,
-#                        median_calibration,
-#                        color="darkgreen",
-#                        linewidth = 1.5,
-#                        alpha=alpha_line)
+                ax.plot(model_wl,
+                        median_calibration,
+                        color="darkgreen",
+                        linewidth = 1.5,
+                        alpha=alpha_line)
 
-                for i in range(calibration_correction_arr.shape[0]):
-                    ax.plot(model_wl, calibration_correction_arr[i,:],color="darkgreen",linewidth=0.8, alpha=alpha_line)
+#                for i in range(calibration_correction_arr.shape[0]):
+#                    ax.plot(model_wl, calibration_correction_arr[i,:],color="darkgreen",linewidth=0.8, alpha=alpha_line)
                         
 
                 ax.fill_between(model_wl,

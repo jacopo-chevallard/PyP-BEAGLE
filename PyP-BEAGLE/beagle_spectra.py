@@ -212,10 +212,8 @@ class Spectrum(object):
         
         if self.show_calibration_correction:
             #Initialize the calibration correction
-            print param_file
             if param_file is None or param_file == BeagleDirectories.param_file:
                 param_file = os.path.join(BeagleDirectories.results_dir, BeagleDirectories.beagle_input_files, BeagleDirectories.param_file)
-            print BeagleDirectories.param_file, param_file, BeagleDirectories.results_dir, BeagleDirectories.beagle_input_files
 
             if config is None:
                 config = ConfigParser.SafeConfigParser()
@@ -346,7 +344,6 @@ class Spectrum(object):
             for i in range(model_fluxes.shape[0]):
                 tmp_coeff = []
                 for d in range(self.calibration_correction.degree+1):
-                    print d, self.calibration_correction.degree
                     label = 'continuum_coeff-'+str(d+1)
                     if self.calibration_correction.coeff_params[label]['fitted']:
                         tmp_coeff.append(hdulist['posterior pdf'].data[label][i])
@@ -862,8 +859,6 @@ class Spectrum(object):
 
             for ax in calibration_axs:
 
-                print np.min(median_calibration), np.max(median_calibration)
-                print np.min(lower_calibration), np.max(upper_calibration)
                 ax.plot(model_wl,
                         median_calibration,
                         color="darkgreen",

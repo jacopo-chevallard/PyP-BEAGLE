@@ -99,7 +99,6 @@ class Photometry:
         self.filters = filters
 
         if kwargs.get('ID_key') is not None:
-            print('here')
             self.key = kwargs.get('ID_key')
         else:
             self.key = self.filters.ID_key

@@ -69,7 +69,7 @@ class ObservedSpectrum(object):
             param_file = os.path.join(BeagleDirectories.results_dir, BeagleDirectories.beagle_input_files, BeagleDirectories.param_file)
 
         if config is None:
-            config = six.moves.configparser.SafeConfigParser()
+            config = six.moves.configparser.SafeConfigParser(strict=False)
             config.read(param_file)
 
         line = config.get('main', 'SPECTRUM FILE DESCRIPTION')
@@ -216,7 +216,7 @@ class Spectrum(object):
                 param_file = os.path.join(BeagleDirectories.results_dir, BeagleDirectories.beagle_input_files, BeagleDirectories.param_file)
 
             if config is None:
-                config = ConfigParser.SafeConfigParser()
+                config = six.moves.configparser.SafeConfigParser(strict=False)
                 config.read(param_file)
                 
             self.calibration_correction.configure(config, os.path.join(BeagleDirectories.results_dir, kwargs.get('json_calibration_correction')))
@@ -859,14 +859,14 @@ class Spectrum(object):
 
             for ax in calibration_axs:
 
-                ax.plot(model_wl,
-                        median_calibration,
-                        color="darkgreen",
-                        linewidth = 1.5,
-                        alpha=alpha_line)
+#                ax.plot(model_wl,
+#                        median_calibration,
+#                        color="darkgreen",
+#                        linewidth = 1.5,
+#                        alpha=alpha_line)
 
-#                for i in range(calibration_correction_arr.shape[0]):
-#                    ax.plot(model_wl, calibration_correction_arr[i,:],color="darkgreen",linewidth=0.8, alpha=alpha_line)
+                for i in range(calibration_correction_arr.shape[0]):
+                    ax.plot(model_wl, calibration_correction_arr[i,:],color="darkgreen",linewidth=0.8, alpha=alpha_line)
                         
 
                 ax.fill_between(model_wl,

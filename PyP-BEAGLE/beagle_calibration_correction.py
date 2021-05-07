@@ -1,4 +1,3 @@
-import ConfigParser
 import json
 from collections import OrderedDict
 import numpy as np
@@ -16,17 +15,14 @@ class CalibrationCorrection:
 
 
         self.has_correction = config.has_option('main', 'FLUX CALIBRATION CORRECTION')
-        print self.has_correction
         
         if self.has_correction and params_file is not None:
         
             #Names of parameters and whether they are fitted or not, supplying the
             #values if they are fixed
-            print 'params_file: ', params_file
             with open(params_file) as f:
                 self.coeff_params = json.load(f, object_pairs_hook=OrderedDict)
             line = config.get('main', 'FLUX CALIBRATION CORRECTION')
-            print line
             if 'type:' in line:
                 self.type = line.split("type:")[1].split()[0]
                 #Type can currently only be Polynomial

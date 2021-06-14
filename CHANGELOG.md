@@ -1,3 +1,11 @@
+## 0.9.0 (June 14, 2021)
+  - Merge pull request #46 from eclake/calibration_branch_new
+  - removing print statements and fixing bugs
+  - Update beagle_spectra.py
+  - Update beagle_spectra.py
+  - Update beagle_calibration_correction.py
+  - adding calibration_correction plot
+
 ## 0.8.3 (May 04, 2021)
   - Removed dependencies which are already included in the Python Standard Library
 

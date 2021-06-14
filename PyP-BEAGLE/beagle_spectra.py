@@ -8,7 +8,6 @@ from scipy.interpolate import interp1d
 from bisect import bisect_left
 import numpy as np
 from itertools import tee
-
 import json
 import matplotlib.pyplot as plt
 import matplotlib.ticker as plticker
@@ -35,6 +34,7 @@ from .beagle_summary_catalogue import BeagleSummaryCatalogue
 from .beagle_multinest_catalogue import MultiNestCatalogue
 from .beagle_posterior_predictive_checks import PosteriorPredictiveChecks
 from .beagle_mock_catalogue import BeagleMockCatalogue
+from .beagle_calibration_correction import CalibrationCorrection
 
 # See here
 # http://peak.telecommunity.com/DevCenter/PythonEggs#accessing-package-resources
@@ -66,10 +66,10 @@ class ObservedSpectrum(object):
     def configure(self, param_file=None, config=None):
 
         if param_file is None:
-            param_file = os.path.join(BeagleDirectories.results_dir, BeagleDirectories.param_file)
+            param_file = os.path.join(BeagleDirectories.results_dir, BeagleDirectories.beagle_input_files, BeagleDirectories.param_file)
 
         if config is None:
-            config = six.moves.configparser.SafeConfigParser()
+            config = six.moves.configparser.SafeConfigParser(strict=False)
             config.read(param_file)
 
         line = config.get('main', 'SPECTRUM FILE DESCRIPTION')
@@ -115,7 +115,6 @@ class ObservedSpectrum(object):
             msg = ("The `ObservedSpectrum.description` must be set through "
                     "the `configure` method!")
             raise AttributeError(msg)
-
 
         hdu = fits.open(os.path.expandvars(file_name))
         data = hdu[1].data
@@ -169,7 +168,7 @@ class ObservedSpectrum(object):
 
 class Spectrum(object):
 
-    def __init__(self, params_file,
+    def __init__(self, param_file=None, config=None,
             **kwargs):
 
         self.inset_fontsize = BeagleDirectories.inset_fontsize_fraction * BeagleDirectories.fontsize
@@ -177,6 +176,8 @@ class Spectrum(object):
         self.observed_spectrum = ObservedSpectrum()
 
         self.multinest_catalogue = MultiNestCatalogue()
+        
+        self.calibration_correction = CalibrationCorrection()
 
         self.mock_catalogue = kwargs.get('mock_catalogue')
 
@@ -206,6 +207,19 @@ class Spectrum(object):
         self.plot_full_SED = kwargs.get('plot_full_SED', False)
 
         self.show_residual = kwargs.get('show_residual', False)
+
+        self.show_calibration_correction = kwargs.get('show_calibration_correction', False)
+        
+        if self.show_calibration_correction:
+            #Initialize the calibration correction
+            if param_file is None or param_file == BeagleDirectories.param_file:
+                param_file = os.path.join(BeagleDirectories.results_dir, BeagleDirectories.beagle_input_files, BeagleDirectories.param_file)
+
+            if config is None:
+                config = six.moves.configparser.SafeConfigParser(strict=False)
+                config.read(param_file)
+                
+            self.calibration_correction.configure(config, os.path.join(BeagleDirectories.results_dir, kwargs.get('json_calibration_correction')))
 
         self.print_ID = kwargs.get('print_ID', False)
 
@@ -301,9 +315,15 @@ class Spectrum(object):
         # Read the template wl array, and the 2D flux array
         model_wl = hdulist['marginal sed wl'].data['wl'][0,:]
         model_fluxes = hdulist['marginal sed'].data
+        
+
+            
 
         # Read the posterior probability
-        probability = hdulist['posterior pdf'].data['probability']
+        # to use random.choice you need the probabilities to very high precision and to
+        # sum to 1
+        probability = np.array(hdulist['posterior pdf'].data['probability'], np.float64)
+        probability = probability/probability.sum().astype(np.float64)
 
         # Now compute for each wl bin the sorted fluxes, you will need this to
         # calculate the median and percentiles for each wl bin
@@ -311,6 +331,30 @@ class Spectrum(object):
 
         # Now it's time to compute the median (observed-frame) SED and its percentiles
         n_wl = model_fluxes.shape[1]
+        
+
+        # If plotting the calibration correction, create calibration_correction fluxes
+        if self.show_calibration_correction:
+            #Sample 100 from the output
+#            nSamp = 100
+#            idx = np.random.choice(np.fromiter((x for x in range(model_fluxes.shape[0])),np.int),\
+#                                               size=nSamp,p=probability)
+            calibration_correction_arr = np.zeros([model_fluxes.shape[0],n_wl])
+            w0 = 0.5*(model_wl[0]+model_wl[-1])
+            for i in range(model_fluxes.shape[0]):
+                tmp_coeff = []
+                for d in range(self.calibration_correction.degree+1):
+                    label = 'continuum_coeff-'+str(d+1)
+                    if self.calibration_correction.coeff_params[label]['fitted']:
+                        tmp_coeff.append(hdulist['posterior pdf'].data[label][i])
+                    else:
+                        tmp_coeff.append(self.calibration_correction.coeff_params[label]['value'])
+              
+                calibration_correction_arr[i,:] = self.calibration_correction.return_correction((model_wl-w0)/1E4, tmp_coeff)
+                
+            median_calibration = np.zeros(n_wl)
+            lower_calibration = np.zeros(n_wl)
+            upper_calibration = np.zeros(n_wl)
 
         median_flux = np.zeros(n_wl)
         lower_flux = np.zeros(n_wl)
@@ -342,6 +386,21 @@ class Spectrum(object):
 
             lev = 1.-(1.-max_interval/100.)/2.
             upper_flux[i] = f_interp(lev)
+            
+            if self.show_calibration_correction:
+                f_interp = interp1d(cumul_pdf, calibration_correction_arr[sort_,i])
+                median_calibration[i] = f_interp(0.5)
+                
+                lev = (1.-max_interval/100.)/2.
+                lower_calibration[i] = f_interp(lev)
+
+                lev = 1.-(1.-max_interval/100.)/2.
+                upper_calibration[i] = f_interp(lev)
+#        pylab.figure()
+#        pylab.plot(model_wl, lower_calibration)
+#        pylab.plot(model_wl, upper_calibration)
+#        pylab.show()
+                
     
         # Set the plot limits from the minimum and maximum wl_eff
         axs = list()
@@ -374,6 +433,10 @@ class Spectrum(object):
         # Convert to correct wl units
         model_wl /= wl_factor
         data_wl /= wl_factor
+        
+
+                
+
 
         # Load the mask spectrum if exists
         mask_color = "grey"
@@ -400,10 +463,14 @@ class Spectrum(object):
         slices_model.append(np.ma.clump_masked(masked_array))
 
 
+        n_outer = 1
+        height_ratios = [3]
         if self.show_residual:
-            n_outer = 2
-        else:
-            n_outer = 1
+            n_outer = n_outer + 1
+            height_ratios.append(1)
+        if self.show_calibration_correction:
+            n_outer = n_outer + 1
+            height_ratios.append(1)
 
         if self.wl_range is None:
             n_ranges = 1
@@ -413,26 +480,37 @@ class Spectrum(object):
             else:
                 n_ranges = int(1.*len(self.wl_range)/2.)
 
-        fig = plt.figure(figsize=(12,8))
-        if self.show_residual:
-            fig, axs_ = plt.subplots(n_outer, n_ranges, gridspec_kw = {'height_ratios':[3, 1]})
+        figsize = [12,8]
+        if self.show_calibration_correction and self.show_residual:
+            figsize = [12,12]
+        fig = plt.figure(figsize=figsize)
+        if self.show_residual or self.show_calibration_correction:
+            fig, axs_ = plt.subplots(n_outer, n_ranges, gridspec_kw = {'height_ratios':height_ratios})
         else:
             fig, axs_ = plt.subplots(n_outer, n_ranges)
 
         fig.subplots_adjust(wspace=0.1, hspace=0.0)
         if self.show_residual:
-            axs = axs_[0,:] 
+            axs = axs_[0]
         else:
             axs = axs_
 
         if self.show_residual:
-            residual_axs = axs_[1,:]
+            residual_axs = axs_[1]
+            if self.show_calibration_correction:
+                calibration_axs = axs_[2]
+        else:
+            if self.show_calibration_correction:
+                calibration_axs = axs_[1]
 
         try:
             isinstance(axs[0], Axes)
         except:
             axs = [axs]
-            residual_axs = [residual_axs]
+            if self.show_residual:
+                residual_axs = [residual_axs]
+            if self.show_calibration_correction:
+                calibration_axs = [calibration_axs]
 
         if n_ranges == 1:
             if self.wl_range is None:
@@ -445,6 +523,8 @@ class Spectrum(object):
             axs[0].set_xlim([wl_low, wl_up])
             if self.show_residual:
                 residual_axs[0].set_xlim([wl_low, wl_up])
+            if self.show_calibration_correction:
+                calibration_axs[0].set_xlim([wl_low, wl_up])
         else:
             # how big to make the diagonal lines in axes coordinates
             # converting "points" to axes coordinates: 
@@ -515,6 +595,44 @@ class Spectrum(object):
                     ax_l.patch.set_facecolor('None')
 
                     wl_l = wl_r
+                    
+                if self.show_calibration_correction:
+                    t = calibration_axs[0].transAxes.transform([(0,0), (1,1)])
+                    t = calibration_axs[0].get_figure().get_dpi() / (t[1,1] - t[0,1]) / 72
+                    d = 0.5*(rcParams['xtick.major.size']*t)
+
+                    wl_l = wl_ranges[0]
+                    for i, (ax_l, ax_r) in enumerate(pairwise(calibration_axs)):
+                        kwargs = dict(transform=ax_l.transAxes, color='k', clip_on=False)
+                        ax_l.spines['right'].set_visible(False)
+                        if not ax_l.spines['left'].get_visible():
+                            ax_l.yaxis.set_ticks_position('none')
+                        else:
+                            ax_l.yaxis.tick_left()
+                        ax_l.set_xlim(wl_l)
+                        ax_l.plot((1-d, 1+d), (-d, +d), **kwargs)
+                        #ax_l.plot((1-d, 1+d), (1-d, 1+d), **kwargs)
+
+                        kwargs = dict(transform=ax_r.transAxes, color='k', clip_on=False)
+                        ax_r.spines['left'].set_visible(False)
+                        ax_r.yaxis.tick_right()
+                        ax_r.tick_params(labelright='off')
+                        wl_r = wl_ranges[1+i]
+                        ax_r.set_xlim(wl_r)
+                        ax_r.plot((-d, +d), (-d, +d), **kwargs)
+                        #ax_r.plot((-d, +d), (1-d, 1+d), **kwargs)
+                        #ax_l.spines['top'].set_visible(False)
+                        ax_l.spines['top'].set_color('none')
+                        ax_l.xaxis.set_ticks_position('bottom')
+
+                        ax_r.spines['top'].set_color('none')
+                        ax_r.xaxis.set_ticks_position('bottom')
+                        #ax_r.spines['top'].set_visible(False)
+
+                        ax_r.patch.set_facecolor('None')
+                        ax_l.patch.set_facecolor('None')
+
+                        wl_l = wl_r
 
         which = 'both'
         for ax in axs:
@@ -535,7 +653,7 @@ class Spectrum(object):
             else:
                 set_plot_ticks(ax, which=which)
 
-        if self.show_residual:
+        if self.show_residual or self.show_calibration_correction:
             for ax in axs:
                 ax.tick_params(labelbottom='off')
 
@@ -562,8 +680,12 @@ class Spectrum(object):
         axs[0].set_ylabel(ylabel)
 
         if self.show_residual:
-            ylabel = "$(F_{\\uplambda}-F_{\\uplambda}^\\textnormal{mod}) / F_{\\uplambda}$"
+            ylabel = "$\\frac{F_{\\uplambda}-F_{\\uplambda}^\\textnormal{mod}}{F_{\\uplambda}}$"
             residual_axs[0].set_ylabel(ylabel)
+            
+        if self.show_calibration_correction:
+            ylabel = "$\\mathcal{P}(\\uplambda)$"
+            calibration_axs[0].set_ylabel(ylabel)
 
         # Title of the plot is the object ID
         if self.print_ID: 
@@ -690,9 +812,9 @@ class Spectrum(object):
             ax.set_ylim(ylim)
 
         if self.show_residual:
-            data_flux_ = data_flux[data_wl==model_wl]
-            data_mask_ = data_mask[data_wl==model_wl]
-            data_flux_err_ = data_flux_err[data_wl==model_wl]
+            data_flux_ = data_flux[np.isclose(data_wl, model_wl, rtol=1e-6, atol=0.0, equal_nan=False)]
+            data_mask_ = data_mask[np.isclose(data_wl, model_wl, rtol=1e-6, atol=0.0, equal_nan=False)]
+            data_flux_err_ = data_flux_err[np.isclose(data_wl, model_wl, rtol=1e-6, atol=0.0, equal_nan=False)]
             residual = (data_flux_-median_flux)/data_flux_
             residual_err = (1./data_flux_ - (data_flux_-median_flux)/data_flux_**2) * data_flux_err_
 
@@ -732,6 +854,29 @@ class Spectrum(object):
                             ms=3,
                             **kwargs
                             )
+                            
+        if self.show_calibration_correction:
+
+            for ax in calibration_axs:
+
+#                ax.plot(model_wl,
+#                        median_calibration,
+#                        color="darkgreen",
+#                        linewidth = 1.5,
+#                        alpha=alpha_line)
+
+                for i in range(calibration_correction_arr.shape[0]):
+                    ax.plot(model_wl, calibration_correction_arr[i,:],color="darkgreen",linewidth=0.8, alpha=alpha_line)
+                        
+
+                ax.fill_between(model_wl,
+                        lower_calibration,
+                        upper_calibration,
+                        facecolor="darkgreen",
+                        linewidth=0,
+                        interpolate=True,
+                        alpha=alpha_fill
+                        )
 
         for ax in axs:
 

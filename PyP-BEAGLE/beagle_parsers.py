@@ -89,6 +89,24 @@ def standard_parser():
         action="store_true", 
         dest="show_residual" 
         )
+        
+    
+
+    parser.add_argument(
+        '--show-calibration-correction',
+        help="Include in the marginal plot a panel showing the calibration correction.",
+        action="store_true",
+        dest="show_calibration_correction"
+        )
+        
+    parser.add_argument(
+        '--json-calibration-correction',
+        help="JSON file containing the configuration for the calibration correction",
+        action="store",
+        type=str,
+        dest="json_calibration_correction",
+        default="calibration_correction.json"
+        )
 
     parser.add_argument(
         '--show-single-solution',

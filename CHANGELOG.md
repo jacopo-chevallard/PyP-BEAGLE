@@ -1,3 +1,7 @@
+## 0.9.1 (June 28, 2021)
+  - Bug fix: now supporting negative fluxes (e.g. absorption lines)
+  - Removed dependency on WeightedKDE since scipy.stats now supports weighted gaussian_kde
+
 ## 0.9.0 (June 14, 2021)
   - Merge pull request #46 from eclake/calibration_branch_new
   - removing print statements and fixing bugs

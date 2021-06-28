@@ -18,7 +18,7 @@ import six
 from six.moves import range
 from six.moves import input
 
-import pyp_beagle.dependencies.WeightedKDE as WeightedKDE
+from scipy.stats import gaussian_kde
 
 ID_COLUMN_LENGTH = 100
 
@@ -578,9 +578,9 @@ def prepare_violin_plot(data,
 
     # Compute the marginal PDF through a weighted KDE
     if weights is not None:
-        pdf = WeightedKDE.gaussian_kde(data, weights=weights)
+        pdf = gaussian_kde(data, weights=weights)
     else:
-        pdf = WeightedKDE.gaussian_kde(data)
+        pdf = gaussian_kde(data)
 
     # Build a grid of value over which computing the actual PDF from its KDE
     x_grid = np.linspace(min_x, max_x, nXgrid)

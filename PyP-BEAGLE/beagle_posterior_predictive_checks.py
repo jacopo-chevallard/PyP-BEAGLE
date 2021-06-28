@@ -8,7 +8,6 @@ from astropy.io import fits
 from astropy.table import Table, Column
 
 import sys
-import pyp_beagle.dependencies.WeightedKDE 
 from pyp_beagle.dependencies.walker_random_sampling import WalkerRandomSampling
 
 from .beagle_utils import prepare_data_saving, prepare_plot_saving, \

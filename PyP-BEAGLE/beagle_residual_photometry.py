@@ -4,10 +4,10 @@ import numpy as np
 from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
 import six.moves.cPickle
+from scipy.stats import gaussian_kde
 
 import os
 import sys
-import pyp_beagle.dependencies.WeightedKDE 
 
 from .beagle_utils import weighted_avg_and_std, BeagleDirectories, match_ID, prepare_plot_saving
 from six.moves import range
@@ -103,7 +103,7 @@ class ResidualPhotometry(object):
             # Sometimes at high redshift, short wavelength filters all contain model_flux = 0 when wavelength
             # of filter outside of wavelength range of templates, hence testing the length of residual
             if len(residual) > 0:
-                kde_pdf = WeightedKDE.gaussian_kde(residual, weights = 1./residualErr)
+                kde_pdf = gaussian_kde(residual, weights = 1./residualErr)
             else:
                 kde_pdf = 0
 

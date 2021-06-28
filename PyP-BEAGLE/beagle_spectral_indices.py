@@ -22,7 +22,6 @@ from astropy.io import fits
 
 import sys
 
-import pyp_beagle.dependencies.WeightedKDE 
 from pyp_beagle.dependencies.walker_random_sampling import WalkerRandomSampling
 import pyp_beagle.dependencies.autoscale
 from pyp_beagle.dependencies import FillBetweenStep
@@ -175,24 +174,25 @@ class SpectralIndices(object):
             _lim_y = kde_pdf(median_flux)/pdf_norm * w
 
             kwargs = {'alpha':0.8}
-            ax.errorbar(X,
-                    _observed_flux, 
-                    yerr=_observed_flux_err,
-                    color="dodgerblue",
-                    ls=" ",
-                    marker=" ",
-                    zorder=5,
-                    **kwargs)
+            if _observed_flux_err > 0.:
+                ax.errorbar(X,
+                        _observed_flux, 
+                        yerr=_observed_flux_err,
+                        color="dodgerblue",
+                        ls=" ",
+                        marker=" ",
+                        zorder=5,
+                        **kwargs)
 
-            ax.plot(X,
-                    _observed_flux, 
-                    color="dodgerblue",
-                    ls=" ",
-                    marker="D",
-                    markeredgewidth=0.,
-                    markersize = 8,
-                    zorder=3,
-                    **kwargs)
+                ax.plot(X,
+                        _observed_flux, 
+                        color="dodgerblue",
+                        ls=" ",
+                        marker="D",
+                        markeredgewidth=0.,
+                        markersize = 8,
+                        zorder=3,
+                        **kwargs)
 
             kwargs = {'color':'tomato', 'alpha':0.7, 'edgecolor':'black', 'linewidth':0.2}
             ax.fill_betweenx(x_plot,
@@ -218,12 +218,12 @@ class SpectralIndices(object):
                     alpha = 0.7
                     )
 
-            _all = np.concatenate((_observed_flux-_observed_flux_err, x_plot))
-            _min = np.amin(_all[_all > 0.])
+            _all = np.concatenate((_observed_flux[_observed_flux_err > 0.]-_observed_flux_err[_observed_flux_err > 0.], x_plot))
+            _min = np.amin(_all)
             minY_values[i] = _min
 
-            _all = np.concatenate((_observed_flux+_observed_flux_err, x_plot))
-            _max = np.amax(_all[_all > 0.])
+            _all = np.concatenate((_observed_flux[_observed_flux_err > 0.]+_observed_flux_err[_observed_flux_err > 0.], x_plot))
+            _max = np.amax(_all)
             maxY_values[i] = _max
 
         minY = np.amin(minY_values)

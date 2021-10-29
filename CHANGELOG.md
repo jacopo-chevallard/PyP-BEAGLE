@@ -1,3 +1,6 @@
+## 0.9.2 (October 29, 2021)
+  - Enabling setting wl units for photometry plots as well (via the --wl-units option)
+
 ## 0.9.1 (June 28, 2021)
   - Bug fix: now supporting negative fluxes (e.g. absorption lines)
   - Removed dependency on WeightedKDE since scipy.stats now supports weighted gaussian_kde

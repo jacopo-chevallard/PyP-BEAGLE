@@ -127,6 +127,8 @@ class Photometry:
 
         self.flux_units = kwargs.get('flux_units', 'microJy')
 
+        self.wl_units = kwargs.get('wl_units', 'micron')
+
         self.single_solutions = None
         if kwargs.get('plot_single_solution') is not None:
             self.single_solutions = OrderedDict()
@@ -135,7 +137,7 @@ class Photometry:
                 self.single_solutions['row'] = f[1].data['row_index']
 
     def plot_marginal(self, ID, max_interval=99.7, 
-            print_text=False, print_title=False, replot=False, show=False, units='nanoJy',
+            print_text=False, print_title=False, replot=False, show=False, 
             SED_prob_log_scale=False, n_SED_to_plot=10):
         """ 
         Plot the fluxes predicted by BEAGLE.
@@ -176,6 +178,19 @@ class Photometry:
             ylabel = "$f_{\\nu}/\\textnormal{nJy}$"
         else:
             raise ValueError("Flux units `" + self.flux_units + "` not recognised!")
+
+        # Factor to convert angstrom to input units
+        if self.wl_units == 'micron':
+            wl_factor = 1.E+04
+            xlabel = "\mu\\textnormal{m}"
+        elif self.wl_units == 'nm':
+            wl_factor = 1.E+01
+            xlabel = "\\textnormal{nm}"
+        elif self.wl_units == 'ang':
+            wl_factor = 1.
+            xlabel = "\\textnormal{\\AA}"
+        else:
+            raise ValueError("Wavelength units `" + self.wl_units + "` not recognised!")
 
         # Name of the output plot
         plot_name = str(ID)+'_BEAGLE_marginal_SED_phot.pdf'
@@ -234,9 +249,9 @@ class Photometry:
         nXgrid = 1000
 
         if self.x_log:
-            wl_eff = np.log10(self.filters.data['wl_eff'])
+            wl_eff = np.log10(self.filters.data['wl_eff']/wl_factor)
         else:
-            wl_eff = np.array(self.filters.data['wl_eff'])
+            wl_eff = np.array(self.filters.data['wl_eff']/wl_factor)
 
         # Sort wl_eff array
         sor = np.argsort(wl_eff)
@@ -368,7 +383,7 @@ class Photometry:
 
                     # Redshift the SED and wl
                     flux_obs = SED / (1.+z)
-                    wl_obs = wl * (1.+z)
+                    wl_obs = wl * (1.+z) / wl_factor
 
                     # Convert F_lambda [erg s^-1 cm^-2 A^-1] ----> F_nu [erg s^-1 cm^-2 Hz^-1]
                     flux_obs = (wl_obs)**2/c_light*flux_obs
@@ -453,9 +468,9 @@ class Photometry:
 
         # Define plotting styles
         if self.x_log:
-            ax.set_xlabel("$\\log (\lambda_\\textnormal{eff} / \\textnormal{\AA})$")
+            ax.set_xlabel("$\\log (\lambda_\\textnormal{eff} / " + xlabel + ")$")
         else:
-            ax.set_xlabel("$\\lambda_\\textnormal{eff} / \\textnormal{\AA}$")
+            ax.set_xlabel("$\\lambda_\\textnormal{eff} / " + xlabel + "$")
 
         ax.set_ylabel(ylabel)
 

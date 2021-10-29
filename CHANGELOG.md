@@ -1,3 +1,6 @@
+## 0.8.4 (October 29, 2021)
+  - Enabling setting wl units for photometry plots as well (via the --wl-units option)
+
 ## 0.8.3 (May 04, 2021)
   - Removed dependencies which are already included in the Python Standard Library
 

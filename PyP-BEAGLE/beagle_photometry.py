@@ -383,13 +383,14 @@ class Photometry:
 
                     # Redshift the SED and wl
                     flux_obs = SED / (1.+z)
-                    wl_obs = wl * (1.+z) / wl_factor
+                    wl_obs = wl * (1.+z)
 
                     # Convert F_lambda [erg s^-1 cm^-2 A^-1] ----> F_nu [erg s^-1 cm^-2 Hz^-1]
                     flux_obs = (wl_obs)**2/c_light*flux_obs
 
-                    # Scale to nanoJy
+                    # Scale to the correct flux and wl units
                     flux_obs = flux_obs / Jy * flux_factor
+                    wl_obs = wl_obs / wl_factor
 
                     prob = probability[i]
                     if SED_prob_log_scale:

@@ -1,3 +1,7 @@
+## 0.9.3 (May 03, 2022)
+  - Fixing plotting of full SED (spectrum) on marginal plots for photometry. Units conversion (F_lambda to F_nu) was wrong (a regression that appeared at some point). Fixes #47
+  - Remove Matplotlib deprecated option (see https://matplotlib.org/3.3.1/gallery/text_labels_and_annotations/usetex_baseline_test.html), fixes #48
+
 ## 0.9.2 (October 29, 2021)
   - Enabling setting wl units for photometry plots as well (via the --wl-units option)
 

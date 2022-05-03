@@ -123,8 +123,6 @@ def configure_matplotlib():
     mpl.rcParams['text.latex.preamble'] = '\\usepackage{amssymb} \\usepackage{amsmath} \
             \\usepackage{upgreek} \\usepackage{txfonts} \\usepackage[utf8]{inputenc} \\DeclareUnicodeCharacter{2212}{$-$}'
 
-    mpl.rcParams['text.latex.preview'] = True
-
     mpl.rc('axes', 
             facecolor='white', edgecolor='black',
             linewidth=1.5, grid=False, labelpad=4.0,

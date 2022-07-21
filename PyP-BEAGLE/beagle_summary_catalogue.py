@@ -69,6 +69,8 @@ def get1DInterval(param_values, probability, levels):
     # You shoud integrate rather than summing here
     mean = np.sum(probability * param_values) / np.sum(probability)
 
+    MAP = param_values[np.argmax(probability)]
+
     median = f_interp(0.5)
 
     interval = list()
@@ -77,7 +79,7 @@ def get1DInterval(param_values, probability, levels):
         low, high = f_interp([0.5*(1.-lev/100.), 1.-0.5*(1.-lev/100.)])
         interval.append([low,high])
 
-    return mean, median, interval
+    return mean, median, MAP, interval
 
 
 class BeagleSummaryCatalogue(object):
@@ -87,6 +89,8 @@ class BeagleSummaryCatalogue(object):
             credible_intervals=None,
             config_file=None,
             hdu_col=None,
+            flatten_columns=False,
+            overwrite=False,
             n_proc=1):
 
         if file_name is not None:
@@ -122,6 +126,10 @@ class BeagleSummaryCatalogue(object):
 
         self.n_proc = n_proc
 
+        self.flatten_columns = flatten_columns
+
+        self.overwrite = overwrite
+
     def exists(self):
 
         return data_exists(self.file_name)
@@ -156,6 +164,12 @@ class BeagleSummaryCatalogue(object):
         probability = hdulist['posterior pdf'].data['probability']
         data = OrderedDict()
 
+        idx = np.argmax(probability)
+
+        for col in self.exclude_columns:
+            data['MAP_' + col] = hdulist['posterior pdf'].data[col][idx]
+        print('-========> ', data)
+
         for hdu in hdu_col:
             hdu_name = hdu['name']
             if 'columns' in hdu:
@@ -167,20 +181,26 @@ class BeagleSummaryCatalogue(object):
                 data['ID'] = ID
                 par_values = hdulist[hdu_name].data[col_name]
 
-                mean, median, interval = get1DInterval(par_values, probability, self.credible_intervals)
+                mean, median, MAP, interval = get1DInterval(par_values, probability, self.credible_intervals)
 
                 data[col_name+'_mean'] = mean
                 data[col_name+'_median'] = median
+                data[col_name+'_MAP'] = MAP
 
                 for j, lev in enumerate(self.credible_intervals):
-                    levName = col_name + '_' + "{:.2f}".format(lev)
-                    data[levName] = interval[j]
+                    if self.flatten_columns:
+                        levName_low = col_name + '_' + "{:.2f}".format(lev) + '_low'
+                        levName_up = col_name + '_' + "{:.2f}".format(lev) + '_up'
+                        data[levName_low], data[levName_up] = interval[j][0], interval[j][1]
+                    else:
+                        levName = col_name + '_' + "{:.2f}".format(lev)
+                        data[levName] = interval[j]
 
         hdulist.close()
 
         return data
 
-    def compute(self, file_list, overwrite=False):
+    def compute(self, file_list):
         """ 
         """ 
 
@@ -196,6 +216,7 @@ class BeagleSummaryCatalogue(object):
     
         # Now you cycle over all extension and columns that you want to put in
         # the summary catalogue
+        is_first = True
         for hdu in self.hdu_col:
             new_columns = list()
 
@@ -205,6 +226,13 @@ class BeagleSummaryCatalogue(object):
             # The first column of each output extension contains the object ID
             #new_columns.append(fits.Column(name='ID', format='K'))
             new_columns.append(fits.Column(name='ID', format=str(ID_COLUMN_LENGTH)+'A'))
+
+            if is_first:
+                for col in self.exclude_columns:
+                    col_ = hdulist[hdu_name].columns[col]
+                    new_columns.append(fits.Column(name='MAP_'+col_.name,
+                        format=col_.format, unit=col_.unit))
+                is_first = False
 
             # You just consider the columns defined in the structure
             if 'columns' in hdu:
@@ -229,10 +257,22 @@ class BeagleSummaryCatalogue(object):
                 new_columns.append(fits.Column(name=col_.name+'_median',
                     format=col_.format, unit=col_.unit))
 
+                new_columns.append(fits.Column(name=col_.name+'_MAP',
+                    format=col_.format, unit=col_.unit))
+
                 for lev in self.credible_intervals:
-                    new_columns.append(fits.Column(name=col_.name + '_' +
-                        "{:.2f}".format(lev), format='2'+col_.format[-1],
-                        unit=col_.unit))
+                    if self.flatten_columns:
+                        new_columns.append(fits.Column(name=col_.name + '_' +
+                            "{:.2f}".format(lev) + '_low', format=col_.format,
+                            unit=col_.unit))
+
+                        new_columns.append(fits.Column(name=col_.name + '_' +
+                            "{:.2f}".format(lev) + '_up', format=col_.format,
+                            unit=col_.unit))
+                    else:
+                        new_columns.append(fits.Column(name=col_.name + '_' +
+                            "{:.2f}".format(lev), format='2'+col_.format[-1],
+                            unit=col_.unit))
 
             # Create the "column definition"
             cols_ = fits.ColDefs(new_columns)
@@ -270,8 +310,14 @@ class BeagleSummaryCatalogue(object):
 
         for i, file in enumerate(file_list):
             idx = index[i]
-            for hdu in self.hdu_col:
+            for h, hdu in enumerate(self.hdu_col):
                 hdu_name = hdu['name']
+
+                if h == 0:
+                    print(self.hdulist[hdu_name].columns)
+                    for col in self.exclude_columns:
+                        self.hdulist[hdu_name].data['MAP_'+col][i] = data[idx]['MAP_'+col]
+
                 if 'columns' in hdu:
                     columnNames = hdu['columns']
                 else:
@@ -279,16 +325,24 @@ class BeagleSummaryCatalogue(object):
 
                 for col_name in columnNames:
                     self.hdulist[hdu_name].data['ID'][i] = data[idx]['ID']
+
                     self.hdulist[hdu_name].data[col_name+'_mean'][i] = data[idx][col_name+'_mean']
                     self.hdulist[hdu_name].data[col_name+'_median'][i] = data[idx][col_name+'_median']
+                    self.hdulist[hdu_name].data[col_name+'_MAP'][i] = data[idx][col_name+'_MAP']
                     for j, lev in enumerate(self.credible_intervals):
-                        levName = col_name + '_' + "{:.2f}".format(lev)
-                        self.hdulist[hdu_name].data[levName][i] = data[idx][levName]
+                        if self.flatten_columns:
+                            levName_low = col_name + '_' + "{:.2f}".format(lev) + '_low'
+                            levName_up = col_name + '_' + "{:.2f}".format(lev) + '_up'
+                            self.hdulist[hdu_name].data[levName_low][i] = data[idx][levName_low]
+                            self.hdulist[hdu_name].data[levName_up][i] = data[idx][levName_up]
+                        else:
+                            levName = col_name + '_' + "{:.2f}".format(lev)
+                            self.hdulist[hdu_name].data[levName][i] = data[idx][levName]
 
         name = prepare_data_saving(self.file_name)
-        self.hdulist.writeto(name, overwrite=overwrite)
+        self.hdulist.writeto(name, overwrite=self.overwrite)
 
-    def extract_MAP_solution(self, file_list, overwrite=False):
+    def extract_MAP_solution(self, file_list):
         """ 
         """ 
 
@@ -333,7 +387,7 @@ class BeagleSummaryCatalogue(object):
 
             file_name = ID + '_BEAGLE_MAP.fits.gz'
             name = prepare_data_saving(file_name)
-            new_hdulist.writeto(name, overwrite=overwrite)
+            new_hdulist.writeto(name, overwrite=self.overwrite)
 
             new_hdulist.close()
             hdulist.close()

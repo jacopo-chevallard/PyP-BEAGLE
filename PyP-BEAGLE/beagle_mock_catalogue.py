@@ -258,7 +258,7 @@ class BeagleMockCatalogue(object):
         hdulist.append(new_hdu)
 
         name = prepare_data_saving(file_name, overwrite=overwrite)
-        hdulist.writeto(name, clobber=overwrite)
+        hdulist.writeto(name, overwrite=overwrite)
 
         self.columns = new_hdu.columns
         self.data = new_hdu.data

@@ -286,7 +286,7 @@ class BeagleSummaryCatalogue(object):
                         self.hdulist[hdu_name].data[levName][i] = data[idx][levName]
 
         name = prepare_data_saving(self.file_name)
-        self.hdulist.writeto(name, clobber=overwrite)
+        self.hdulist.writeto(name, overwrite=overwrite)
 
     def extract_MAP_solution(self, file_list, overwrite=False):
         """ 
@@ -333,7 +333,7 @@ class BeagleSummaryCatalogue(object):
 
             file_name = ID + '_BEAGLE_MAP.fits.gz'
             name = prepare_data_saving(file_name)
-            new_hdulist.writeto(name, clobber=overwrite)
+            new_hdulist.writeto(name, overwrite=overwrite)
 
             new_hdulist.close()
             hdulist.close()

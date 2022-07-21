@@ -1,3 +1,8 @@
+## 0.9.4 (July 21, 2022)
+  - Added new fields to the summary catalogue: the MAP value for each parameter, and the probability, likelihood and chi_square corresponding to the MAP solution. Also added the number of data points used in the fitting to ease the calculation of a pseudo reduceed chi_square. Closes #49
+  - Added command-line options to overwrite existing files and to flatten the columns in the output FITS files
+  - Replacing deprecated Astropy FITS clobber keyword, fixes #50
+
 ## 0.9.3 (May 03, 2022)
   - Fixing plotting of full SED (spectrum) on marginal plots for photometry. Units conversion (F_lambda to F_nu) was wrong (a regression that appeared at some point). Fixes #47
   - Remove Matplotlib deprecated option (see https://matplotlib.org/3.3.1/gallery/text_labels_and_annotations/usetex_baseline_test.html), fixes #48

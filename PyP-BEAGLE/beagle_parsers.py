@@ -344,6 +344,20 @@ def standard_parser():
     )
 
     parser.add_argument(
+        '--overwrite',
+        help="Overwrite existing files",
+        action="store_true", 
+        dest="overwrite"
+    )
+
+    parser.add_argument(
+        '--flatten-columns',
+        help="Flatten columns in the output files so that columns only contain scalar values",
+        action="store_true", 
+        dest="flatten_columns"
+    )
+
+    parser.add_argument(
         '--fontsize',
         help="Fontsize of axes labels, tick marks",
         action="store", 

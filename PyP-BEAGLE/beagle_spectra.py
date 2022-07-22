@@ -412,8 +412,10 @@ class Spectrum(object):
             _redshifts =  hdulist['galaxy properties'].data['redshift']
             _, _counts = np.unique(_redshifts, return_counts=True)
             if len(_counts) > 1:
-                raise ValueError("The `redshift` of the object is not unique!")
-            redshift = _redshifts[0]
+                logging.warning("The `redshift` of the object is not unique!")
+
+            # Take the MAP redshift
+            redshift = hdulist['galaxy properties'].data['redshift'][np.argmax(probability)]
 
         z1 = 1. + redshift
 

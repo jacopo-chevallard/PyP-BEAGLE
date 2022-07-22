@@ -1,3 +1,8 @@
+## 0.9.6 (July 22, 2022)
+  - Raise error whne unable to match object IDs and input spectra
+  - Allow post-processing of spectra with redshift as an adjustable parametter, i.e. the redshift column can contain different values
+  - Defining backend when on Mac OS
+
 ## 0.9.5 (July 22, 2022)
   - Adding some logging messages to ease debugging
 

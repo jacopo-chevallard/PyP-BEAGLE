@@ -238,6 +238,9 @@ def main():
                     file_names.append(line)
                     break
 
+        if len(file_names) != len(IDs):
+            raise ValueError("Cannot match object IDs and file names of the input spectra!")
+
     # Create "pool" of processes
     if args.n_proc > 1:
         pool = ProcessingPool(nodes=args.n_proc)

@@ -1,3 +1,6 @@
+## 0.9.5 (July 22, 2022)
+  - Adding some logging messages to ease debugging
+
 ## 0.9.4 (July 21, 2022)
   - Added new fields to the summary catalogue: the MAP value for each parameter, and the probability, likelihood and chi_square corresponding to the MAP solution. Also added the number of data points used in the fitting to ease the calculation of a pseudo reduceed chi_square. Closes #49
   - Added command-line options to overwrite existing files and to flatten the columns in the output FITS files

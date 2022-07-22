@@ -167,6 +167,8 @@ class Photometry:
             Whether to redo the plot, even if it already exists
         """
 
+        logging.info("Computing the marginal plot for object ID: " + ID)
+
         if self.flux_units == 'milliJy':
             flux_factor = 1.E+03
             ylabel = "$f_{\\nu}/\\textnormal{mJy}$"

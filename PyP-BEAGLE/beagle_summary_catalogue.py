@@ -161,6 +161,8 @@ class BeagleSummaryCatalogue(object):
         #ID = np.int(np.float(os.path.basename(file[0:end])))
         ID = os.path.basename(file[0:end])
 
+        logging.info("Computing the summary quantities for object ID: " + ID)
+
         probability = hdulist['posterior pdf'].data['probability']
         data = OrderedDict()
 
@@ -168,7 +170,6 @@ class BeagleSummaryCatalogue(object):
 
         for col in self.exclude_columns:
             data['MAP_' + col] = hdulist['posterior pdf'].data[col][idx]
-        print('-========> ', data)
 
         for hdu in hdu_col:
             hdu_name = hdu['name']
@@ -314,7 +315,6 @@ class BeagleSummaryCatalogue(object):
                 hdu_name = hdu['name']
 
                 if h == 0:
-                    print(self.hdulist[hdu_name].columns)
                     for col in self.exclude_columns:
                         self.hdulist[hdu_name].data['MAP_'+col][i] = data[idx]['MAP_'+col]
 

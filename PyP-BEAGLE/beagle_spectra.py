@@ -258,6 +258,8 @@ class Spectrum(object):
             Whether to print the object ID on the top of the plot.
         """
 
+        logging.info("Computing the marginal plot for object ID: " + ID)
+
         # Factor to convert angstrom to input units
         if self.wl_units == 'micron':
             wl_factor = 1.E+04

@@ -9,6 +9,7 @@ from bisect import bisect_left
 from scipy.integrate import simps, cumtrapz
 from scipy.interpolate import interp1d
 from datetime import datetime
+import platform
 
 import sys
 
@@ -99,7 +100,8 @@ def configure_matplotlib():
     # into 
     # mpl.rcParams['ytick.minor.right'] = True
 
-    mpl.rcParams['backend'] = 'MacOSX'
+    if platform.system() == 'Darwin':
+        mpl.rcParams['backend'] = 'MacOSX'
 
     mpl.rc('lines', 
             linewidth=1.5, linestyle='-', 

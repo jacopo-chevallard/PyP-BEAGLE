@@ -102,6 +102,7 @@ class SpectralIndices(object):
 
         self.max_interval = kwargs.get('max_interval')
 
+        self.show_residual = kwargs.get('show_residual', False)
 
     def plot_line_fluxes(self, 
             ID, replot=False, 
@@ -112,6 +113,8 @@ class SpectralIndices(object):
         #    suffix = "_printed_values"
 
         plot_name = str(ID) + '_BEAGLE_spectral_indices' + suffix + ".pdf"
+
+        print('ID: ', ID)
 
         # Check if the plot already exists
         if plot_exists(plot_name) and not replot:
@@ -167,6 +170,8 @@ class SpectralIndices(object):
             kde_pdf, pdf_norm, median_flux, x_plot, y_plot = prepare_violin_plot(_model_flux, weights=probability) 
             _model_fluxes[i] = median_flux
 
+            print(_label, _observed_flux / median_flux, abs(_observed_flux-median_flux) / _observed_flux_err)
+
             _max_y = np.max(y_plot)
             w = width / _max_y
 
@@ -218,16 +223,21 @@ class SpectralIndices(object):
                     alpha = 0.7
                     )
 
-            _all = np.concatenate((_observed_flux[_observed_flux_err > 0.]-_observed_flux_err[_observed_flux_err > 0.], x_plot))
+            _all = np.concatenate((_observed_flux[_observed_flux_err > 0.], x_plot))
             _min = np.amin(_all)
             minY_values[i] = _min
 
-            _all = np.concatenate((_observed_flux[_observed_flux_err > 0.]+_observed_flux_err[_observed_flux_err > 0.], x_plot))
+            _all = np.concatenate((_observed_flux[_observed_flux_err > 0.], x_plot))
             _max = np.amax(_all)
             maxY_values[i] = _max
 
-        minY = np.amin(minY_values)
+        if self.plot_log_flux:
+            minY = np.amin(minY_values[minY_values > 0.])
+        else:
+            minY = np.amin(minY_values)
+
         maxY = np.max(maxY_values)
+        print('min, max', minY, maxY)
         if self.print_values:
             _factor = 0.15
         else:

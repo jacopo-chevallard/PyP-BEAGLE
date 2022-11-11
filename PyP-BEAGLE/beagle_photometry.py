@@ -562,7 +562,7 @@ class Photometry:
             name = prepare_plot_saving(plot_name)
 
             fig.savefig(name, dpi=None, facecolor='w', edgecolor='w',
-                    orientation='portrait', papertype='a4', format="pdf",
+                    orientation='portrait', format="pdf",
                     transparent=False, bbox_inches="tight", pad_inches=0.1)
 
         plt.close(fig)
@@ -766,7 +766,7 @@ class Photometry:
             name = prepare_plot_saving(str(ID)+'_BEAGLE_replic_data_phot_matrix.pdf')
 
             fig.savefig(name, dpi=None, facecolor='w', edgecolor='w',
-                    orientation='portrait', papertype='a4', format="pdf",
+                    orientation='portrait', format="pdf",
                     transparent=False, bbox_inches="tight", pad_inches=0.1)
 
             fig.clear()
@@ -958,7 +958,7 @@ class Photometry:
         name = prepare_plot_saving(plot_name)
 
         fig.savefig(name, dpi=None, facecolor='w', edgecolor='w',
-                orientation='portrait', papertype='a4', format="pdf",
+                orientation='portrait', format="pdf",
                 transparent=False, bbox_inches="tight", pad_inches=0.1)
 
         plt.close(fig)

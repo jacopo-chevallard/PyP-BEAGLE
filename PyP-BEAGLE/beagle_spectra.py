@@ -992,7 +992,7 @@ class Spectrum(object):
         name = prepare_plot_saving(plot_name)
 
         fig.savefig(name, dpi=None, facecolor='w', edgecolor='w',
-                orientation='portrait', papertype='a4', format="pdf",
+                orientation='portrait', format="pdf",
                 transparent=False, bbox_inches="tight", pad_inches=0.1)
         plt.close(fig)
 

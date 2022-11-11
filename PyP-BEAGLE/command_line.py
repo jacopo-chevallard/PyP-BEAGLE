@@ -160,7 +160,7 @@ def main():
     # ---------------------------------------------------------
     # --------- Post-processing of photometric data -----------
     # ---------------------------------------------------------
-    if has_photometry:
+    if has_photometry and args.plot_marginal:
 
         # We can load a set of photometric filters
         try:
@@ -189,7 +189,7 @@ def main():
     # ---------------------------------------------------------
     # --------- Post-processing of spectral indices data -----------
     # ---------------------------------------------------------
-    if has_spec_indices and args.line_labels_json:
+    if has_spec_indices and args.line_labels_json and args.plot_marginal:
 
         # Initialize an instance of the main "SpectralIndices" class
         my_spec_indices = SpectralIndices(**args_dict)
@@ -204,7 +204,7 @@ def main():
     # ---------------------------------------------------------
     # -------- Post-processing of spectroscopic data ----------
     # ---------------------------------------------------------
-    if has_spectra:
+    if has_spectra and args.plot_marginal:
 
         # Initialize an instance of the main "Spectrum" class
         my_spectrum = Spectrum(**args_dict)

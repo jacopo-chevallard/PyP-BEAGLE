@@ -217,7 +217,6 @@ class BeagleSummaryCatalogue(object):
     
         # Now you cycle over all extension and columns that you want to put in
         # the summary catalogue
-        is_first = True
         for hdu in self.hdu_col:
             new_columns = list()
 
@@ -228,12 +227,11 @@ class BeagleSummaryCatalogue(object):
             #new_columns.append(fits.Column(name='ID', format='K'))
             new_columns.append(fits.Column(name='ID', format=str(ID_COLUMN_LENGTH)+'A'))
 
-            if is_first:
+            if hdu_name == 'POSTERIOR PDF':
                 for col in self.exclude_columns:
                     col_ = hdulist[hdu_name].columns[col]
                     new_columns.append(fits.Column(name='MAP_'+col_.name,
                         format=col_.format, unit=col_.unit))
-                is_first = False
 
             # You just consider the columns defined in the structure
             if 'columns' in hdu:
@@ -314,7 +312,7 @@ class BeagleSummaryCatalogue(object):
             for h, hdu in enumerate(self.hdu_col):
                 hdu_name = hdu['name']
 
-                if h == 0:
+                if hdu_name == 'POSTERIOR PDF':
                     for col in self.exclude_columns:
                         self.hdulist[hdu_name].data['MAP_'+col][i] = data[idx]['MAP_'+col]
 

@@ -1,3 +1,6 @@
+## 0.9.9 (November 11, 2022)
+  - Bug fix: residuals can be correctly computed even when the marginal wl array and the data wl array do not have the same size, fixes #52
+
 ## 0.9.8 (November 11, 2022)
   - Removing unsupported 'papertype' option from matplotlib fig.savefig method
   - Update README.md

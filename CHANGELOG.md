@@ -1,3 +1,7 @@
+## 0.9.8 (November 11, 2022)
+  - Removing unsupported 'papertype' option from matplotlib fig.savefig method
+  - Update README.md
+
 ## 0.9.7 (November 11, 2022)
   - Bug fix: an issue was introduced when adding support for the MAP solution in the summary catalogue, this fix closes #51
   - Bug fix: correctly dealing with log flux scale in the presence of negative or zero fluxes

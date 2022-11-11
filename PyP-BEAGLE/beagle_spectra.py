@@ -317,9 +317,6 @@ class Spectrum(object):
         model_wl = hdulist['marginal sed wl'].data['wl'][0,:]
         model_fluxes = hdulist['marginal sed'].data
         
-
-            
-
         # Read the posterior probability
         # to use random.choice you need the probabilities to very high precision and to
         # sum to 1
@@ -333,7 +330,6 @@ class Spectrum(object):
         # Now it's time to compute the median (observed-frame) SED and its percentiles
         n_wl = model_fluxes.shape[1]
         
-
         # If plotting the calibration correction, create calibration_correction fluxes
         if self.show_calibration_correction:
             #Sample 100 from the output
@@ -406,6 +402,7 @@ class Spectrum(object):
         # Set the plot limits from the minimum and maximum wl_eff
         axs = list()
         residual_axs = list()
+        multiple_redshifts = False
         if observation.data['redshift'] is not None:
             redshift = observation.data['redshift']
         else:
@@ -413,13 +410,15 @@ class Spectrum(object):
             _, _counts = np.unique(_redshifts, return_counts=True)
             if len(_counts) > 1:
                 logging.warning("The `redshift` of the object is not unique!")
+                multiple_redshifts = True
 
             # Take the MAP redshift
             redshift = hdulist['galaxy properties'].data['redshift'][np.argmax(probability)]
 
-        z1 = 1. + redshift
-
         if self.wl_rest:
+            if multiple_redshifts:
+                raise ValueError('Cannot plot in the rest-frame since redshift is an adjustable parameter of the model!')
+            z1 = 1. + redshift
             data_wl = observation.data['wl'] / z1
             data_flux = observation.data['flux'] * z1
             data_flux_err = observation.data['fluxerr'] * z1
@@ -437,10 +436,6 @@ class Spectrum(object):
         model_wl /= wl_factor
         data_wl /= wl_factor
         
-
-                
-
-
         # Load the mask spectrum if exists
         mask_color = "grey"
         has_mask = False
@@ -786,16 +781,15 @@ class Spectrum(object):
                 wrand = WalkerRandomSampling(probability, keys=indices)
                 rand_indices = wrand.random(self.n_SED_to_plot)
 
-                if self.wl_rest:
-                    wl_obs = hdulist['full sed wl'].data['wl'][0,:]
+                for i in rand_indices:
 
-                    for i in rand_indices:
-                        SED = hdulist['full sed'].data[i,:]
-                else:
-                    wl_obs = hdulist['full sed wl'].data['wl'][0,:] * z1
-
-                    for i in rand_indices:
-                        SED = hdulist['full sed'].data[i,:] / z1
+                    if self.wl_rest:
+                        wl_obs = hdulist['full sed wl'].data['wl'][0,:]
+                        flux_obs = hdulist['full sed'].data[i,:]
+                    else:
+                        _z1 = 1. + hdulist['galaxy properties'].data['redshift'][i]
+                        wl_obs = hdulist['full sed wl'].data['wl'][0,:] * _z1
+                        flux_obs = hdulist['full sed'].data[i,:] / _z1
 
                     ax.plot(wl_obs, 
                             flux_obs,
@@ -815,9 +809,13 @@ class Spectrum(object):
             ax.set_ylim(ylim)
 
         if self.show_residual:
-            data_flux_ = data_flux[np.isclose(data_wl, model_wl, rtol=1e-6, atol=0.0, equal_nan=False)]
-            data_mask_ = data_mask[np.isclose(data_wl, model_wl, rtol=1e-6, atol=0.0, equal_nan=False)]
-            data_flux_err_ = data_flux_err[np.isclose(data_wl, model_wl, rtol=1e-6, atol=0.0, equal_nan=False)]
+            arr1 = np.pad(model_wl, (3, 2), 'constant', constant_values=(8,0))                 
+            len_diff = len(data_wl)-len(model_wl)
+            is_close = np.isclose(data_wl, np.pad(model_wl, (0, len_diff), constant_values=(0.,0.)), rtol=1e-6, atol=0.0, equal_nan=False)
+            data_flux_ = data_flux[is_close]
+            data_mask_ = data_mask[is_close]
+            data_flux_err_ = data_flux_err[is_close]
+
             residual = (data_flux_-median_flux)/data_flux_
             residual_err = (1./data_flux_ - (data_flux_-median_flux)/data_flux_**2) * data_flux_err_
 
@@ -826,7 +824,7 @@ class Spectrum(object):
             ymax = 1.1
 
             colors = ["darkgreen"]
-            indices = np.arange(len(data_wl))
+            indices = np.arange(len(data_flux_))
             if has_mask:
                 colors = ["darkgreen", mask_color]
 

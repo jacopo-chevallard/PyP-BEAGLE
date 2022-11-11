@@ -1,3 +1,7 @@
+## 0.9.7 (November 11, 2022)
+  - Bug fix: an issue was introduced when adding support for the MAP solution in the summary catalogue, this fix closes #51
+  - Bug fix: correctly dealing with log flux scale in the presence of negative or zero fluxes
+
 ## 0.9.6 (July 22, 2022)
   - Raise error whne unable to match object IDs and input spectra
   - Allow post-processing of spectra with redshift as an adjustable parametter, i.e. the redshift column can contain different values

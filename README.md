@@ -107,6 +107,12 @@ where
 
 The successful execution of the script will create the file ``<your Beagle results folder>/pyp-beagle/data/BEAGLE_summary_catalogue.fits``.
 
+#### Description
+
+In the ``POSTERIOR PDF`` extension we have added some quantities related to the MAP = Maximum-a-Posteriori solution, namely the probability (``MAP_probability``), log-likelihood (``MAP_ln_likelihood``), chi-square (``MAP_chi_square``), and number of data points used in the fitting (``MAP_n_data``). These quantities enable a quick "frequentist-like" check of the goodness-of-the-fit of the MAP solution.
+
+The physical parameters corresponding to the MAP solution are indicated as ``<parameter_name>_MAP`` (e.g. ``mass_MAP``).
+
 ### Plotting the comparison of input and retrieved parameters when fitting mock observations
 
 #### Command

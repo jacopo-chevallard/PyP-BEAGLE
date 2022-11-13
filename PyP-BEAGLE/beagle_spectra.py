@@ -205,6 +205,15 @@ class Spectrum(object):
 
         self.plot_full_SED = kwargs.get('plot_full_SED', False)
 
+        self.plot_MAP_SED = kwargs.get('plot_MAP_SED', False)
+
+        self.single_solutions = None
+        if kwargs.get('plot_single_solution') is not None:
+            self.single_solutions = OrderedDict()
+            with fits.open(kwargs.get('plot_single_solution')) as f:
+                self.single_solutions['ID'] = f[1].data['ID']
+                self.single_solutions['row'] = f[1].data['row_index']
+
         self.show_residual = kwargs.get('show_residual', False)
 
         self.show_calibration_correction = kwargs.get('show_calibration_correction', False)
@@ -224,7 +233,7 @@ class Spectrum(object):
 
         self.draw_steps = kwargs.get('draw_steps', False)
 
-        self.n_SED_to_plot = kwargs.get('n_SED_to_plot', 100)
+        self.n_SED_to_plot = kwargs.get('n_SED_to_plot')
 
         self.plot_suffix = kwargs.get('plot_suffix')
 
@@ -776,27 +785,46 @@ class Spectrum(object):
                                 )
 
             # Extract and plot full SED
-            if 'full sed wl' in hdulist and self.plot_full_SED:
-                indices = np.arange(len(probability))
-                wrand = WalkerRandomSampling(probability, keys=indices)
-                rand_indices = wrand.random(self.n_SED_to_plot)
+            if 'full sed wl' in hdulist:
 
-                for i in rand_indices:
+                if self.plot_full_SED:
+                    indices = np.arange(len(probability))
+                    wrand = WalkerRandomSampling(probability, keys=indices)
+                    rand_indices = wrand.random(self.n_SED_to_plot)
 
+                    for i in rand_indices:
+
+                        if self.wl_rest:
+                            wl_obs = hdulist['full sed wl'].data['wl'][0,:]
+                            flux_obs = hdulist['full sed'].data[i,:]
+                        else:
+                            _z1 = 1. + hdulist['galaxy properties'].data['redshift'][i]
+                            wl_obs = hdulist['full sed wl'].data['wl'][0,:] * _z1 / wl_factor
+                            flux_obs = hdulist['full sed'].data[i,:] / _z1
+
+                        ax.plot(wl_obs, 
+                                flux_obs,
+                                color="grey",
+                                ls="-",
+                                lw=0.5,
+                                alpha=0.3)
+
+                if self.plot_MAP_SED:
+                    i = np.argmax(probability)
                     if self.wl_rest:
                         wl_obs = hdulist['full sed wl'].data['wl'][0,:]
                         flux_obs = hdulist['full sed'].data[i,:]
                     else:
                         _z1 = 1. + hdulist['galaxy properties'].data['redshift'][i]
-                        wl_obs = hdulist['full sed wl'].data['wl'][0,:] * _z1
+                        wl_obs = hdulist['full sed wl'].data['wl'][0,:] * _z1 / wl_factor
                         flux_obs = hdulist['full sed'].data[i,:] / _z1
 
                     ax.plot(wl_obs, 
                             flux_obs,
                             color="black",
                             ls="-",
-                            lw=0.5,
-                            alpha=0.5)
+                            lw=1,
+                            alpha=0.6)
 
             kwargs = { 'alpha': 0.8 }
 

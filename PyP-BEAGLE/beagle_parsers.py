@@ -210,6 +210,14 @@ def standard_parser():
         )
 
     parser.add_argument(
+        '--n-full-SED',
+        help="Number of full resolution model SED to overplot (model SEDs are randomly drawn from the posterior pdf).",
+        type=int,
+        default=10,
+        dest="n_SED_to_plot" 
+    )
+
+    parser.add_argument(
         '--show-MAP-SED',
         help="Overplot the full resolution model SED corresponding to the MAP solution.",
         action="store_true", 

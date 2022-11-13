@@ -119,6 +119,8 @@ class Photometry:
 
         self.plot_full_SED = kwargs.get('plot_full_SED', False)
 
+        self.n_SED_to_plot = kwargs.get('n_SED_to_plot')
+
         self.plot_MAP_SED = kwargs.get('plot_MAP_SED', False)
 
         self.log_flux = kwargs.get('log_flux', False)
@@ -138,7 +140,7 @@ class Photometry:
 
     def plot_marginal(self, ID, max_interval=99.7, 
             print_text=False, print_title=False, replot=False, show=False, 
-            SED_prob_log_scale=False, n_SED_to_plot=10):
+            SED_prob_log_scale=False):
         """ 
         Plot the fluxes predicted by BEAGLE.
 
@@ -344,7 +346,7 @@ class Photometry:
 
                 _n_SED_to_plot = 0
                 if self.plot_full_SED: 
-                    _n_SED_to_plot = n_SED_to_plot
+                    _n_SED_to_plot = self.n_SED_to_plot
 
                 if self.plot_MAP_SED:
                     _n_SED_to_plot += 1
@@ -362,7 +364,7 @@ class Photometry:
                 indices = np.arange(len(probability))
 
                 wrand = WalkerRandomSampling(probability, keys=indices)
-                rand_indices = wrand.random(n_SED_to_plot)
+                rand_indices = wrand.random(self.n_SED_to_plot)
 
                 for j in range(_n_SED_to_plot):
 

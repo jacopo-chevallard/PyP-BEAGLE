@@ -1,3 +1,6 @@
+## 0.9.10 (November 13, 2022)
+  - The options '--show-full-SED' and '--show-MAP-SED' now work well for the spectra marginal plots. A new '--n-full-SED' option has been added to define the number of full SED to overplot on the marginal plots
+
 ## 0.9.9 (November 11, 2022)
   - Bug fix: residuals can be correctly computed even when the marginal wl array and the data wl array do not have the same size, fixes #52
 

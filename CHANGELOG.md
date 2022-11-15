@@ -1,3 +1,6 @@
+## 0.9.12 (November 15, 2022)
+  - Bug fix: the '--show-line-labels' option was still creating issues for labels at the edges of the spectra
+
 ## 0.9.11 (November 15, 2022)
   - Bug fix: emission lines labelling in marginal plots now works again
   - Updated requirements

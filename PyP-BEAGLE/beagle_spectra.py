@@ -933,7 +933,7 @@ class Spectrum(object):
                     else:
                         x = label["wl"]/wl_factor * z1
 
-                    if x < x0 or x > x1:
+                    if x <= (x0+dx*0.02) or x >= (x1-dx*0.02):
                         continue
 
                     if self.resolution is not None:

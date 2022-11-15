@@ -83,7 +83,7 @@ setup(
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=['matplotlib', 'scipy', 'numpy', 'getdist', 'pathos', 
-                      'astropy', 'bokeh', 'natsort', 'six'],
+                      'extension-helpers', 'astropy', 'bokeh', 'natsort', 'six'],
 
     include_package_data=True, 
 

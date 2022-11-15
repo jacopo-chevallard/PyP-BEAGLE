@@ -1,3 +1,7 @@
+## 0.9.11 (November 15, 2022)
+  - Bug fix: emission lines labelling in marginal plots now works again
+  - Updated requirements
+
 ## 0.9.10 (November 13, 2022)
   - The options '--show-full-SED' and '--show-MAP-SED' now work well for the spectra marginal plots. A new '--n-full-SED' option has been added to define the number of full SED to overplot on the marginal plots
 

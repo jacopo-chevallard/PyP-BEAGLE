@@ -910,6 +910,7 @@ class Spectrum(object):
         for ax in axs:
 
             x0, x1 = ax.get_xlim()
+            dx = x1-x0
 
             y0, y1 = ax.get_ylim()
             if self.log_flux:
@@ -918,7 +919,15 @@ class Spectrum(object):
 
             # Label emission lines
             if self.plot_line_labels:
-                for key, label in six.iteritems(self.line_labels):
+
+                if observation.data['redshift'] is not None:
+                    z1 = 1. + observation.data['redshift']
+                else:
+                    z1 = 1. + hdulist['galaxy properties'].data['redshift'][np.argmax(probability)]
+
+                shift = 0.
+
+                for i, (key, label) in enumerate(six.iteritems(self.line_labels)):
                     if self.wl_rest:
                         x = label["wl"]/wl_factor
                     else:
@@ -939,16 +948,21 @@ class Spectrum(object):
                     if 'color' in label:
                         color = label['color']
 
-                    i1 = bisect_left(data_wl, x-2)
-                    i2 = bisect_left(data_wl, x+2.)
+                    i1 = bisect_left(data_wl, x - dx*0.01)
+                    i2 = bisect_left(data_wl, x + dx*0.01)
+
                     if direction == "up":
                         mm = np.amax(data_flux[i1:i2+1])
-                        y = mm+dy*0.1
-                        ydots = mm+dy*0.07
+                        y = mm + dy*0.1 + shift
+                        if y >= 0.8*y1:
+                            shift = 0.
+                            y = mm + dy*0.1 + shift
+                        ydots = y-dy*0.03
+                        shift += dy*0.15
                     elif direction == "down":
                         mm = np.amin(data_flux[i1:i2+1])
                         y = mm-dy*0.1
-                        ydots = mm-dy*0.07
+                        ydots = y+dy*0.03
 
                     ha = 'center'
                     if 'ha' in label:

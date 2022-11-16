@@ -425,14 +425,14 @@ def set_plot_ticks(ax, which='both', n_x=4, n_y=4, prune_x=None, prune_y=None):
     """ 
 
     if which.lower() == 'both' or which.lower() == 'x':
-        ax.xaxis.major_locations = plticker.MaxNLocator(nbins=n_x, prune=prune_x) 
+        ax.xaxis.major_locations = plticker.MaxNLocator(nbins=n_x, prune=prune_x, integer=True) 
         ax.xaxis.set_major_locator(ax.xaxis.major_locations)
 
         ax.xaxis.minor_locations = plticker.AutoMinorLocator(2)
         ax.xaxis.set_minor_locator(ax.xaxis.minor_locations)
 
     if which.lower() == 'both' or which.lower() == 'y':
-        ax.yaxis.major_locations = plticker.MaxNLocator(nbins=n_y, prune=prune_y) 
+        ax.yaxis.major_locations = plticker.MaxNLocator(nbins=n_y, prune=prune_y, integer=True) 
         ax.yaxis.set_major_locator(ax.yaxis.major_locations)
 
         ax.yaxis.minor_locations = plticker.AutoMinorLocator(2)

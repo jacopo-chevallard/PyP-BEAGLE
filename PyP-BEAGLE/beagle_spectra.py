@@ -14,6 +14,7 @@ import matplotlib.ticker as plticker
 import matplotlib.gridspec as gridspec
 from matplotlib import rcParams
 from matplotlib.axes import Axes
+from matplotlib.patches import Rectangle
 #import pandas as pd
 # SEABORN creates by default plots with a filled background!!
 #import seaborn as sns
@@ -215,6 +216,8 @@ class Spectrum(object):
                 self.single_solutions['row'] = f[1].data['row_index']
 
         self.show_residual = kwargs.get('show_residual', False)
+
+        self.residual_units = kwargs.get('residual_units')
 
         self.show_calibration_correction = kwargs.get('show_calibration_correction', False)
         
@@ -492,7 +495,7 @@ class Spectrum(object):
             figsize = [12,12]
         fig = plt.figure(figsize=figsize)
         if self.show_residual or self.show_calibration_correction:
-            fig, axs_ = plt.subplots(n_outer, n_ranges, gridspec_kw = {'height_ratios':height_ratios})
+            fig, axs_ = plt.subplots(n_outer, n_ranges, gridspec_kw = {'height_ratios':height_ratios}, sharex=True)
         else:
             fig, axs_ = plt.subplots(n_outer, n_ranges)
 
@@ -649,7 +652,7 @@ class Spectrum(object):
 
             # Set better location of tick marks
             if self.wl_range is not None:
-                set_plot_ticks(ax, which=which, prune_x='both', n_x=3)
+                set_plot_ticks(ax, which=which, prune_y='both')
                 for tick in ax.get_xticklabels():
                     tick.set_rotation(45)
                     if self.show_residual:
@@ -658,7 +661,10 @@ class Spectrum(object):
                         tick.set_ha('right')
                     tick.set_rotation_mode("anchor")
             else:
-                set_plot_ticks(ax, which=which)
+                if self.show_residual or self.show_calibration_correction:
+                    set_plot_ticks(ax, which=which, prune_y='lower')
+                else:
+                    set_plot_ticks(ax, which=which)
 
         if self.show_residual or self.show_calibration_correction:
             for ax in axs:
@@ -666,9 +672,11 @@ class Spectrum(object):
 
             for ax in residual_axs:
                 if self.wl_range is not None:
-                    set_plot_ticks(ax, prune_x='both', n_x=3)
+                    set_plot_ticks(ax, prune_y='both')
                     for tick in ax.get_xticklabels():
                         tick.set_rotation(45)
+                else:
+                    set_plot_ticks(ax, which=which, n_y=3)
 
         # Define plotting styles
         xlabel = "$\\uplambda / " + xlabel + "$"
@@ -687,7 +695,13 @@ class Spectrum(object):
         axs[0].set_ylabel(ylabel)
 
         if self.show_residual:
-            ylabel = "$\\frac{F_{\\uplambda}-F_{\\uplambda}^\\textnormal{mod}}{F_{\\uplambda}}$"
+            if self.residual_units == 'relative':
+                ylabel = "$\\frac{F_{\\uplambda}-F_{\\uplambda}^\\textnormal{mod}}{F_{\\uplambda}}$"
+            elif self.residual_units == 'absolute':
+                ylabel = "$F_{\\uplambda}-F_{\\uplambda}^\\textnormal{mod}$"
+            elif self.residual_units == 'sigma':
+                ylabel = "$\\frac{F_{\\uplambda}-F_{\\uplambda}^\\textnormal{mod}}{\\sigma}$"
+
             residual_axs[0].set_ylabel(ylabel)
             
         if self.show_calibration_correction:
@@ -697,7 +711,7 @@ class Spectrum(object):
         # Title of the plot is the object ID
         if self.print_ID: 
             #fig.text(0.5, 0.95, str(ID).split('_')[0].strip(), ha='center', va='top')
-            plt.suptitle(str(ID).split('_')[0].strip())
+            plt.suptitle('ID: ' + str(ID).split('_')[0].strip(), fontsize=self.inset_fontsize)
 
         alpha_line = 0.7
         alpha_fill = 0.3
@@ -784,6 +798,15 @@ class Spectrum(object):
                                 alpha=alpha_fill
                                 )
 
+        ylim = autoscale.get_autoscale_y(axs[0], ylog=self.log_flux)
+        for ax in axs:
+            yl = autoscale.get_autoscale_y(ax, ylog=self.log_flux, top_margin=0.2, bottom_margin=0.1)
+            ylim = [min(ylim[0], yl[0]), max(ylim[1], yl[1])]
+
+        for ax in axs:
+            ax.set_ylim(ylim)
+
+        for ax in axs:
             # Extract and plot full SED
             if 'full sed wl' in hdulist:
 
@@ -806,7 +829,7 @@ class Spectrum(object):
                                 flux_obs,
                                 color="grey",
                                 ls="-",
-                                lw=0.5,
+                                lw=0.3,
                                 alpha=0.3)
 
                 if self.plot_MAP_SED:
@@ -823,18 +846,11 @@ class Spectrum(object):
                             flux_obs,
                             color="black",
                             ls="-",
-                            lw=1,
+                            lw=0.6,
                             alpha=0.6)
 
             kwargs = { 'alpha': 0.8 }
 
-        ylim = autoscale.get_autoscale_y(axs[0], ylog=self.log_flux)
-        for ax in axs:
-            yl = autoscale.get_autoscale_y(ax, ylog=self.log_flux, top_margin=0.2, bottom_margin=0.1)
-            ylim = [min(ylim[0], yl[0]), max(ylim[1], yl[1])]
-
-        for ax in axs:
-            ax.set_ylim(ylim)
 
         if self.show_residual:
             arr1 = np.pad(model_wl, (3, 2), 'constant', constant_values=(8,0))                 
@@ -844,12 +860,15 @@ class Spectrum(object):
             data_mask_ = data_mask[is_close]
             data_flux_err_ = data_flux_err[is_close]
 
-            residual = (data_flux_-median_flux)/data_flux_
-            residual_err = (1./data_flux_ - (data_flux_-median_flux)/data_flux_**2) * data_flux_err_
-
-            ymax = np.amax(abs(residual))
-            ymax += 0.2*ymax
-            ymax = 1.1
+            if self.residual_units == 'relative':
+                residual = (data_flux_-median_flux)/data_flux_
+                residual_err = (1./data_flux_ - (data_flux_-median_flux)/data_flux_**2) * data_flux_err_
+            elif self.residual_units == 'absolute':
+                residual = (data_flux_-median_flux)
+                residual_err = data_flux_err_
+            elif self.residual_units == 'sigma':
+                residual = (data_flux_-median_flux) / data_flux_err_
+                residual_err = None
 
             colors = ["darkgreen"]
             indices = np.arange(len(data_flux_))
@@ -857,9 +876,7 @@ class Spectrum(object):
                 colors = ["darkgreen", mask_color]
 
             for ax in residual_axs:
-                ax.set_ylim([-ymax, ymax])
                 kwargs = {'alpha':0.7}
-
                 ax.plot(ax.get_xlim(), [0.,0.],
                         color="black",
                         lw=0.7,
@@ -873,16 +890,43 @@ class Spectrum(object):
                     elif i==1:
                         ind = indices[~data_mask_]
 
-                    ax.errorbar(model_wl[ind],
-                            residual[ind],
-                            yerr=residual_err[ind],
-                            color = col,
-                            ls=" ",
-                            elinewidth = 0.5,
-                            marker='o',
-                            ms=3,
-                            **kwargs
-                            )
+                    if self.residual_units == 'relative':
+                        pass
+                    elif self.residual_units == 'absolute':
+                        pass
+                    elif self.residual_units == 'sigma':
+                        ax.add_patch(
+                                Rectangle((ax.get_xlim()[0], -1.), 
+                                ax.get_xlim()[1]-ax.get_xlim()[0], 
+                                2, 
+                                facecolor="grey", 
+                                alpha=0.3)
+                                )
+
+
+                    if residual_err is not None:
+
+                        ax.errorbar(model_wl[ind],
+                                residual[ind],
+                                yerr=residual_err[ind],
+                                color = col,
+                                ls=" ",
+                                elinewidth = 0.5,
+                                marker='o',
+                                ms=3,
+                                **kwargs
+                                )
+                    else:
+                        ax.plot(model_wl[ind],
+                                residual[ind],
+                                color = col,
+                                ls=" ",
+                                marker='o',
+                                ms=3,
+                                **kwargs
+                                )
+
+                autoscale.autoscale_y(ax)
                             
         if self.show_calibration_correction:
 

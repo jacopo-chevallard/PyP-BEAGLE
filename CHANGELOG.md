@@ -1,3 +1,8 @@
+## 0.9.13 (November 16, 2022)
+  - Several cosmetic improvements to the way residuals are shown, in particular by introducing the possibility of showing residuals in absolute units, relative units, or in units of sigma
+  - Show tick marks at integer locations
+  - Added option to show different type of residuals: absolute, relative, or in units of sigma (default option)
+
 ## 0.9.12 (November 15, 2022)
   - Bug fix: the '--show-line-labels' option was still creating issues for labels at the edges of the spectra
 

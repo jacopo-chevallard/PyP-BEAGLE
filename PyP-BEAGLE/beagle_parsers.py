@@ -90,6 +90,15 @@ def standard_parser():
         dest="show_residual" 
         )
         
+    parser.add_argument(
+        '--residual-units',
+        help="You can show the residuals in absolute units (f_obs-f_mod), in relative units (f_obs-f_mod)/f_obs, or in units of sigma (f_obs-f_mod)/sigma_obs",
+        action="store", 
+        type=str,
+        dest="residual_units",
+        choices=['absolute', 'relative', 'sigma'],
+        default='sigma'
+        )
     
 
     parser.add_argument(

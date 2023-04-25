@@ -189,7 +189,7 @@ def main():
     # ---------------------------------------------------------
     # --------- Post-processing of spectral indices data -----------
     # ---------------------------------------------------------
-    if has_spec_indices and args.line_labels_json and args.plot_marginal:
+    if has_spec_indices:
 
         # Initialize an instance of the main "SpectralIndices" class
         my_spec_indices = SpectralIndices(**args_dict)
@@ -254,7 +254,7 @@ def main():
             if has_photometry:
                 pool.map(my_photometry.plot_marginal, IDs)
 
-            if has_spec_indices and args.line_labels_json:
+            if has_spec_indices:
                 pool.map(my_spec_indices.plot_line_fluxes, IDs)
         else:
             for i, ID in enumerate(IDs):
@@ -264,7 +264,7 @@ def main():
                 if has_photometry:
                     my_photometry.plot_marginal(ID)
 
-                if has_spec_indices and args.line_labels_json:
+                if has_spec_indices:
                     my_spec_indices.plot_line_fluxes(ID)
 
     # Plot the triangle plot

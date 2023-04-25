@@ -1,3 +1,10 @@
+## 0.10.0 (April 25, 2023)
+  - Removed spurious print statements
+  - Python 3.7 --> 3.8
+  - Refactoring to the latest versions of numpy and matplotlib
+  - Removing mandatory presence of json file to configure emission line labels
+  - Enable units definition in spectral indices catalogue
+
 ## 0.9.13 (November 16, 2022)
   - Several cosmetic improvements to the way residuals are shown, in particular by introducing the possibility of showing residuals in absolute units, relative units, or in units of sigma
   - Show tick marks at integer locations

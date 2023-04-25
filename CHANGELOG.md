@@ -1,3 +1,9 @@
+## 0.10.0 (April 25, 2023)
+  - Python 3.7 --> 3.8
+  - Refactoring to the latest versions of numpy and matplotlib
+  - Removing mandatory presence of json file to configure emission line labels
+  - Enable units definition in spectral indices catalogue
+
 ## 0.9.6 (July 22, 2022)
   - Raise error whne unable to match object IDs and input spectra
   - Allow post-processing of spectra with redshift as an adjustable parametter, i.e. the redshift column can contain different values

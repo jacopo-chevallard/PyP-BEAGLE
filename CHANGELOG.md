@@ -1,3 +1,35 @@
+## 0.10.1 (April 25, 2023)
+  - Version bump 0.10.0
+  - Removed spurious print statements
+  - Python 3.7 --> 3.8
+  - Refactoring to the latest versions of numpy and matplotlib
+  - Removing mandatory presence of json file to configure emission line labels
+  - Enable units definition in spectral indices catalogue
+  - Version bump 0.10.0
+  - Python 3.7 --> 3.8
+  - Refactoring to the latest versions of numpy and matplotlib
+  - Removing mandatory presence of json file to configure emission line labels
+  - Enable units definition in spectral indices catalogue
+  - Version bump 0.9.13
+  - Several cosmetic improvements to the way residuals are shown, in particular by introducing the possibility of showing residuals in absolute units, relative units, or in units of sigma
+  - Show tick marks at integer locations
+  - Added option to show different type of residuals: absolute, relative, or in units of sigma (default option)
+  - Version bump 0.9.12
+  - Bug fix: the '--show-line-labels' option was still creating issues for labels at the edges of the spectra
+  - Version bump 0.9.11
+  - Bug fix: emission lines labelling in marginal plots now works again
+  - Updated requirements
+  - Version bump 0.9.10
+  - The options '--show-full-SED' and '--show-MAP-SED' now work well for the spectra marginal plots. A new '--n-full-SED' option has been added to define the number of full SED to overplot on the marginal plots
+  - Version bump 0.9.9
+  - Bug fix: residuals can be correctly computed even when the marginal wl array and the data wl array do not have the same size, fixes #52
+  - Version bump 0.9.8
+  - Removing unsupported 'papertype' option from matplotlib fig.savefig method
+  - Update README.md
+  - Version bump 0.9.7
+  - Bug fix: an issue was introduced when adding support for the MAP solution in the summary catalogue, this fix closes #51
+  - Bug fix: correctly dealing with log flux scale in the presence of negative or zero fluxes
+
 ## 0.10.0 (April 25, 2023)
   - Removed spurious print statements
   - Python 3.7 --> 3.8

@@ -43,8 +43,8 @@ from six.moves import zip
 from six.moves import range
 
 TOKEN_SEP = ":"
-microJy = np.float32(1.E-23 * 1.E-06)
-nanoJy = np.float32(1.E-23 * 1.E-09)
+microJy = float(1.E-23 * 1.E-06)
+nanoJy = float(1.E-23 * 1.E-09)
 
 p_value_lim = 0.05
 
@@ -56,11 +56,15 @@ def pairwise(iterable):
 
 
 _TOKENS = ['lum', 'lumErr', 'ew', 'ewErr']
+_UNITS = 'lum:units:value:'
 _COL_NAME = 'colName'
 _LABEL = 'label'
 _SEP = ':'
 
 class SpectralIndicesCatalogue(ObservedCatalogue):
+
+    def __init__(self):
+        self.units = float(1.)
 
     def configure(self, file_name):
 
@@ -68,7 +72,10 @@ class SpectralIndicesCatalogue(ObservedCatalogue):
 
         for line in open(file_name):
             if line.strip() and not line.startswith("#"):
-                _line = line
+                
+                if _UNITS in line:
+                    self.units = float(line.split(_UNITS)[1])
+                    continue
 
                 _key = _LABEL + _SEP
                 if _key in line:
@@ -86,9 +93,11 @@ class SpectralIndicesCatalogue(ObservedCatalogue):
 class SpectralIndices(object):
 
     def __init__(self, **kwargs):
-
-        with open(kwargs.get('line_labels_json')) as f:    
-            self.line_list = json.load(f, object_pairs_hook=OrderedDict)
+        
+        self.line_labels = None
+        if kwargs.get('line_labels_json'):
+            with open(kwargs.get('line_labels_json')) as f:    
+                self.line_labels = json.load(f, object_pairs_hook=OrderedDict)
 
         self.inset_fontsize = BeagleDirectories.inset_fontsize_fraction * BeagleDirectories.fontsize
 
@@ -133,7 +142,7 @@ class SpectralIndices(object):
 
         # Read model fluxes
         model_fluxes = hdulist['spectral indices'].data
-        n_lines = len(self.line_list)
+        n_lines = len(self.observed_catalogue.line_config)
 
         # Read the posterior probability
         probability = hdulist['posterior pdf'].data['probability']
@@ -143,24 +152,21 @@ class SpectralIndices(object):
         minY_values = np.zeros(n_lines) ; maxY_values = np.zeros(n_lines)
         _observed_fluxes = np.zeros(n_lines) ; _observed_flux_errors = np.zeros(n_lines)
         _model_fluxes = np.zeros(n_lines)
-        for i, (key, value) in enumerate(six.iteritems(self.line_list)):
+        for i, (key, value) in enumerate(six.iteritems(self.observed_catalogue.line_config)):
 
             X = i+1
-            _line_conf = self.observed_catalogue.line_config[key]
-            if 'lum' in _line_conf:
-                _col_name = _line_conf['lum']
-                _err_col_name = _line_conf['lumErr']
-            elif 'ew' in _line_conf:
-                _col_name = _line_conf['ew']
-                _err_col_name = _line_conf['ewErr']
+            if 'lum' in value:
+                _col_name = value['lum']
+                _err_col_name = value['lumErr']
+            elif 'ew' in value:
+                _col_name = value['ew']
+                _err_col_name = value['ewErr']
 
-            _observed_flux = observation[_col_name]
+            _observed_flux = observation[_col_name] * self.observed_catalogue.units
             _observed_fluxes[i] = _observed_flux 
 
-            _observed_flux_err = observation[_err_col_name]
+            _observed_flux_err = observation[_err_col_name] * self.observed_catalogue.units
             _observed_flux_errors[i] = _observed_flux_err
-
-            _label = value["label"]
 
             # This function provides you with all the necessary info to draw violin plots
             _model_flux = model_fluxes[key]
@@ -262,7 +268,7 @@ class SpectralIndices(object):
             top='off',      # ticks along the bottom edge are off
             bottom='off')         # ticks along the top edge are off
 
-        xticks = list(range(1, len(self.line_list)+1))
+        xticks = list(range(1, len(self.observed_catalogue.line_config)+1))
         ax.set_xticks(xticks)
 
         ticklabels = list()
@@ -271,9 +277,10 @@ class SpectralIndices(object):
         _factor = 0.03  ; _init_fact = 0.04
         j = 1
         _fontsize = min(self.inset_fontsize, self.inset_fontsize/(0.075*n_lines))
-        for i, (line_key, line_value) in enumerate(six.iteritems(self.line_list)):
+        for i, (line_key, line_value) in enumerate(six.iteritems(self.observed_catalogue.line_config)):
             X = i+1
-            ticklabels.append(line_value["label"])
+            label = self.line_labels[line_key] if self.line_labels is not None else line_key
+            ticklabels.append(label)
             _variab_fact = _init_fact * j
             if self.plot_log_flux:
                 dY = np.log10(maxY) - np.log10(minY)
@@ -339,7 +346,7 @@ class SpectralIndices(object):
         name = prepare_plot_saving(plot_name)
 
         fig.savefig(name, dpi=None, facecolor='w', edgecolor='w',
-                orientation='portrait', papertype='a4', format="pdf",
+                orientation='portrait', format="pdf",
                 transparent=False, bbox_inches="tight", pad_inches=0.1)
 
         plt.close(fig)

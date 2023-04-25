@@ -1033,7 +1033,7 @@ class Spectrum(object):
                 try:
                     ax.text(x, y, "$\\log(Z)=" + "{:.2f}".format(self.logEvidence) + "$", fontsize=self.inset_fontsize)
                 except AttributeError:
-                    print("ciao")
+                    pass
 
                 # Print the average reduced chi-square
                 try:

@@ -66,8 +66,8 @@ class ResidualPhotometry(object):
         beagle_data = beagle_data[indx_beagle]
         catalogue_data = catalogue_data[indx_catalogue]
 
-        print("ID: ", beagle_data['ID'])
-        print("ID: ", catalogue_data['ID'])
+        #print("ID: ", beagle_data['ID'])
+        #print("ID: ", catalogue_data['ID'])
 
         # As a sanity check, check if the ID match among the two catalogues, by
         # random picking some indices here and there...

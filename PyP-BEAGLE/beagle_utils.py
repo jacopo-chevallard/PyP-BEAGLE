@@ -244,8 +244,6 @@ def find_file(file_name, path):
         Full path to the file_name
     """ 
 
-    print("file_name: ", file_name)
-
     for root, dirs, files in os.walk(path):
         for file in files:
             if fnmatch.fnmatch(file, file_name):

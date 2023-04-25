@@ -530,7 +530,7 @@ class Photometry:
             try:
                 ax.text(x, y, "$\\log(Z)=" + "{:.2f}".format(self.logEvidence) + "$", fontsize=10 )
             except AttributeError:
-                print("ciao")
+                pass
 
             # Print the average reduced chi-square
             try:
@@ -928,7 +928,7 @@ class Photometry:
             try:
                 ax.text(x, y, "$\\log(Z)=" + "{:.2f}".format(self.logEvidence) + "$", fontsize=10 )
             except AttributeError:
-                print("ciao")
+                pass
 
             # Print the average reduced chi-square
             try:

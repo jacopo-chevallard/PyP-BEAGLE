@@ -123,8 +123,6 @@ class SpectralIndices(object):
 
         plot_name = str(ID) + '_BEAGLE_spectral_indices' + suffix + ".pdf"
 
-        print('ID: ', ID)
-
         # Check if the plot already exists
         if plot_exists(plot_name) and not replot:
             logging.warning('The plot "' + plot_name + '" already exists. \n Exiting the function.')
@@ -175,8 +173,6 @@ class SpectralIndices(object):
             _model_flux = model_fluxes[key]
             kde_pdf, pdf_norm, median_flux, x_plot, y_plot = prepare_violin_plot(_model_flux, weights=probability) 
             _model_fluxes[i] = median_flux
-
-            print(_label, _observed_flux / median_flux, abs(_observed_flux-median_flux) / _observed_flux_err)
 
             _max_y = np.max(y_plot)
             w = width / _max_y
@@ -243,7 +239,6 @@ class SpectralIndices(object):
             minY = np.amin(minY_values)
 
         maxY = np.max(maxY_values)
-        print('min, max', minY, maxY)
         if self.print_values:
             _factor = 0.15
         else:

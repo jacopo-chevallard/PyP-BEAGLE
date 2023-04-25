@@ -28,9 +28,9 @@ from .beagle_observed_catalogue import ObservedCatalogue
 from six.moves import range
 
 
-Jy = np.float32(1.E-23)
-microJy = np.float32(1.E-23 * 1.E-06)
-nanoJy = np.float32(1.E-23 * 1.E-09)
+Jy = float(1.E-23)
+microJy = float(1.E-23 * 1.E-06)
+nanoJy = float(1.E-23 * 1.E-09)
 c_light = 2.99792e+18 # Ang/s
 
 p_value_lim = 0.05
@@ -65,8 +65,8 @@ class PhotometricCatalogue(ObservedCatalogue):
 
         """
 
-        flux = np.zeros(filters.n_bands, np.float32)
-        flux_err = np.zeros(filters.n_bands, np.float32)
+        flux = np.zeros(filters.n_bands, float)
+        flux_err = np.zeros(filters.n_bands, float)
 
         row = extract_row(self.data, ID, key=key)
 
@@ -87,7 +87,7 @@ class PhotometricCatalogue(ObservedCatalogue):
             if flux_err[j] > 0.:
                 # if defined, add the minimum error in quadrature
                 flux_err[j] = (np.sqrt((flux_err[j]/flux[j])**2 +
-                    np.float32(filters.data['min_rel_err'][j])**2) *
+                    float(filters.data['min_rel_err'][j])**2) *
                     abs(flux[j]))
 
         return flux, flux_err
@@ -496,7 +496,7 @@ class Photometry:
 
         if self.single_solutions is not None:
             row =  self.single_solutions['row'][self.single_solutions['ID']==ID]
-            solution = np.zeros(n_bands, dtype=np.float32)
+            solution = np.zeros(n_bands, dtype=float)
             for i, band_name in enumerate((self.filters.data['label'][sor])):
                 solution[i] = model_sed.data['_'+band_name+'_'][row] / nanoJy
 
@@ -562,7 +562,7 @@ class Photometry:
             name = prepare_plot_saving(plot_name)
 
             fig.savefig(name, dpi=None, facecolor='w', edgecolor='w',
-                    orientation='portrait', papertype='a4', format="pdf",
+                    orientation='portrait', format="pdf",
                     transparent=False, bbox_inches="tight", pad_inches=0.1)
 
         plt.close(fig)
@@ -766,7 +766,7 @@ class Photometry:
             name = prepare_plot_saving(str(ID)+'_BEAGLE_replic_data_phot_matrix.pdf')
 
             fig.savefig(name, dpi=None, facecolor='w', edgecolor='w',
-                    orientation='portrait', papertype='a4', format="pdf",
+                    orientation='portrait', format="pdf",
                     transparent=False, bbox_inches="tight", pad_inches=0.1)
 
             fig.clear()
@@ -958,7 +958,7 @@ class Photometry:
         name = prepare_plot_saving(plot_name)
 
         fig.savefig(name, dpi=None, facecolor='w', edgecolor='w',
-                orientation='portrait', papertype='a4', format="pdf",
+                orientation='portrait', format="pdf",
                 transparent=False, bbox_inches="tight", pad_inches=0.1)
 
         plt.close(fig)

@@ -51,17 +51,17 @@ def fill_between_steps(ax, x, y1, y2=0, step_where='pre', **kwargs):
     # this logic is lifted from lines.py
     # this should probably be centralized someplace
     if step_where == 'pre':
-        steps = ma.zeros((3, 2 * len(x) - 1), np.float)
+        steps = ma.zeros((3, 2 * len(x) - 1), float)
         steps[0, 0::2], steps[0, 1::2] = vertices[0, :], vertices[0, :-1]
         steps[1:, 0::2], steps[1:, 1:-1:2] = vertices[1:, :], vertices[1:, 1:]
 
     elif step_where == 'post':
-        steps = ma.zeros((3, 2 * len(x) - 1), np.float)
+        steps = ma.zeros((3, 2 * len(x) - 1), float)
         steps[0, ::2], steps[0, 1:-1:2] = vertices[0, :], vertices[0, 1:]
         steps[1:, 0::2], steps[1:, 1::2] = vertices[1:, :], vertices[1:, :-1]
 
     elif step_where == 'mid':
-        steps = ma.zeros((3, 2 * len(x)), np.float)
+        steps = ma.zeros((3, 2 * len(x)), float)
         steps[0, 1:-1:2] = 0.5 * (vertices[0, :-1] + vertices[0, 1:])
         steps[0, 2::2] = 0.5 * (vertices[0, :-1] + vertices[0, 1:])
         steps[0, 0] = vertices[0, 0]

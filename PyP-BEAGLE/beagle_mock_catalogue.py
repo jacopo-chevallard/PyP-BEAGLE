@@ -159,7 +159,7 @@ class BeagleMockCatalogue(object):
 
     def get_param_values(self, ID, names):
 
-        values = np.zeros(len(names), dtype=np.float32)
+        values = np.zeros(len(names), dtype=float)
 
         for i, name in enumerate(names):
 
@@ -425,7 +425,7 @@ class BeagleMockCatalogue(object):
         #plt.tight_layout()
 
         fig.savefig(name, dpi=None, facecolor='w', edgecolor='w',
-                orientation='portrait', papertype='a4', format="pdf",
+                orientation='portrait', format="pdf",
                 transparent=False, bbox_inches="tight", pad_inches=0.1)
 
         plt.close(fig)
@@ -717,7 +717,7 @@ class BeagleMockCatalogue(object):
         plt.tight_layout()
 
         fig.savefig(name, dpi=None, facecolor='w', edgecolor='w',
-                orientation='portrait', papertype='a4', format="pdf",
+                orientation='portrait', format="pdf",
                 transparent=False, bbox_inches="tight", pad_inches=0.1)
 
         plt.close(fig)
@@ -878,7 +878,7 @@ class BeagleMockCatalogue(object):
             #plt.tight_layout()
 
             fig.savefig(name, dpi=None, facecolor='w', edgecolor='w',
-                    orientation='portrait', papertype='a4', format="pdf",
+                    orientation='portrait', format="pdf",
                     transparent=False, bbox_inches="tight", pad_inches=0.1)
 
         plt.close(fig)

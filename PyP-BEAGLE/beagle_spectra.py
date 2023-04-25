@@ -45,8 +45,8 @@ from six.moves import zip
 from six.moves import range
 
 TOKEN_SEP = ":"
-microJy = np.float32(1.E-23 * 1.E-06)
-nanoJy = np.float32(1.E-23 * 1.E-09)
+microJy = float(1.E-23 * 1.E-06)
+nanoJy = float(1.E-23 * 1.E-09)
 
 p_value_lim = 0.05
 
@@ -130,7 +130,7 @@ class ObservedSpectrum(object):
             raise AttributeError(msg)
 
         if self.description["wl"]["conversion"] is not None:
-            self.data['wl'] *= np.float(self.description["wl"]["conversion"])
+            self.data['wl'] *= float(self.description["wl"]["conversion"])
 
         # Set the array containing the flux
         try:
@@ -141,7 +141,7 @@ class ObservedSpectrum(object):
             raise AttributeError(msg)
 
         if self.description["flux"]["conversion"] is not None:
-            self.data['flux'] *= np.float(self.description["flux"]["conversion"])
+            self.data['flux'] *= float(self.description["flux"]["conversion"])
 
         # Set the array containing the flux error
         if self.description["fluxerr"]["colName"] is not None:
@@ -156,7 +156,7 @@ class ObservedSpectrum(object):
         self.data['redshift'] = None
         if self.description["redshift"]["keyword"] is not None:
             try:
-                self.data['redshift'] = np.float(hdu[1].header[self.description["redshift"]["keyword"]])
+                self.data['redshift'] = float(hdu[1].header[self.description["redshift"]["keyword"]])
             except:
                 pass
 
@@ -312,7 +312,7 @@ class Spectrum(object):
         #    if tmp_err > 0.:
         #        obs_flux_err[i] = observation[0][err]*aper_corr*self.filters.units / nanoJy
         #        obs_flux_err[i] = (np.sqrt( (obs_flux_err[i]/obs_flux[i])**2 +
-        #                np.float32(self.filters.data['min_rel_err'][i])**2) *
+        #                float(self.filters.data['min_rel_err'][i])**2) *
         #                obs_flux[i])
         #    else:
         #        obs_flux_err[i] = tmp_err
@@ -332,8 +332,8 @@ class Spectrum(object):
         # Read the posterior probability
         # to use random.choice you need the probabilities to very high precision and to
         # sum to 1
-        probability = np.array(hdulist['posterior pdf'].data['probability'], np.float64)
-        probability = probability/probability.sum().astype(np.float64)
+        probability = np.array(hdulist['posterior pdf'].data['probability'], float64)
+        probability = probability/probability.sum().astype(float64)
 
         # Now compute for each wl bin the sorted fluxes, you will need this to
         # calculate the median and percentiles for each wl bin

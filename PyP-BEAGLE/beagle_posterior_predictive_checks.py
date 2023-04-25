@@ -93,7 +93,7 @@ class PosteriorPredictiveChecks(object):
                 n_samples = len(hdulist['MARGINAL PHOTOMETRY'].data.field(0))
                 cols = hdulist['MARGINAL PHOTOMETRY'].columns
 
-                model_flux = np.zeros((filters.n_bands, n_samples), np.float32)
+                model_flux = np.zeros((filters.n_bands, n_samples), float)
 
                 for j in range(filters.n_bands):
                     name = '_' + filters.data['label'][j] + '_'
@@ -109,7 +109,7 @@ class PosteriorPredictiveChecks(object):
 
                 noiseless_flux = model_flux[:, replic_data_rows]
 
-                replic_flux = np.zeros((filters.n_bands, len(replic_data_rows)), np.float32)
+                replic_flux = np.zeros((filters.n_bands, len(replic_data_rows)), float)
                 for col_name in hdulist[1].columns.names:
                     if col_name in cols.names:
                         replic_flux[j,:] = hdulist[1].data[col_name]
@@ -131,16 +131,16 @@ class PosteriorPredictiveChecks(object):
                 wrand = WalkerRandomSampling(probability, keys=row_indices, rand_seed=seed)
                 replic_data_rows = wrand.random(n_replicated)
 
-                obs_flux = np.zeros(filters.n_bands, np.float32)
-                obs_flux_err = np.zeros(filters.n_bands, np.float32)
-                model_flux = np.zeros((filters.n_bands, n_samples), np.float32)
+                obs_flux = np.zeros(filters.n_bands, float)
+                obs_flux_err = np.zeros(filters.n_bands, float)
+                model_flux = np.zeros((filters.n_bands, n_samples), float)
 
                 # The replicated data are just the fluxes predicted by your
                 # model, drawn from the posterior probability distribution
                 # accordingly to their probability, with the effect of
                 # observatironal noise added
-                noiseless_flux = np.zeros((filters.n_bands, n_replicated), np.float32)
-                replic_flux = np.zeros((filters.n_bands, n_replicated), np.float32)
+                noiseless_flux = np.zeros((filters.n_bands, n_replicated), float)
+                replic_flux = np.zeros((filters.n_bands, n_replicated), float)
 
                 n_data = 0
 
@@ -246,7 +246,7 @@ class PosteriorPredictiveChecks(object):
         # Compute the "average chi square", a measure of the predicitve accuacy
         # of the model (e.g. see Section 6.5 of "Bayesian Data Analysis", by
         # Gelman, Carlin, Stern and Rubin )
-        aver_chi_square = Column(name='aver_chi_square', dtype=np.float32,
+        aver_chi_square = Column(name='aver_chi_square', dtype=float,
                 length=n_obj)
 
         # Int from 0 to x of chi^2(x) with N-1 degreed of freedom (see Johnson,
@@ -254,18 +254,18 @@ class PosteriorPredictiveChecks(object):
         # Annals of Statistics for an explanation of why the average chi^2 has
         # N-1 and not N-k-1 degrees of freedom)
 
-        left_cumul_probability = Column(name='left_cumul_probability', dtype=np.float32,
+        left_cumul_probability = Column(name='left_cumul_probability', dtype=float,
                 length=n_obj)
 
         # Int from x to +infty of chi^2(x)
-        right_cumul_probability = Column(name='right_cumul_probability', dtype=np.float32,
+        right_cumul_probability = Column(name='right_cumul_probability', dtype=float,
                 length=n_obj)
 
         aver_red_chi_square = Column(name='aver_red_chi_square',
-                dtype=np.float32, length=n_obj)
+                dtype=float, length=n_obj)
 
         p_value = Column(name='p_value',
-                dtype=np.float32, length=n_obj)
+                dtype=float, length=n_obj)
 
         my_cols = [objID, n_used_bands, deg_of_freedom, aver_chi_square,
                 aver_red_chi_square, left_cumul_probability,
@@ -273,7 +273,7 @@ class PosteriorPredictiveChecks(object):
 
         my_table = Table(my_cols)
 
-        model_flux = np.zeros(filters.n_bands, np.float32)
+        model_flux = np.zeros(filters.n_bands, float)
 
 
         for i in range(n_obj):
@@ -382,7 +382,7 @@ class PosteriorPredictiveChecks(object):
         max_dof = np.amax(self.data['dof'][mask])
                 
         dof_range = np.arange(min_dof, max_dof+1)
-        frac_data = np.zeros(len(dof_range), dtype=np.float32)
+        frac_data = np.zeros(len(dof_range), dtype=float)
 
         for i in range(len(dof_range)):
             dof = dof_range[i]
@@ -392,7 +392,7 @@ class PosteriorPredictiveChecks(object):
         frac_data /= np.sum(frac_data)
 
         xdata = np.linspace(min_x, max_x, 1000)
-        chi_distr = np.zeros(len(xdata), dtype=np.float32)
+        chi_distr = np.zeros(len(xdata), dtype=float)
         for i in range(len(dof_range)):
             dof = dof_range[i]
             chi_distr += frac_data[i] * stats.chi2.pdf(xdata, dof)

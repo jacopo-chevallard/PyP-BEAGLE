@@ -158,7 +158,7 @@ class BeagleSummaryCatalogue(object):
         end = file.find('_' + BeagleDirectories.suffix)
 
         # Extract the object ID from the file_name
-        #ID = np.int(np.float(os.path.basename(file[0:end])))
+        #ID = np.int(float(os.path.basename(file[0:end])))
         ID = os.path.basename(file[0:end])
 
         logging.info("Computing the summary quantities for object ID: " + ID)

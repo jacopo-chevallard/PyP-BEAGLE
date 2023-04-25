@@ -159,7 +159,7 @@ class BeagleMockCatalogue(object):
 
     def get_param_values(self, ID, names):
 
-        values = np.zeros(len(names), dtype=np.float32)
+        values = np.zeros(len(names), dtype=float)
 
         for i, name in enumerate(names):
 

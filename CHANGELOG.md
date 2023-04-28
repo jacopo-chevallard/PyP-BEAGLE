@@ -1,3 +1,6 @@
+## 0.10.2 (April 28, 2023)
+  - Removing undefined float64 data type
+
 ## 0.10.1 (April 25, 2023)
   - Version bump 0.10.0
   - Removed spurious print statements

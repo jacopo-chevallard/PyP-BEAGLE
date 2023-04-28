@@ -332,8 +332,8 @@ class Spectrum(object):
         # Read the posterior probability
         # to use random.choice you need the probabilities to very high precision and to
         # sum to 1
-        probability = np.array(hdulist['posterior pdf'].data['probability'], float64)
-        probability = probability/probability.sum().astype(float64)
+        probability = np.array(hdulist['posterior pdf'].data['probability'], float)
+        probability = probability/probability.sum().astype(float)
 
         # Now compute for each wl bin the sorted fluxes, you will need this to
         # calculate the median and percentiles for each wl bin

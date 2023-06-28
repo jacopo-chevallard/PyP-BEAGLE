@@ -10,7 +10,7 @@ from scipy.integrate import simps, cumtrapz
 from scipy.interpolate import interp1d
 from datetime import datetime
 import platform
-
+import math
 import sys
 
 import matplotlib.ticker as plticker
@@ -22,6 +22,19 @@ from six.moves import input
 from scipy.stats import gaussian_kde
 
 ID_COLUMN_LENGTH = 100
+
+def find_nearest_wl(array, value, rel_tol=None):
+    idx = np.searchsorted(array, value, side="left")
+    if idx > 0 and (idx == len(array) or math.fabs(value - array[idx-1]) < math.fabs(value - array[idx])):
+        idx = idx-1
+    
+    if rel_tol is not None:
+        if abs(array[idx]-value)/value <= rel_tol:
+            return idx
+        else:
+            return []
+        
+    return idx
 
 def is_integer(s):
     try:

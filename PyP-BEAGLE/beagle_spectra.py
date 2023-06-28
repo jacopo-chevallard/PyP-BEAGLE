@@ -2,6 +2,7 @@ from __future__ import absolute_import
 from __future__ import print_function
 import os
 import logging
+import math
 import six.moves.configparser
 from collections import OrderedDict
 from scipy.interpolate import interp1d
@@ -27,7 +28,7 @@ import pyp_beagle.dependencies.autoscale as autoscale
 from pyp_beagle.dependencies import FillBetweenStep
 import pyp_beagle.dependencies.set_shared_labels  as shLab
 
-from .beagle_utils import BeagleDirectories, prepare_plot_saving, set_plot_ticks, plot_exists
+from .beagle_utils import BeagleDirectories, prepare_plot_saving, set_plot_ticks, plot_exists, find_nearest_wl
 from .beagle_filters import PhotometricFilters
 from .beagle_summary_catalogue import BeagleSummaryCatalogue
 #from beagle_residual_photometry import ResidualPhotometry
@@ -456,6 +457,13 @@ class Spectrum(object):
             data_mask = observation.data['mask']
             has_mask = True
 
+        # Remove wl bins for which the data error is negative
+        pos_err = np.where(data_flux_err > 0.)[0]
+        data_wl = data_wl[pos_err]
+        data_flux = data_flux[pos_err]
+        data_flux_err = data_flux_err[pos_err]
+        data_mask = data_mask[pos_err]
+
         # Create masked versions of arrays
         slices = list()
         masked_array = np.ma.array(data_wl, mask=~data_mask)
@@ -853,9 +861,9 @@ class Spectrum(object):
 
 
         if self.show_residual:
-            arr1 = np.pad(model_wl, (3, 2), 'constant', constant_values=(8,0))                 
-            len_diff = len(data_wl)-len(model_wl)
-            is_close = np.isclose(data_wl, np.pad(model_wl, (0, len_diff), constant_values=(0.,0.)), rtol=1e-6, atol=0.0, equal_nan=False)
+            is_close = [find_nearest_wl(data_wl, wl) for wl in model_wl]
+            #is_close = [i for i, wl in enumerate(data_wl) if np.isclose(model_wl, wl, rtol=1e-6, atol=0.0, equal_nan=False).any()]
+            #is_close = np.isclose(data_wl, model_wl, rtol=1e-6, atol=0.0, equal_nan=False)
             data_flux_ = data_flux[is_close]
             data_mask_ = data_mask[is_close]
             data_flux_err_ = data_flux_err[is_close]

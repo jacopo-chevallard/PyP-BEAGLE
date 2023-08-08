@@ -171,6 +171,8 @@ class SpectralIndices(object):
 
             # This function provides you with all the necessary info to draw violin plots
             _model_flux = model_fluxes[key]
+            if np.sum(_model_flux) == 0.:
+                continue
             kde_pdf, pdf_norm, median_flux, x_plot, y_plot = prepare_violin_plot(_model_flux, weights=probability) 
             _model_fluxes[i] = median_flux
 

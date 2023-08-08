@@ -1,3 +1,8 @@
+## 0.10.3 (August 08, 2023)
+  - Skip objects with all fluxes set to 0
+  - Avoid using NaN or Inf as axes limits, fixes #54
+  - Correctly dealing with observed spectra with negative errors, i.e. we now ignore the wl bins corresponding to negative errors
+
 ## 0.10.2 (April 28, 2023)
   - Removing undefined float64 data type
 

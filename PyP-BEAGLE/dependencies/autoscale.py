@@ -20,7 +20,8 @@ def get_autoscale_y(ax, margin=0.1, ylog=False, top_margin=None, bottom_margin=N
         xd = line.get_xdata()
         yd = line.get_ydata()
         lo,hi = ax.get_xlim()
-        y_displayed = yd[((xd>lo) & (xd<hi))]
+        y_displayed = np.array(yd[((xd>lo) & (xd<hi))])
+        y_displayed = y_displayed[np.isfinite(y_displayed)]
 
         if ylog: y_displayed = y_displayed[y_displayed > 0.]
 

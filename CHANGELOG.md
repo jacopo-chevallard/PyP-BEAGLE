@@ -1,3 +1,8 @@
+## 0.10.4 (October 13, 2023)
+  - Merge branch 'fix/crontab' into develop
+  - [ADD] Added check so that when --show-calibration-option is set the presence of a  calibration polynomial is checked, to avoid encountering errors (this enable using the same pyp_beagle command for runs w and w/o calibration polynomial)
+  - [FIX] numpyp.int --> int
+
 ## 0.10.3 (August 08, 2023)
   - Skip objects with all fluxes set to 0
   - Avoid using NaN or Inf as axes limits, fixes #54

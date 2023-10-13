@@ -344,7 +344,7 @@ class Spectrum(object):
         n_wl = model_fluxes.shape[1]
         
         # If plotting the calibration correction, create calibration_correction fluxes
-        if self.show_calibration_correction:
+        if self.show_calibration_correction and self.calibration_correction.has_correction:
             #Sample 100 from the output
 #            nSamp = 100
 #            idx = np.random.choice(np.fromiter((x for x in range(model_fluxes.shape[0])),np.int),\
@@ -397,7 +397,7 @@ class Spectrum(object):
             lev = 1.-(1.-max_interval/100.)/2.
             upper_flux[i] = f_interp(lev)
             
-            if self.show_calibration_correction:
+            if self.show_calibration_correction and self.calibration_correction.has_correction:
                 f_interp = interp1d(cumul_pdf, calibration_correction_arr[sort_,i])
                 median_calibration[i] = f_interp(0.5)
                 
@@ -486,7 +486,7 @@ class Spectrum(object):
         if self.show_residual:
             n_outer = n_outer + 1
             height_ratios.append(1)
-        if self.show_calibration_correction:
+        if self.show_calibration_correction and self.calibration_correction.has_correction:
             n_outer = n_outer + 1
             height_ratios.append(1)
 
@@ -499,7 +499,7 @@ class Spectrum(object):
                 n_ranges = int(1.*len(self.wl_range)/2.)
 
         figsize = [12,8]
-        if self.show_calibration_correction and self.show_residual:
+        if self.show_calibration_correction and self.calibration_correction.has_correction and self.show_residual:
             figsize = [12,12]
         fig = plt.figure(figsize=figsize)
         if self.show_residual or self.show_calibration_correction:
@@ -515,7 +515,7 @@ class Spectrum(object):
 
         if self.show_residual:
             residual_axs = axs_[1]
-            if self.show_calibration_correction:
+            if self.show_calibration_correction and self.calibration_correction.has_correction:
                 calibration_axs = axs_[2]
         else:
             if self.show_calibration_correction:
@@ -527,7 +527,7 @@ class Spectrum(object):
             axs = [axs]
             if self.show_residual:
                 residual_axs = [residual_axs]
-            if self.show_calibration_correction:
+            if self.show_calibration_correction and self.calibration_correction.has_correction:
                 calibration_axs = [calibration_axs]
 
         if n_ranges == 1:
@@ -541,7 +541,7 @@ class Spectrum(object):
             axs[0].set_xlim([wl_low, wl_up])
             if self.show_residual:
                 residual_axs[0].set_xlim([wl_low, wl_up])
-            if self.show_calibration_correction:
+            if self.show_calibration_correction and self.calibration_correction.has_correction:
                 calibration_axs[0].set_xlim([wl_low, wl_up])
         else:
             # how big to make the diagonal lines in axes coordinates
@@ -614,7 +614,7 @@ class Spectrum(object):
 
                     wl_l = wl_r
                     
-                if self.show_calibration_correction:
+                if self.show_calibration_correction and self.calibration_correction.has_correction:
                     t = calibration_axs[0].transAxes.transform([(0,0), (1,1)])
                     t = calibration_axs[0].get_figure().get_dpi() / (t[1,1] - t[0,1]) / 72
                     d = 0.5*(rcParams['xtick.major.size']*t)
@@ -712,7 +712,7 @@ class Spectrum(object):
 
             residual_axs[0].set_ylabel(ylabel)
             
-        if self.show_calibration_correction:
+        if self.show_calibration_correction and self.calibration_correction.has_correction:
             ylabel = "$\\mathcal{P}(\\uplambda)$"
             calibration_axs[0].set_ylabel(ylabel)
 
@@ -936,7 +936,7 @@ class Spectrum(object):
 
                 autoscale.autoscale_y(ax)
                             
-        if self.show_calibration_correction:
+        if self.show_calibration_correction and self.calibration_correction.has_correction:
 
             for ax in calibration_axs:
 

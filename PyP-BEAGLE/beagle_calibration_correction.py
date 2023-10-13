@@ -29,7 +29,7 @@ class CalibrationCorrection:
                 if self.type != "polynomial":
                     raise ValueError("Calibration Correction of type `" + type + "` not recognised!")
             if 'degree:' in line:
-                self.degree = np.int(line.split("degree:")[1].split()[0])
+                self.degree = int(line.split("degree:")[1].split()[0])
             
     
     def return_correction(self, x, coeff):

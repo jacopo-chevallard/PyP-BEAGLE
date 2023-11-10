@@ -1,3 +1,6 @@
+## 0.10.6 (November 10, 2023)
+  - [ADD] Allowing the params_names.json file to contain entries not present in the output file, for instance adjustable parameters not fitted for. This enables users to use a common params_names.json file for different Beagle parameter files
+
 ## 0.10.5 (November 10, 2023)
   - Merge branch 'feature/log_level' into develop
   - [ADD] Adding possibility to set logging level from command line

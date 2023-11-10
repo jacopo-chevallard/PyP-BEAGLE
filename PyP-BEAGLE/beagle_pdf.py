@@ -100,15 +100,11 @@ class PDF(object):
 
         param_values = OrderedDict()
         for key, value in six.iteritems(self.adjust_params):
-            extName = "POSTERIOR PDF"
-            if "extName" in value:
-                extName = value["extName"]
-
-            colName = key
-            if "colName" in value:
-                colName = value["colName"]
-
-            param_values[key] = hdulist[extName].data[colName]
+            extName = value["extName"] if "extName" in value else "POSTERIOR PDF"
+            colName = value["colName"] if "colName" in value else key
+            if extName in hdulist:
+                if colName in hdulist[extName].data:
+                    param_values[key] = hdulist[extName].data[colName]
 
         probability = hdulist['posterior pdf'].data['probability']
 

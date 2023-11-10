@@ -98,13 +98,20 @@ class PDF(object):
 
         hdulist = fits.open(fits_file)
 
+        keys_to_remove = []
         param_values = OrderedDict()
         for key, value in six.iteritems(self.adjust_params):
             extName = value["extName"] if "extName" in value else "POSTERIOR PDF"
             colName = value["colName"] if "colName" in value else key
             if extName in hdulist:
-                if colName in hdulist[extName].data:
+                if colName in hdulist[extName].data.dtype.names:
                     param_values[key] = hdulist[extName].data[colName]
+                    continue
+            keys_to_remove.append(key)
+
+        # Then, remove these keys from the dictionary
+        for key in keys_to_remove:
+            del self.adjust_params[key]
 
         probability = hdulist['posterior pdf'].data['probability']
 

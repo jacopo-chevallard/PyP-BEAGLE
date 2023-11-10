@@ -1,3 +1,6 @@
+## 0.10.7 (November 10, 2023)
+  - [FIX] Fixing error `TypeError: Cannot compare structured or void to non-void arrays.` and removing parameters not present in the result file being analyzed
+
 ## 0.10.6 (November 10, 2023)
   - [ADD] Allowing the params_names.json file to contain entries not present in the output file, for instance adjustable parameters not fitted for. This enables users to use a common params_names.json file for different Beagle parameter files
 

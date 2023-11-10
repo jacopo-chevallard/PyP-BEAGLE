@@ -18,11 +18,12 @@ def standard_parser():
     )
 
     parser.add_argument(
-        '--verbose',
-        help="Be verbose",
-        action="store_const", 
-        dest="loglevel", 
-        const=logging.INFO
+        '--log-level',
+        help='Set logging level',
+        action='store', 
+        dest="loglevel",
+        choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], 
+        default='INFO'
     )
 
     parser.add_argument(

@@ -1,3 +1,7 @@
+## 0.10.5 (November 10, 2023)
+  - Merge branch 'feature/log_level' into develop
+  - [ADD] Adding possibility to set logging level from command line
+
 ## 0.10.4 (October 13, 2023)
   - Merge branch 'fix/crontab' into develop
   - [ADD] Added check so that when --show-calibration-option is set the presence of a  calibration polynomial is checked, to avoid encountering errors (this enable using the same pyp_beagle command for runs w and w/o calibration polynomial)

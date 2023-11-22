@@ -394,7 +394,7 @@ class BeagleSummaryCatalogue(object):
             IDs=None,
             summary_statistics='median',
             average_errors=True,
-            significant_digits=1):
+            significant_digits=2):
 
         # Check if a list of params has been passed, or a JSON file
         if param_names[0].lower().endswith("json"):
@@ -425,10 +425,12 @@ class BeagleSummaryCatalogue(object):
                     factor = value["factor"]
 
                 colName = param.lower() + '_' + summary_statistics
+                found = False
                 for hdu in self.hdulist:
                     if hasattr(hdu, 'columns'):
-                        if colName in hdu.columns.names:
+                        if colName in [x.lower() for x in hdu.columns.names]:
                             sum_stat = hdu.data[colName][row]
+                            found = True
                             #print "n_ ", n_
                             for lev in self.credible_intervals:
                                 errColName = param + '_' + "{:.2f}".format(lev)
@@ -454,6 +456,6 @@ class BeagleSummaryCatalogue(object):
                                     print(' & $' + to_precision(sum_stat, n+n_) + '_{-' + to_precision(error_low, n) \
                                             + '}^{+' + to_precision(error_up, n) + '}$', end='')
                             break
+                if not found:
+                    raise ValueError('Could not find ' + colName)
             print(' \\\\ ', end='')
-
-                        

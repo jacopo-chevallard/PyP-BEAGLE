@@ -203,6 +203,10 @@ class Spectrum(object):
 
         self.wl_rest = kwargs.get('wl_rest', False)
 
+        self.wl_label_rotation = kwargs.get('wl_label_rotation', 0)
+
+        self.residual_range = kwargs.get('residual_range', None)
+
         self.log_flux = kwargs.get('plot_log_flux', False)
 
         self.plot_full_SED = kwargs.get('plot_full_SED', False)
@@ -662,7 +666,7 @@ class Spectrum(object):
             if self.wl_range is not None:
                 set_plot_ticks(ax, which=which, prune_y='both')
                 for tick in ax.get_xticklabels():
-                    tick.set_rotation(45)
+                    tick.set_rotation(self.wl_label_rotation)
                     if self.show_residual:
                         tick.set_ha('left')
                     else:
@@ -682,7 +686,7 @@ class Spectrum(object):
                 if self.wl_range is not None:
                     set_plot_ticks(ax, prune_y='both')
                     for tick in ax.get_xticklabels():
-                        tick.set_rotation(45)
+                        tick.set_rotation(self.wl_label_rotation)
                 else:
                     set_plot_ticks(ax, which=which, n_y=3)
 
@@ -933,8 +937,10 @@ class Spectrum(object):
                                 ms=3,
                                 **kwargs
                                 )
-
-                autoscale.autoscale_y(ax)
+                if self.residual_range is not None:
+                    ax.set_ylim(self.residual_range)
+                else:
+                    autoscale.autoscale_y(ax)
                             
         if self.show_calibration_correction and self.calibration_correction.has_correction:
 

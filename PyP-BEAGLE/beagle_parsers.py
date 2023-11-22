@@ -92,6 +92,16 @@ def standard_parser():
         )
         
     parser.add_argument(
+        '--residual-range',
+        help="Option useufl to set when plotting residuals in units of sigma, to manually determine which range of +/- sigma to show",
+        action="store", 
+        dest="residual_range",
+        type=float,
+        nargs=2,
+        default=None
+        )
+    
+    parser.add_argument(
         '--residual-units',
         help="You can show the residuals in absolute units (f_obs-f_mod), in relative units (f_obs-f_mod)/f_obs, or in units of sigma (f_obs-f_mod)/sigma_obs",
         action="store", 
@@ -258,6 +268,15 @@ def standard_parser():
         dest="wl_units",
         choices=['ang', 'nm', 'micron'],
         default='micron'
+        )
+
+    parser.add_argument(
+        '--wl-label-rotation',
+        help="Rotation of wl axis labels",
+        action="store",
+        type=int, 
+        dest="wl_label_rotation",
+        default=0
         )
 
     parser.add_argument(

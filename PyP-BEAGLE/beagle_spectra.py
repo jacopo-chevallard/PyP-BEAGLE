@@ -729,7 +729,8 @@ class Spectrum(object):
         alpha_fill = 0.3
 
         for ax in axs:
-
+            # Draw an horizontal line at zero
+            ax.hlines(0, ax.get_xlim()[0], ax.get_xlim()[1], color="grey", linewidth=1)
             colors = ["red", "salmon"]
             for slic, col in zip(slices, colors):
                 for s in slic:

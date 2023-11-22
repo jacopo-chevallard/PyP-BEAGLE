@@ -412,6 +412,18 @@ class BeagleSummaryCatalogue(object):
         if IDs is None:
             IDs = self.hdulist[1].data['ID']
 
+        # We always want to start with the POSTERIOR PDF extension, so we re-arrange the hdu order
+        # Find the 'POSTERIOR' extension
+        posterior_index = None
+        for i, hdu in enumerate(self.hdulist):
+            if hdu.name == 'POSTERIOR PDF':
+                posterior_index = i
+                break
+
+        # If 'POSTERIOR' extension exists, rearrange the HDU list
+        if posterior_index is not None:
+            self.hdulist.insert(0, self.hdulist.pop(posterior_index))
+
         for ID in IDs:
             print("\n " + ID, end='') 
             row = np.arange(n_rows)[self.hdulist[1].data['ID'] == ID][0]

@@ -1,3 +1,10 @@
+## 0.10.8 (November 22, 2023)
+  - [ADD] Reordering the hdu extensions so that the POSTERIOR PDF extension is always checked first
+  - [FIX] Other fix for upper-lower cases mismatches. [ADD] Also added a sanity check that all parameters for which we require a LaTeX table have been printed
+  - [FIX] Fixing column names mismatch caused by upper/lower cases
+  - [ADD] Added horizontal line to show the level of 0 flux
+  - [ADD] Added two command line options to set the rotation of the x-axis labels and to set the y-range of the residuals
+
 ## 0.10.7 (November 10, 2023)
   - [FIX] Fixing error `TypeError: Cannot compare structured or void to non-void arrays.` and removing parameters not present in the result file being analyzed
 

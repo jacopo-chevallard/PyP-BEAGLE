@@ -424,7 +424,7 @@ class BeagleSummaryCatalogue(object):
                 if "factor" in value:
                     factor = value["factor"]
 
-                colName = param + '_' + summary_statistics
+                colName = param.lower() + '_' + summary_statistics
                 for hdu in self.hdulist:
                     if hasattr(hdu, 'columns'):
                         if colName in hdu.columns.names:

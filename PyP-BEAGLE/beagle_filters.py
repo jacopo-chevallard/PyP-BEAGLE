@@ -68,12 +68,12 @@ class PhotometricFilters(object):
 
         transmission = list()
         index = Column(name='index', dtype=np.int32, length=self.n_bands)
-        name = Column(name='name', dtype='S40', length=self.n_bands)
+        name = Column(name='name', dtype='S80', length=self.n_bands)
         fileName = Column(name='fileName', dtype='S250', length=self.n_bands)
         wl_eff = Column(name='wl_eff', dtype=float, length=self.n_bands)
-        colName = Column(name='flux_colName', dtype='S20', length=self.n_bands)
-        errcolName = Column(name='flux_errcolName', dtype='S20', length=self.n_bands)
-        label = Column(name='label', dtype='S40', length=self.n_bands)
+        colName = Column(name='flux_colName', dtype='S80', length=self.n_bands)
+        errcolName = Column(name='flux_errcolName', dtype='S80', length=self.n_bands)
+        label = Column(name='label', dtype='S80', length=self.n_bands)
 
         min_rel_err = Column(name='min_rel_err', dtype=float, length=self.n_bands)
 

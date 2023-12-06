@@ -1,3 +1,6 @@
+## 0.10.9 (December 06, 2023)
+  - [FIX] Fixing errors of filters with names longer than 20 characters
+
 ## 0.10.8 (November 22, 2023)
   - [ADD] Reordering the hdu extensions so that the POSTERIOR PDF extension is always checked first
   - [FIX] Other fix for upper-lower cases mismatches. [ADD] Also added a sanity check that all parameters for which we require a LaTeX table have been printed

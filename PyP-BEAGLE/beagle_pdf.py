@@ -104,7 +104,8 @@ class PDF(object):
             extName = value["extName"] if "extName" in value else "POSTERIOR PDF"
             colName = value["colName"] if "colName" in value else key
             if extName in hdulist:
-                if colName in hdulist[extName].data.dtype.names:
+                dtype_names_lower = [name.lower() for name in hdulist[extName].data.dtype.names]
+                if colName.lower() in dtype_names_lower:
                     param_values[key] = hdulist[extName].data[colName]
                     continue
             keys_to_remove.append(key)

@@ -1,3 +1,6 @@
+## 0.10.10 (January 24, 2024)
+  - [FIX] Fixing case column names matching
+
 ## 0.10.9 (December 06, 2023)
   - [FIX] Fixing errors of filters with names longer than 20 characters
 

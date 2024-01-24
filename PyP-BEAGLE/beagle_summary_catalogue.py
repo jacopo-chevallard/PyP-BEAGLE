@@ -101,7 +101,7 @@ class BeagleSummaryCatalogue(object):
         self.hdu_col = hdu_col
 
         if config_file is not None:
-            if os.path.dirname(config_file) is None:
+            if not os.path.dirname(config_file):
                 _config_file  = os.path.join(BeagleDirectories.results_dir, 
                         config_file)
             else:

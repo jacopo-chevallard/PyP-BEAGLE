@@ -130,10 +130,11 @@ def main():
     params_file = os.path.join(BeagleDirectories.results_dir, args.json_file_triangle)
 
     # Compute the summary catalogue
-    summary_catalogue = BeagleSummaryCatalogue(credible_intervals=args.credible_interval, 
-                                               n_proc=args.n_proc, 
-                                              overwrite=args.overwrite,
-                                              flatten_columns=args.flatten_columns)
+    summary_catalogue = BeagleSummaryCatalogue(credible_intervals=args.credible_interval,
+                                                config_file=args.summary_config,
+                                                n_proc=args.n_proc, 
+                                                overwrite=args.overwrite,
+                                                flatten_columns=args.flatten_columns)
     if args.compute_summary:
         if not summary_catalogue.exists() or args.overwrite:
             summary_catalogue.compute(file_list)

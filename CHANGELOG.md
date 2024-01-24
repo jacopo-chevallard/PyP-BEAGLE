@@ -1,3 +1,6 @@
+## 0.10.11 (January 24, 2024)
+  - [FIX] Fixing passing a summary_config.json file to configure the summary catalogue computation
+
 ## 0.10.10 (January 24, 2024)
   - [FIX] Fixing case column names matching
 

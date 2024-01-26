@@ -1,3 +1,6 @@
+## 0.10.12 (January 26, 2024)
+  - [FIX] Fixing errors when no summary_config.json file is present
+
 ## 0.10.11 (January 24, 2024)
   - [FIX] Fixing passing a summary_config.json file to configure the summary catalogue computation
 

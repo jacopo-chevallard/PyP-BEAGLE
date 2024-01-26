@@ -106,15 +106,12 @@ class BeagleSummaryCatalogue(object):
                         config_file)
             else:
                 _config_file = config_file
-
-            with open(_config_file) as f:    
-                self.hdu_col = json.load(f, object_pairs_hook=OrderedDict)
-
         else:
             _config_file = os.path.join(BeagleDirectories.results_dir, "summary_config.json")
-            if os.path.isfile(_config_file):
-                with open(_config_file) as f:    
-                    self.hdu_col = json.load(f, object_pairs_hook=OrderedDict)
+            
+        if os.path.isfile(_config_file):
+            with open(_config_file) as f:    
+                self.hdu_col = json.load(f, object_pairs_hook=OrderedDict)
 
         self.exclude_columns = ['probability', 'ln_likelihood', 'chi_square', 'n_data'] 
 

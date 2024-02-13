@@ -1,3 +1,6 @@
+## 0.10.13 (February 13, 2024)
+  - [FIX] Missing default (False) flag for --compute-summary option
+
 ## 0.10.12 (January 26, 2024)
   - [FIX] Fixing errors when no summary_config.json file is present
 

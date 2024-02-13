@@ -299,7 +299,8 @@ def standard_parser():
         '--compute-summary',
         help="Compute the summary catalogue.",
         action="store_true", 
-        dest="compute_summary" 
+        dest="compute_summary",
+        default=False
         )
 
     parser.add_argument(

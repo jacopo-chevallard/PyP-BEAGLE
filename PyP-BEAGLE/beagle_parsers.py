@@ -312,6 +312,15 @@ def standard_parser():
         default=[68., 95.],
         dest="credible_interval" 
         )
+    
+    parser.add_argument(
+        '--n-sigma-limit',
+        help="The upper/lower limit definition in units of sigma",
+        action="store", 
+        type=int, 
+        dest="n_sigma_limit",
+        default=3 
+    )
 
     parser.add_argument(
         '--latex-table-params',

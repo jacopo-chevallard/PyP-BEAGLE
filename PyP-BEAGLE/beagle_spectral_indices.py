@@ -324,7 +324,7 @@ class SpectralIndices(object):
         _fontsize = min(self.inset_fontsize, self.inset_fontsize/(0.075*n_lines))
         for i, (line_key, line_value) in enumerate(six.iteritems(self.observed_catalogue.line_config)):
             X = i+1
-            label = self.line_labels[line_key] if self.line_labels is not None else line_key
+            label = self.line_labels[line_key] if self.line_labels is not None and line_key in self.line_labels else line_key
             ticklabels.append(label)
             _variab_fact = _init_fact * j
             if self.plot_log_flux:

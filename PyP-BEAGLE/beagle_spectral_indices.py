@@ -54,8 +54,16 @@ def pairwise(iterable):
     next(b, None)
     return zip(a, b)
 
+class IndexType():
+    standard = "standard"
+    lower = "lower"
+    upper = "upper"
 
-_TOKENS = ['lum', 'lumErr', 'ew', 'ewErr']
+class Tokens():
+    lumType = "lumType"
+    ewType = "ewType"
+
+_TOKENS = ['lum', 'lumErr', 'lumType', 'ew', 'ewErr', 'ewType']
 _UNITS = 'lum:units:value:'
 _COL_NAME = 'colName'
 _LABEL = 'label'
@@ -113,6 +121,8 @@ class SpectralIndices(object):
 
         self.show_residual = kwargs.get('show_residual', False)
 
+        self.n_sigma_limit = kwargs.get('n_sigma_limit', 3)
+
     def plot_line_fluxes(self, 
             ID, replot=False, 
             title=False, letter=None, signif_digits=1):
@@ -163,6 +173,12 @@ class SpectralIndices(object):
                 _col_name = value['ew']
                 _err_col_name = value['ewErr']
 
+            obs_type = IndexType.standard
+            if Tokens.ewType in value:
+                obs_type = observation[value[Tokens.ewType]]
+            elif Tokens.lumType in value:
+                obs_type = observation[value[Tokens.lumType]]
+
             _observed_flux = observation[_col_name] * self.observed_catalogue.units
             _observed_fluxes[i] = _observed_flux 
 
@@ -184,24 +200,48 @@ class SpectralIndices(object):
 
             kwargs = {'alpha':0.8}
             if _observed_flux_err > 0.:
-                ax.errorbar(X,
-                        _observed_flux, 
-                        yerr=_observed_flux_err,
-                        color="dodgerblue",
-                        ls=" ",
-                        marker=" ",
-                        zorder=5,
-                        **kwargs)
+                if obs_type == IndexType.standard:
+                    ax.errorbar(X,
+                            _observed_flux, 
+                            yerr=_observed_flux_err,
+                            color="dodgerblue",
+                            ls=" ",
+                            marker=" ",
+                            zorder=5,
+                            **kwargs)
 
-                ax.plot(X,
-                        _observed_flux, 
-                        color="dodgerblue",
-                        ls=" ",
-                        marker="D",
-                        markeredgewidth=0.,
-                        markersize = 8,
-                        zorder=3,
-                        **kwargs)
+                    ax.plot(X,
+                            _observed_flux, 
+                            color="dodgerblue",
+                            ls=" ",
+                            marker="D",
+                            markeredgewidth=0.,
+                            markersize = 8,
+                            zorder=3,
+                            **kwargs)
+                    _all = np.concatenate((_observed_flux[_observed_flux_err > 0.], x_plot))
+                elif obs_type == IndexType.upper:
+                    ax.plot(X,
+                            _observed_flux_err*self.n_sigma_limit, 
+                            color="dodgerblue",
+                            ls=" ",
+                            marker="v",
+                            markeredgewidth=0.,
+                            markersize = 8,
+                            zorder=3,
+                            **kwargs)
+                    _all = np.concatenate((_observed_flux_err*self.n_sigma_limit, x_plot))
+                elif obs_type == IndexType.lower:
+                    ax.plot(X,
+                            _observed_flux_err*self.n_sigma_limit, 
+                            color="dodgerblue",
+                            ls=" ",
+                            marker="^",
+                            markeredgewidth=0.,
+                            markersize = 8,
+                            zorder=3,
+                            **kwargs)
+                    _all = np.concatenate((_observed_flux_err*self.n_sigma_limit, x_plot))
 
             kwargs = {'color':'tomato', 'alpha':0.7, 'edgecolor':'black', 'linewidth':0.2}
             ax.fill_betweenx(x_plot,
@@ -227,11 +267,9 @@ class SpectralIndices(object):
                     alpha = 0.7
                     )
 
-            _all = np.concatenate((_observed_flux[_observed_flux_err > 0.], x_plot))
             _min = np.amin(_all)
             minY_values[i] = _min
 
-            _all = np.concatenate((_observed_flux[_observed_flux_err > 0.], x_plot))
             _max = np.amax(_all)
             maxY_values[i] = _max
 

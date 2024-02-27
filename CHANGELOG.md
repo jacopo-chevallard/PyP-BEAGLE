@@ -1,3 +1,7 @@
+## 0.10.14 (February 27, 2024)
+  - [FEAT] Adding feature to correctly plot upper/lower limits as uppper/lower facing triangles
+  - [ADD] Adding option to specify the definition of the upper/lower limits in units of sigma
+
 ## 0.10.13 (February 13, 2024)
   - [FIX] Missing default (False) flag for --compute-summary option
 

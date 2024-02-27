@@ -1,3 +1,6 @@
+## 0.10.15 (February 27, 2024)
+  - [FIX] Fixing error when line labels in the spectral indices configuration file do not match the keys in the JSON file
+
 ## 0.10.14 (February 27, 2024)
   - [FEAT] Adding feature to correctly plot upper/lower limits as uppper/lower facing triangles
   - [ADD] Adding option to specify the definition of the upper/lower limits in units of sigma

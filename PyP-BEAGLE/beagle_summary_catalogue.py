@@ -391,6 +391,7 @@ class BeagleSummaryCatalogue(object):
             IDs=None,
             summary_statistics='median',
             average_errors=True,
+            column_wise=False,
             significant_digits=2):
 
         # Check if a list of params has been passed, or a JSON file
@@ -425,6 +426,8 @@ class BeagleSummaryCatalogue(object):
             print("\n " + ID, end='') 
             row = np.arange(n_rows)[self.hdulist[1].data['ID'] == ID][0]
             for param, value in six.iteritems(param_config):
+                if column_wise:
+                    print("\n " + param, end='')
                 is_log = False
                 if "log" in value:
                     is_log = value["log"]

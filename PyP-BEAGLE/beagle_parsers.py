@@ -337,6 +337,13 @@ def standard_parser():
         action="store_true", 
         dest="average_errors" 
         )
+    
+    parser.add_argument(
+        '--latex-column-wise',
+        help="If set, print the parameter values one per column, otherwise all parameters of a single object are printed in the same row",
+        action="store_true", 
+        dest="latex_column" 
+        )
 
     parser.add_argument(
         '--extract-MAP',

@@ -108,7 +108,7 @@ class BeagleSummaryCatalogue(object):
                 _config_file = config_file
         else:
             _config_file = os.path.join(BeagleDirectories.results_dir, "summary_config.json")
-            
+
         if os.path.isfile(_config_file):
             with open(_config_file) as f:    
                 self.hdu_col = json.load(f, object_pairs_hook=OrderedDict)
@@ -442,8 +442,10 @@ class BeagleSummaryCatalogue(object):
                             found = True
                             #print "n_ ", n_
                             for lev in self.credible_intervals:
-                                errColName = param + '_' + "{:.2f}".format(lev)
-                                error_low, error_up = hdu.data[errColName][row]
+                                try:
+                                    error_low, error_up = hdu.data[param + '_' + "{:.2f}".format(lev)][row]
+                                except: 
+                                    error_low, error_up = hdu.data[param + '_' + "{:.2f}".format(lev) + '_low'][row], hdu.data[param + '_' + "{:.2f}".format(lev) + '_up'][row]
 
                                 if average_errors:
                                     err = 0.5 * (error_up-error_low)

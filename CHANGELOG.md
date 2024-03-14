@@ -1,3 +1,7 @@
+## 0.10.16 (March 14, 2024)
+  - [FIX] Fixed y-axis label (units) when plotting EWs vs line fluxes
+  - [FIX] Spectral indices labels were not correctly printed when reading them from a JSON file
+
 ## 0.10.15 (February 27, 2024)
   - [FIX] Fixing error when line labels in the spectral indices configuration file do not match the keys in the JSON file
 

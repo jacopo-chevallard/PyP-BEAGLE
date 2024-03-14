@@ -145,7 +145,7 @@ def main():
     if args.latex_table_params is not None:
         if not args.compute_summary:
             parser.error("The `--latex-table-params` option requires the `--compute-summary` option to be set")
-        summary_catalogue.make_latex_table(args.latex_table_params, IDs=args.ID_list)
+        summary_catalogue.make_latex_table(args.latex_table_params, IDs=args.ID_list, average_errors=args.average_errors)
 
     if args.extract_MAP:
         if not args.compute_summary:

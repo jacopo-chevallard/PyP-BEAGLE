@@ -330,6 +330,13 @@ def standard_parser():
         nargs='+',
         dest="latex_table_params" 
         )
+    
+    parser.add_argument(
+        '--latex-average-errors',
+        help="If set, positive/negative errors are averaged in the output LaTeX table",
+        action="store_true", 
+        dest="average_errors" 
+        )
 
     parser.add_argument(
         '--extract-MAP',

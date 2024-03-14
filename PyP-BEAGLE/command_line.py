@@ -131,7 +131,7 @@ def main():
 
     # Compute the summary catalogue
     if args.compute_summary:
-        
+
         summary_catalogue = BeagleSummaryCatalogue(credible_intervals=args.credible_interval,
                                                 config_file=args.summary_config,
                                                 n_proc=args.n_proc, 
@@ -140,22 +140,20 @@ def main():
     
         if not summary_catalogue.exists() or args.overwrite:
             summary_catalogue.compute(file_list)
+        summary_catalogue.load()
 
     if args.latex_table_params is not None:
-        if not summary_catalogue.exists():
-            summary_catalogue.compute(file_list)
-        summary_catalogue.load()
+        if not args.compute_summary:
+            parser.error("The `--latex-table-params` option requires the `--compute-summary` option to be set")
         summary_catalogue.make_latex_table(args.latex_table_params, IDs=args.ID_list)
 
     if args.extract_MAP:
+        if not args.compute_summary:
+            parser.error("The `--extract-MAP` option requires the `--compute-summary` option to be set")
         summary_catalogue.extract_MAP_solution(file_list)
 
     # Comparison plots of true vs retrieved values 
     if args.mock_file_name is not None:
-        if not summary_catalogue.exists():
-            summary_catalogue.compute(file_list)
-        summary_catalogue.load()
-
         #mock_catalogue.plot_input_param_distribution()
         mock_catalogue.compare_hist(summary_catalogue, overwrite=True)
         mock_catalogue.compare(summary_catalogue, overwrite=True)

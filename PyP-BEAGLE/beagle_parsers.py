@@ -309,7 +309,7 @@ def standard_parser():
         action="store", 
         type=float,
         nargs='+',
-        default=[68., 95.],
+        default=[68.],
         dest="credible_interval" 
         )
     

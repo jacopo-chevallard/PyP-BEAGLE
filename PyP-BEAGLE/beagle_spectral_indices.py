@@ -177,8 +177,10 @@ class SpectralIndices(object):
             obs_type = IndexType.standard
             if Tokens.ewType in value:
                 obs_type = observation[value[Tokens.ewType]]
+                self.is_ew = True
             elif Tokens.lumType in value:
                 obs_type = observation[value[Tokens.lumType]]
+                self.is_ew = False
 
             _observed_flux = observation[_col_name] * self.observed_catalogue.units
             _observed_fluxes[i] = _observed_flux 
@@ -301,11 +303,17 @@ class SpectralIndices(object):
 
 
         if self.plot_log_flux:
-            ax.set_ylabel("$\\log(\\textnormal{F}/\\textnormal{erg} \; \
-                \\textnormal{s}^{-1} \, \\textnormal{cm}^{-2})$")
+            if self.is_ew:
+                ax.set_ylabel("$\\log(\\textnormal{EW}/\\textnormal{\\AA}$")
+            else:
+                ax.set_ylabel("$\\log(\\textnormal{F}/\\textnormal{erg} \; \
+                    \\textnormal{s}^{-1} \, \\textnormal{cm}^{-2})$")
         else:
-            ax.set_ylabel("$\\textnormal{F}/\\textnormal{erg} \; \
-                \\textnormal{s}^{-1} \, \\textnormal{cm}^{-2}$")
+            if self.is_ew:
+                ax.set_ylabel("$\\textnormal{EW}/\\textnormal{\\AA}$")
+            else:
+                ax.set_ylabel("$\\textnormal{F}/\\textnormal{erg} \; \
+                    \\textnormal{s}^{-1} \, \\textnormal{cm}^{-2}$")
 
 
         plt.tick_params(

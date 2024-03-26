@@ -1,3 +1,10 @@
+## 0.10.17 (March 26, 2024)
+  - [ADD] Added option to print LaTeX table in column-wise order (one parameter per row)
+  - [MOD] Changing the default credible interval to be printed to the LaTeX table to 68%
+  - [ADD] Added command line option to average or not the positive/negative errors printed in the output LaTeX table
+  - [FIX]Fixing computationof LaTeX table when the summary catalogue has been computed flattening the columns
+  - [FIX] Fixing command line options dependencies: some options require the  option
+
 ## 0.10.16 (March 14, 2024)
   - [FIX] Fixed y-axis label (units) when plotting EWs vs line fluxes
   - [FIX] Spectral indices labels were not correctly printed when reading them from a JSON file

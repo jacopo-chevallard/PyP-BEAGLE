@@ -234,6 +234,10 @@ class Photometry:
             model_sed = hdulist['marginal photometry']
             old_API = True
         except:
+            if 'apparent magnitudes' not in hdulist:
+                logging.warning("Missing extension 'apparent magnitudes'. " 
+                                "Cannot compute the marginal photometry plot for object ID: " + ID)
+                return
             model_sed = hdulist['apparent magnitudes']
 
         probability = hdulist['posterior pdf'].data['probability']

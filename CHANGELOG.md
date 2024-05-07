@@ -1,3 +1,6 @@
+## 0.10.18 (May 07, 2024)
+  - [FIX]: only attempt to create the marginal photometry plot if photometry has been printed to the output file
+
 ## 0.10.17 (March 26, 2024)
   - [ADD] Added option to print LaTeX table in column-wise order (one parameter per row)
   - [MOD] Changing the default credible interval to be printed to the LaTeX table to 68%

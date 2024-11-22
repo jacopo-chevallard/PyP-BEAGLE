@@ -1,3 +1,6 @@
+## 0.10.19 (November 22, 2024)
+  - fix: fixing issues with multiprocessing on a Mac OS
+
 ## 0.10.18 (May 07, 2024)
   - [FIX]: only attempt to create the marginal photometry plot if photometry has been printed to the output file
 

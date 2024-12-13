@@ -1,3 +1,6 @@
+## 0.10.20 (December 13, 2024)
+  - feat: more robustly matching Beagle output IDs and list of input spectra
+
 ## 0.10.19 (November 22, 2024)
   - fix: fixing issues with multiprocessing on a Mac OS
 

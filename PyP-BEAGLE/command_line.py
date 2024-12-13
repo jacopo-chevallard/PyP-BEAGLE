@@ -279,7 +279,7 @@ def main():
                 line = os.path.join(os.path.dirname(inputSpectraFileName), line)
                 lines.append(line)
 
-        file_names = list()
+        spec_file_names = dict()
 
         for ID in IDs:
             _ID = ID
@@ -291,13 +291,8 @@ def main():
                     _line = regex.sub("", _line)
                 _line = _line.split("_BEAGLE")[0]
                 if _ID == _line:
-                    file_names.append(line)
+                    spec_file_names[ID] = line
                     break
-
-        if len(file_names) != len(IDs):
-            raise ValueError(
-                "Cannot match object IDs and file names of the input spectra!"
-            )
 
     # Create "pool" of processes
     if args.n_proc > 1:
@@ -307,7 +302,11 @@ def main():
     if args.plot_marginal:
         if args.n_proc > 1:
             if has_spectra:
-                pool.map(my_spectrum.plot_marginal, IDs, file_names)
+                pool.map(
+                    my_spectrum.plot_marginal,
+                    [ID for ID in IDs if ID in spec_file_names],
+                    [spec_file_names[ID] for ID in IDs if ID in spec_file_names],
+                )
 
             if has_photometry:
                 pool.map(my_photometry.plot_marginal, IDs)
@@ -316,8 +315,8 @@ def main():
                 pool.map(my_spec_indices.plot_line_fluxes, IDs)
         else:
             for i, ID in enumerate(IDs):
-                if has_spectra:
-                    my_spectrum.plot_marginal(ID, file_names[i])
+                if has_spectra and ID in spec_file_names:
+                    my_spectrum.plot_marginal(ID, spec_file_names[ID])
 
                 if has_photometry:
                     my_photometry.plot_marginal(ID)

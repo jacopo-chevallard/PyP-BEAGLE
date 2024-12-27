@@ -214,6 +214,21 @@ class BeagleSummaryCatalogue(object):
 
         return data
 
+    def _get_column_names(self, hdu, hdulist):
+        if "columns" in hdu:
+            columnNames = [
+                name
+                for name in hdu["columns"]
+                if name in hdulist[hdu["name"]].columns.names
+            ]
+        else:
+            columnNames = [
+                name
+                for name in hdulist[hdu["name"]].columns.names
+                if name not in self.exclude_columns
+            ]
+        return columnNames
+
     def compute(self, file_list):
         """ """
 
@@ -251,15 +266,7 @@ class BeagleSummaryCatalogue(object):
                     )
 
             # You just consider the columns defined in the structure
-            if "columns" in hdu:
-                columnNames = hdu["columns"]
-            # While by default you take all columns in that extensions
-            else:
-                columnNames = [
-                    name
-                    for name in hdulist[hdu_name].columns.names
-                    if name not in self.exclude_columns
-                ]
+            columnNames = self._get_column_names(hdu, hdulist)
 
             # For each column, you add a '_mean', '_median' and confidence
             # intervals columns, taking the appropriate units from the FITS
@@ -360,14 +367,7 @@ class BeagleSummaryCatalogue(object):
                             "MAP_" + col
                         ]
 
-                if "columns" in hdu:
-                    columnNames = hdu["columns"]
-                else:
-                    columnNames = [
-                        name
-                        for name in hdulist[hdu_name].columns.names
-                        if name not in self.exclude_columns
-                    ]
+                columnNames = self._get_column_names(hdu, hdulist)
 
                 for col_name in columnNames:
                     self.hdulist[hdu_name].data["ID"][i] = data[idx]["ID"]

@@ -1,3 +1,6 @@
+## 0.10.21 (December 27, 2024)
+  - feat: making summary catalogue computation robust to missing columns so that the same JSON file can be used for different configurations
+
 ## 0.10.20 (December 13, 2024)
   - feat: more robustly matching Beagle output IDs and list of input spectra
 

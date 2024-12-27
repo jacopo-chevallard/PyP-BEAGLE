@@ -1,3 +1,6 @@
+## 0.10.22 (December 27, 2024)
+  - fix: fixing summary catalogue calculation
+
 ## 0.10.21 (December 27, 2024)
   - feat: making summary catalogue computation robust to missing columns so that the same JSON file can be used for different configurations
 

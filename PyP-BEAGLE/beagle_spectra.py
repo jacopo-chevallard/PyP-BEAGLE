@@ -988,8 +988,6 @@ class Spectrum(object):
 
         if self.show_residual:
             is_close = [find_nearest_wl(data_wl, wl) for wl in model_wl]
-            # is_close = [i for i, wl in enumerate(data_wl) if np.isclose(model_wl, wl, rtol=1e-6, atol=0.0, equal_nan=False).any()]
-            # is_close = np.isclose(data_wl, model_wl, rtol=1e-6, atol=0.0, equal_nan=False)
             data_flux_ = data_flux[is_close]
             data_mask_ = data_mask[is_close]
             data_flux_err_ = data_flux_err[is_close]
@@ -1017,55 +1015,103 @@ class Spectrum(object):
                     ax.get_xlim(), [0.0, 0.0], color="black", lw=0.7, zorder=5, **kwargs
                 )
 
-                for i, col in enumerate(colors):
-
-                    if i == 0:
-                        ind = indices[data_mask_]
-                    elif i == 1:
-                        ind = indices[~data_mask_]
-
-                    if self.residual_units == "relative":
-                        pass
-                    elif self.residual_units == "absolute":
-                        pass
-                    elif self.residual_units == "sigma":
+                # Add the shaded regions for different residual units
+                if self.residual_units == "relative":
+                    pass
+                elif self.residual_units == "absolute":
+                    pass
+                elif self.residual_units == "sigma":
+                    sigma_limit_to_show = [1, 3]
+                    for sigma_limit in sigma_limit_to_show:
                         ax.add_patch(
                             Rectangle(
-                                (ax.get_xlim()[0], -1.0),
+                                (ax.get_xlim()[0], -sigma_limit),
                                 ax.get_xlim()[1] - ax.get_xlim()[0],
-                                2,
+                                2 * sigma_limit,
                                 facecolor="grey",
                                 alpha=0.3,
                             )
                         )
 
-                    if residual_err is not None:
+                for i, col in enumerate(colors):
+                    if i == 0:
+                        ind = indices[data_mask_]
+                    elif i == 1:
+                        ind = indices[~data_mask_]
 
-                        ax.errorbar(
-                            model_wl[ind],
-                            residual[ind],
-                            yerr=residual_err[ind],
+                    if (
+                        self.residual_units == "sigma"
+                        and self.residual_range is not None
+                    ):
+                        # Plot points within range normally
+                        in_range = (residual[ind] >= self.residual_range[0]) & (
+                            residual[ind] <= self.residual_range[1]
+                        )
+                        ax.plot(
+                            model_wl[ind][in_range],
+                            residual[ind][in_range],
                             color=col,
                             ls=" ",
-                            elinewidth=0.5,
                             marker="o",
                             ms=3,
+                            **kwargs
+                        )
+
+                        # Plot arrows for points below range
+                        below_range = residual[ind] < self.residual_range[0]
+                        ax.plot(
+                            model_wl[ind][below_range],
+                            [self.residual_range[0]] * np.sum(below_range),
+                            color=col,
+                            ls=" ",
+                            marker="v",
+                            ms=4,
+                            **kwargs
+                        )
+
+                        # Plot arrows for points above range
+                        above_range = residual[ind] > self.residual_range[1]
+                        ax.plot(
+                            model_wl[ind][above_range],
+                            [self.residual_range[1]] * np.sum(above_range),
+                            color=col,
+                            ls=" ",
+                            marker="^",
+                            ms=4,
                             **kwargs
                         )
                     else:
-                        ax.plot(
-                            model_wl[ind],
-                            residual[ind],
-                            color=col,
-                            ls=" ",
-                            marker="o",
-                            ms=3,
-                            **kwargs
-                        )
-                if self.residual_range is not None:
-                    ax.set_ylim(self.residual_range)
-                else:
-                    autoscale.autoscale_y(ax)
+                        # Original plotting code for when no range is specified
+                        if residual_err is not None:
+                            ax.errorbar(
+                                model_wl[ind],
+                                residual[ind],
+                                yerr=residual_err[ind],
+                                color=col,
+                                ls=" ",
+                                elinewidth=0.5,
+                                marker="o",
+                                ms=3,
+                                **kwargs
+                            )
+                        else:
+                            ax.plot(
+                                model_wl[ind],
+                                residual[ind],
+                                color=col,
+                                ls=" ",
+                                marker="o",
+                                ms=3,
+                                **kwargs
+                            )
+
+                    if self.residual_range is not None:
+                        _min = self.residual_range[0]
+                        _max = self.residual_range[1]
+                        _delta = _max - _min
+                        ax.set_ylim(_min - _delta * 0.1, _max + _delta * 0.1)
+                    else:
+                        autoscale.autoscale_y(ax)
 
         if (
             self.show_calibration_correction

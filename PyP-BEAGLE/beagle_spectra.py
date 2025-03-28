@@ -356,6 +356,11 @@ class Spectrum(object):
         else:
             plot_name = str(ID) + "_BEAGLE_marginal_SED_spec" + plot_suffix + ".pdf"
 
+        if self.wl_range:
+            plot_name = plot_name.replace(
+                ".pdf", "_wl_range_" + "_".join(map(str, self.wl_range)) + ".pdf"
+            )
+
         # Check if the plot already exists
         if plot_exists(plot_name) and not replot:
             logging.warning(
@@ -938,10 +943,32 @@ class Spectrum(object):
             yl = autoscale.get_autoscale_y(
                 ax, ylog=self.log_flux, top_margin=0.2, bottom_margin=0.1
             )
-            ylim = [min(ylim[0], yl[0]), max(ylim[1], yl[1])]
+            try:
+                new_min = min(ylim[0], yl[0])
+                new_max = max(ylim[1], yl[1])
+                if np.isfinite(new_min) and np.isfinite(new_max):
+                    ylim = [new_min, new_max]
+                else:
+                    logging.warning(
+                        "Invalid y-axis limits detected (NaN or Inf). Using original limits."
+                    )
+            except:
+                logging.warning("Error computing y-axis limits. Using original limits.")
 
         for ax in axs:
-            ax.set_ylim(ylim)
+            try:
+                if np.isfinite(ylim[0]) and np.isfinite(ylim[1]):
+                    ax.set_ylim(ylim)
+                else:
+                    logging.warning(
+                        "Invalid y-axis limits. Using matplotlib autoscale."
+                    )
+                    ax.autoscale(axis="y")
+            except:
+                logging.warning(
+                    "Error setting y-axis limits. Using matplotlib autoscale."
+                )
+                ax.autoscale(axis="y")
 
         for ax in axs:
             # Extract and plot full SED
@@ -1109,7 +1136,22 @@ class Spectrum(object):
                         _min = self.residual_range[0]
                         _max = self.residual_range[1]
                         _delta = _max - _min
-                        ax.set_ylim(_min - _delta * 0.1, _max + _delta * 0.1)
+                        # Add some padding to the limits and check for valid values
+                        try:
+                            new_min = _min - _delta * 0.1
+                            new_max = _max + _delta * 0.1
+                            if np.isfinite(new_min) and np.isfinite(new_max):
+                                ax.set_ylim(new_min, new_max)
+                            else:
+                                logging.warning(
+                                    "Invalid residual range limits detected (NaN or Inf). Using autoscale instead."
+                                )
+                                autoscale.autoscale_y(ax)
+                        except:
+                            logging.warning(
+                                "Error setting residual range limits. Using autoscale instead."
+                            )
+                            autoscale.autoscale_y(ax)
                     else:
                         autoscale.autoscale_y(ax)
 
@@ -1195,7 +1237,13 @@ class Spectrum(object):
                     i2 = bisect_left(data_wl, x + dx * 0.01)
 
                     if direction == "up":
-                        mm = np.amax(data_flux[i1 : i2 + 1])
+                        # Check if we have any data points in the range
+                        if i1 < i2 and i1 < len(data_flux):
+                            mm = np.amax(data_flux[i1 : i2 + 1])
+                        else:
+                            # If no points in range, use the current y position
+                            mm = y0 if "y0" in locals() else y1 * 0.5
+
                         y = mm + dy * 0.1 + shift
                         if y >= 0.8 * y1:
                             shift = 0.0

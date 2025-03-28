@@ -1,3 +1,7 @@
+## 0.10.23 (March 28, 2025)
+  - feat: better file naming
+  - feat: improving residual visualization
+
 ## 0.10.22 (December 27, 2024)
   - fix: fixing summary catalogue calculation
 
